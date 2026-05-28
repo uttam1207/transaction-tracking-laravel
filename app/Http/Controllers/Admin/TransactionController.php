@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
+use App\Models\User;
 use App\Services\FraudDetectionService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -74,7 +75,8 @@ class TransactionController extends Controller
 
     public function create()
     {
-        return view('admin.transactions.create');
+        $users = User::active()->orderBy('name')->get();
+        return view('admin.transactions.create', compact('users'));
     }
 
     public function store(Request $request)

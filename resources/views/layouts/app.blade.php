@@ -237,6 +237,17 @@
                     <i class="bi bi-journal-text"></i> Audit Logs
                 </a>
 
+                <div class="nav-section-title">Organisation</div>
+                <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
+                    <i class="bi bi-building"></i> Departments
+                </a>
+                <a href="{{ route('admin.holidays.index') }}" class="sidebar-link {{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">
+                    <i class="bi bi-calendar-heart"></i> Holidays
+                </a>
+                <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
+                    <i class="bi bi-diagram-3"></i> Projects
+                </a>
+
                 <div class="nav-section-title">System</div>
                 <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> Settings
@@ -297,6 +308,18 @@
             </div>
 
             <div class="ms-auto d-flex align-items-center gap-3">
+                <!-- Language Switcher -->
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="dropdown" title="Language">
+                        <i class="bi bi-translate"></i>
+                        <span class="d-none d-md-inline small ms-1">{{ strtoupper(app()->getLocale()) }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+                        <li><a class="dropdown-item small {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="?lang=en">&#127468;&#127463; English</a></li>
+                        <li><a class="dropdown-item small {{ app()->getLocale() === 'es' ? 'active' : '' }}" href="?lang=es">&#127466;&#127480; Español</a></li>
+                    </ul>
+                </div>
+
                 <!-- Theme Toggle -->
                 <button class="btn btn-sm btn-outline-secondary border-0" id="themeToggle" title="Toggle Theme">
                     <i class="bi bi-sun-fill" id="themeIcon"></i>
@@ -482,6 +505,59 @@
             });
         }
     });
+    </script>
+
+    <!-- Laravel Echo / Real-time WebSocket -->
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>
+    <script>
+    // Initialise Laravel Echo with Pusher-compatible WebSocket (Reverb / Soketi)
+    window.Echo = new LaravelEcho.default({
+        broadcaster: 'pusher',
+        key:         '{{ config('broadcasting.connections.pusher.key') }}',
+        wsHost:      '{{ config('broadcasting.connections.pusher.options.host', '127.0.0.1') }}',
+        wsPort:      {{ config('broadcasting.connections.pusher.options.port', 6001) }},
+        wssPort:     {{ config('broadcasting.connections.pusher.options.port', 6001) }},
+        cluster:     '{{ config('broadcasting.connections.pusher.options.cluster', 'mt1') }}',
+        forceTLS:    false,
+        enabledTransports: ['ws', 'wss'],
+        auth: {
+            headers: {
+                'X-CSRF-TOKEN': APP.csrfToken,
+            },
+        },
+    });
+
+    // Private channel for the authenticated user — real-time notifications
+    @auth
+    Echo.private('App.Models.User.{{ auth()->id() }}')
+        .notification(function (notification) {
+            // Refresh notification bell
+            loadNotifications();
+            // Show toast for fraud alerts
+            if (notification.type && notification.type.includes('Fraud')) {
+                APP.toast('New fraud alert detected!', 'warning');
+            }
+        });
+
+    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+    // Listen for new fraud alerts on the admin channel
+    Echo.private('fraud-alerts')
+        .listen('FraudAlertCreated', function (e) {
+            loadNotifications();
+            APP.toast('Fraud alert: ' + (e.message ?? 'New high-risk transaction detected'), 'warning');
+            // Update badge count if element exists
+            const badge = document.querySelector('.fraud-alert-badge');
+            if (badge) badge.textContent = parseInt(badge.textContent || 0) + 1;
+        });
+
+    // Listen for transaction status updates
+    Echo.channel('transactions')
+        .listen('TransactionStatusUpdated', function (e) {
+            APP.toast('Transaction ' + e.transaction_id + ' → ' + e.status, 'info');
+        });
+    @endif
+    @endauth
     </script>
 
     @stack('scripts')

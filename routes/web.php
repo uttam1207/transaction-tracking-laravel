@@ -11,6 +11,9 @@ use App\Http\Controllers\Admin\FraudAlertController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\HolidayController;
+use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
@@ -107,6 +110,15 @@ Route::prefix('admin')
     Route::get('/reports/attendance', [ReportController::class, 'attendanceReport'])->name('reports.attendance');
     Route::get('/reports/{type}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
+
+    // Department Management
+    Route::resource('departments', DepartmentController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Holiday Management
+    Route::resource('holidays', HolidayController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Project Management
+    Route::resource('projects', ProjectController::class)->except(['create', 'edit']);
 
     // Settings
     Route::get('/settings/{group?}', [SettingController::class, 'index'])->name('settings.index');

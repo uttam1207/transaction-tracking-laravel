@@ -4,6 +4,9 @@ use App\Http\Controllers\API\V1\AuthController;
 use App\Http\Controllers\API\V1\TransactionApiController;
 use App\Http\Controllers\API\V1\AttendanceApiController;
 use App\Http\Controllers\API\V1\DashboardApiController;
+use App\Http\Controllers\API\V1\TaskApiController;
+use App\Http\Controllers\API\V1\WorkReportApiController;
+use App\Http\Controllers\API\V1\FraudAlertApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -70,19 +73,28 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(functi
     Route::middleware('role:super_admin,admin')->group(function () {
         Route::apiResource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::apiResource('employees', \App\Http\Controllers\Admin\EmployeeController::class)->only(['index', 'show']);
-        Route::get('/fraud-alerts', [\App\Http\Controllers\Admin\FraudAlertController::class, 'index']);
         Route::get('/audit-logs', [\App\Http\Controllers\Admin\ReportController::class, 'auditLogs']);
+
+        // Fraud Alerts (Admin API)
+        Route::get('/fraud-alerts/statistics', [FraudAlertApiController::class, 'statistics']);
+        Route::get('/fraud-alerts', [FraudAlertApiController::class, 'index']);
+        Route::get('/fraud-alerts/{fraudAlert}', [FraudAlertApiController::class, 'show']);
+        Route::patch('/fraud-alerts/{fraudAlert}', [FraudAlertApiController::class, 'update']);
+        Route::post('/fraud-alerts/{fraudAlert}/assign', [FraudAlertApiController::class, 'assign']);
+        Route::post('/fraud-alerts/{fraudAlert}/resolve', [FraudAlertApiController::class, 'resolve']);
     });
 
     // Tasks
-    Route::get('/tasks', [\App\Http\Controllers\Employee\TaskController::class, 'index']);
-    Route::get('/tasks/{task}', [\App\Http\Controllers\Employee\TaskController::class, 'show']);
-    Route::post('/tasks/{task}/status', [\App\Http\Controllers\Employee\TaskController::class, 'updateStatus']);
+    Route::get('/tasks', [TaskApiController::class, 'index']);
+    Route::get('/tasks/{task}', [TaskApiController::class, 'show']);
+    Route::post('/tasks/{task}/status', [TaskApiController::class, 'updateStatus']);
+    Route::post('/tasks/{task}/comments', [TaskApiController::class, 'addComment']);
 
     // Work Reports
-    Route::get('/work-reports', [\App\Http\Controllers\Employee\WorkReportController::class, 'index']);
-    Route::post('/work-reports', [\App\Http\Controllers\Employee\WorkReportController::class, 'store']);
-    Route::post('/work-reports/{report}/submit', [\App\Http\Controllers\Employee\WorkReportController::class, 'submit']);
+    Route::get('/work-reports', [WorkReportApiController::class, 'index']);
+    Route::post('/work-reports', [WorkReportApiController::class, 'store']);
+    Route::get('/work-reports/{report}', [WorkReportApiController::class, 'show']);
+    Route::post('/work-reports/{report}/submit', [WorkReportApiController::class, 'submit']);
 
     // Settings (read only for public)
     Route::get('/settings', function () {
