@@ -225,6 +225,18 @@
                 <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
                     <i class="bi bi-kanban"></i> Tasks
                 </a>
+                <a href="{{ route('admin.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.work-reports.*') ? 'active' : '' }}">
+                    <i class="bi bi-file-earmark-check"></i> Work Reports
+                </a>
+                <a href="{{ route('admin.timesheets.index') }}" class="sidebar-link {{ request()->routeIs('admin.timesheets.*') ? 'active' : '' }}">
+                    <i class="bi bi-table"></i> Timesheets
+                </a>
+                <a href="{{ route('admin.teams.index') }}" class="sidebar-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
+                    <i class="bi bi-people-fill"></i> Teams
+                </a>
+                <a href="{{ route('admin.shifts.index') }}" class="sidebar-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
+                    <i class="bi bi-calendar-range"></i> Shifts
+                </a>
 
                 <div class="nav-section-title">Reports</div>
                 <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
@@ -249,6 +261,11 @@
                 </a>
 
                 <div class="nav-section-title">System</div>
+                <a href="{{ route('admin.queue.index') }}" class="sidebar-link {{ request()->routeIs('admin.queue.*') ? 'active' : '' }}">
+                    <i class="bi bi-cpu"></i> Queue Monitor
+                    @php $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count(); @endphp
+                    @if($failedJobs > 0) <span class="badge bg-danger">{{ $failedJobs }}</span> @endif
+                </a>
                 <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> Settings
                 </a>
@@ -306,6 +323,18 @@
                     </ol>
                 </nav>
             </div>
+
+            {{-- Global Search --}}
+            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+            <div class="position-relative d-none d-lg-block ms-3" style="width:280px" id="globalSearchWrapper">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="globalSearch" class="form-control border-start-0 ps-0"
+                           placeholder="Search transactions, users, employees..." autocomplete="off">
+                </div>
+                <div id="searchDropdown" class="dropdown-menu w-100 shadow p-0 mt-1" style="display:none; max-height:400px; overflow-y:auto;"></div>
+            </div>
+            @endif
 
             <div class="ms-auto d-flex align-items-center gap-3">
                 <!-- Language Switcher -->
@@ -493,6 +522,49 @@
 
     // Load notifications on page load
     loadNotifications();
+
+    // ── Global Search ────────────────────────────────────────────────────────
+    const searchInput = document.getElementById('globalSearch');
+    const searchDropdown = document.getElementById('searchDropdown');
+    let searchTimer;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimer);
+            const q = this.value.trim();
+            if (q.length < 2) { searchDropdown.style.display = 'none'; return; }
+
+            searchTimer = setTimeout(() => {
+                $.get('/admin/search', { q }, function (res) {
+                    if (!res.results || !res.results.length) {
+                        searchDropdown.innerHTML = '<div class="p-3 text-muted small text-center">No results found</div>';
+                    } else {
+                        const colorMap = { primary:'primary', success:'success', info:'info', warning:'warning', danger:'danger' };
+                        searchDropdown.innerHTML = res.results.map(r => `
+                            <a class="dropdown-item d-flex align-items-start gap-2 py-2 border-bottom" href="${r.url}">
+                                <span class="text-${r.color} mt-1"><i class="bi bi-${r.icon} fs-5"></i></span>
+                                <div>
+                                    <div class="small fw-semibold">${r.title}</div>
+                                    <div class="text-muted" style="font-size:.7rem">${r.type} · ${r.subtitle}</div>
+                                </div>
+                            </a>
+                        `).join('');
+                    }
+                    searchDropdown.style.display = 'block';
+                }).fail(() => { searchDropdown.style.display = 'none'; });
+            }, 300);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!document.getElementById('globalSearchWrapper')?.contains(e.target)) {
+                searchDropdown.style.display = 'none';
+            }
+        });
+
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { searchDropdown.style.display = 'none'; this.value = ''; }
+        });
+    }
     setInterval(loadNotifications, 30000);
 
     // Initialize DataTables

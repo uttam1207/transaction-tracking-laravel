@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Jenssegers\Agent\Agent;
@@ -24,10 +25,30 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
+        $rules = [
+            'email'    => 'required|email',
             'password' => 'required',
-        ]);
+        ];
+
+        if (config('services.recaptcha.secret_key')) {
+            $rules['g-recaptcha-response'] = 'required';
+        }
+
+        $request->validate($rules);
+
+        // Verify reCAPTCHA with Google
+        if (config('services.recaptcha.secret_key') && $request->input('g-recaptcha-response')) {
+            $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+                'secret'   => config('services.recaptcha.secret_key'),
+                'response' => $request->input('g-recaptcha-response'),
+                'remoteip' => $request->ip(),
+            ]);
+            if (!($response->json('success') ?? false)) {
+                throw ValidationException::withMessages([
+                    'g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.',
+                ]);
+            }
+        }
 
         // Rate limiting
         $key = 'login.' . $request->ip();
@@ -172,7 +193,7 @@ class LoginController extends Controller
         for ($i = 0; $i < strlen($secret); $i++) {
             $pos = strpos($base32Chars, $secret[$i]);
             if ($pos !== false) {
-                $binaryKey .= str_pad(decbin($pos), 5, '0', STR_PAD_LEFT);
+                $binaryKey .= str_pad(decbin($pos), 5, '0', \STR_PAD_LEFT);
             }
         }
 
@@ -191,6 +212,6 @@ class LoginController extends Controller
             (ord($hash[$offset + 3]) & 0xff)
         ) % 1000000;
 
-        return str_pad($code, 6, '0', STR_PAD_LEFT);
+        return str_pad($code, 6, '0', \STR_PAD_LEFT);
     }
 }

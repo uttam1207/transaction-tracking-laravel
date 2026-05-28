@@ -184,6 +184,37 @@
     </div>
 </div>
 
+<!-- ── Drag-Drop Widget Toolbar ─────────────────────────────────────────── -->
+<div class="d-flex align-items-center gap-2 mb-3">
+    <span class="small text-muted">Widgets:</span>
+    <button class="btn btn-xs btn-outline-secondary py-0 px-2" id="toggleWidgets" title="Toggle drag mode">
+        <i class="bi bi-grid-3x3-gap"></i> Arrange
+    </button>
+    <button class="btn btn-xs btn-outline-danger py-0 px-2 d-none" id="resetLayout">
+        <i class="bi bi-arrow-counterclockwise"></i> Reset Layout
+    </button>
+    <span class="badge bg-secondary small d-none" id="dragHint">Drag cards to rearrange</span>
+</div>
+
+<div id="widgetGrid" class="row g-3 mb-3">
+    <div class="col-12" data-widget="quick-stats">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold d-flex justify-content-between">
+                <span><i class="bi bi-lightning me-1 text-warning"></i>Quick Stats</span>
+                <button class="btn btn-xs btn-outline-secondary widget-hide py-0 px-1"><i class="bi bi-dash"></i></button>
+            </div>
+            <div class="card-body widget-body">
+                <div class="row g-2 text-center">
+                    <div class="col-3"><div class="fw-bold text-primary">{{ $stats['total_transactions'] }}</div><div class="small text-muted">Transactions</div></div>
+                    <div class="col-3"><div class="fw-bold text-success">${{ number_format($stats['total_revenue'],0) }}</div><div class="small text-muted">Revenue</div></div>
+                    <div class="col-3"><div class="fw-bold text-danger">{{ $stats['fraud_alerts'] }}</div><div class="small text-muted">Fraud Alerts</div></div>
+                    <div class="col-3"><div class="fw-bold text-info">{{ $stats['active_employees'] }}</div><div class="small text-muted">Active Employees</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Recent Transactions & Top Employees -->
 <div class="row g-3">
     <div class="col-lg-8">
@@ -266,7 +297,76 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+.sortable-ghost  { opacity: .4; }
+.sortable-chosen { box-shadow: 0 0 0 3px rgba(79,70,229,.4); }
+#widgetGrid [data-widget] { cursor: default; }
+#widgetGrid.drag-mode [data-widget] { cursor: grab; }
+#widgetGrid.drag-mode .card { border: 2px dashed rgba(79,70,229,.4); }
+</style>
+@endpush
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+// ── Drag-drop widgets ────────────────────────────────────────────────────────
+const widgetGrid = document.getElementById('widgetGrid');
+let sortable = null;
+
+function getStoredOrder() {
+    try { return JSON.parse(localStorage.getItem('dashboard_widget_order') || 'null'); } catch { return null; }
+}
+
+function applyStoredOrder() {
+    const order = getStoredOrder();
+    if (!order) return;
+    order.forEach(id => {
+        const el = widgetGrid.querySelector(`[data-widget="${id}"]`);
+        if (el) widgetGrid.appendChild(el);
+    });
+}
+
+function saveOrder() {
+    const order = [...widgetGrid.querySelectorAll('[data-widget]')].map(el => el.dataset.widget);
+    localStorage.setItem('dashboard_widget_order', JSON.stringify(order));
+}
+
+applyStoredOrder();
+
+document.getElementById('toggleWidgets').addEventListener('click', function () {
+    const active = widgetGrid.classList.toggle('drag-mode');
+    document.getElementById('dragHint').classList.toggle('d-none', !active);
+    document.getElementById('resetLayout').classList.toggle('d-none', !active);
+    this.innerHTML = active ? '<i class="bi bi-check2"></i> Done' : '<i class="bi bi-grid-3x3-gap"></i> Arrange';
+
+    if (active && !sortable) {
+        sortable = Sortable.create(widgetGrid, {
+            animation: 150, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen',
+            onEnd: saveOrder,
+        });
+    } else if (!active && sortable) {
+        sortable.destroy(); sortable = null;
+    }
+});
+
+document.getElementById('resetLayout').addEventListener('click', function () {
+    localStorage.removeItem('dashboard_widget_order');
+    location.reload();
+});
+
+// Widget collapse/expand
+document.querySelectorAll('.widget-hide').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const body = this.closest('.card').querySelector('.widget-body');
+        const icon = this.querySelector('i');
+        if (body) {
+            body.style.display = body.style.display === 'none' ? '' : 'none';
+            icon.className = body.style.display === 'none' ? 'bi bi-plus' : 'bi bi-dash';
+        }
+    });
+});
+</script>
 <script>
 // Transaction Chart
 const txData = @json($transactionChart);

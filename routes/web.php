@@ -14,7 +14,13 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\QueueMonitorController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\ShiftController;
+use App\Http\Controllers\Admin\TeamController;
+use App\Http\Controllers\Admin\TimesheetController;
+use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
@@ -75,12 +81,17 @@ Route::prefix('admin')
     // Employee Management
     Route::resource('employees', EmployeeController::class);
     Route::get('/employees/{employee}/performance', [EmployeeController::class, 'performance'])->name('employees.performance');
+    Route::get('/employees/export/excel', [EmployeeController::class, 'exportExcel'])->name('employees.export.excel');
+    Route::get('/employees/export/csv', [EmployeeController::class, 'exportCsv'])->name('employees.export.csv');
+    Route::get('/employees/import/template', [EmployeeController::class, 'importTemplate'])->name('employees.import.template');
+    Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
 
     // Transaction Management
     Route::resource('transactions', TransactionController::class)->except(['edit']);
     Route::post('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status');
     Route::get('/transactions-export/csv', [TransactionController::class, 'exportCsv'])->name('transactions.export.csv');
     Route::get('/transactions-export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
+    Route::get('/transactions-export/excel', [TransactionController::class, 'exportExcel'])->name('transactions.export.excel');
 
     // Fraud Alerts
     Route::get('/fraud-alerts', [FraudAlertController::class, 'index'])->name('fraud-alerts.index');
@@ -119,6 +130,39 @@ Route::prefix('admin')
 
     // Project Management
     Route::resource('projects', ProjectController::class)->except(['create', 'edit']);
+
+    // Timesheet Management
+    Route::get('/timesheets', [TimesheetController::class, 'index'])->name('timesheets.index');
+    Route::post('/timesheets/{timesheet}/approve', [TimesheetController::class, 'approve'])->name('timesheets.approve');
+    Route::post('/timesheets/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('timesheets.reject');
+    Route::post('/timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
+
+    // Team Management
+    Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
+    Route::post('/teams/assign', [TeamController::class, 'assignTeam'])->name('teams.assign');
+    Route::delete('/teams/{employee}/remove', [TeamController::class, 'removeFromTeam'])->name('teams.remove');
+
+    // Shift Management
+    Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
+    Route::patch('/shifts/{employee}', [ShiftController::class, 'updateShift'])->name('shifts.update');
+    Route::post('/shifts/bulk-assign', [ShiftController::class, 'bulkAssign'])->name('shifts.bulk-assign');
+
+    // Work Report Review (Admin/Manager)
+    Route::get('/work-reports', [AdminWorkReportController::class, 'index'])->name('work-reports.index');
+    Route::get('/work-reports/{workReport}', [AdminWorkReportController::class, 'show'])->name('work-reports.show');
+    Route::post('/work-reports/{workReport}/approve', [AdminWorkReportController::class, 'approve'])->name('work-reports.approve');
+    Route::post('/work-reports/{workReport}/reject', [AdminWorkReportController::class, 'reject'])->name('work-reports.reject');
+    Route::post('/work-reports/bulk-approve', [AdminWorkReportController::class, 'bulkApprove'])->name('work-reports.bulk-approve');
+
+    // Queue Monitor
+    Route::get('/queue', [QueueMonitorController::class, 'index'])->name('queue.index');
+    Route::post('/queue/{uuid}/retry', [QueueMonitorController::class, 'retry'])->name('queue.retry');
+    Route::post('/queue/retry-all', [QueueMonitorController::class, 'retryAll'])->name('queue.retry-all');
+    Route::delete('/queue/failed/{uuid}', [QueueMonitorController::class, 'deleteFailedJob'])->name('queue.delete-failed');
+    Route::post('/queue/flush', [QueueMonitorController::class, 'flushFailed'])->name('queue.flush');
+
+    // Global Search
+    Route::get('/search', [SearchController::class, 'search'])->name('search');
 
     // Settings
     Route::get('/settings/{group?}', [SettingController::class, 'index'])->name('settings.index');

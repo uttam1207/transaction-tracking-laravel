@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\TransactionsExport;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
 use App\Services\FraudDetectionService;
 use App\Services\NotificationService;
-use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
@@ -204,5 +205,14 @@ class TransactionController extends Controller
         $transactions = Transaction::with('user')->latest()->limit(100)->get();
         $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions'));
         return $pdf->download('transactions_' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $filters = $request->only(['status', 'type', 'date_from', 'date_to', 'is_flagged']);
+        return Excel::download(
+            new TransactionsExport($filters),
+            'transactions_' . now()->format('Y-m-d') . '.xlsx'
+        );
     }
 }

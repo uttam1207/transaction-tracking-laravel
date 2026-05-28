@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\EmployeesExport;
 use App\Http\Controllers\Controller;
+use App\Imports\EmployeesImport;
+use App\Models\Department;
 use App\Models\Employee;
 use App\Models\User;
-use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
 {
@@ -78,7 +81,7 @@ class EmployeeController extends Controller
         $user->assignRole('employee');
 
         // Generate employee ID
-        $employeeId = 'EMP-' . str_pad(Employee::count() + 1, 5, '0', STR_PAD_LEFT);
+        $employeeId = 'EMP-' . str_pad(Employee::count() + 1, 5, '0', \STR_PAD_LEFT);
 
         $employee = Employee::create([
             'user_id' => $user->id,
@@ -156,6 +159,49 @@ class EmployeeController extends Controller
         ];
 
         return response()->json($stats);
+    }
+
+    public function exportExcel()
+    {
+        return Excel::download(new EmployeesExport(), 'employees_' . now()->format('Y-m-d') . '.xlsx');
+    }
+
+    public function exportCsv()
+    {
+        return Excel::download(new EmployeesExport(), 'employees_' . now()->format('Y-m-d') . '.csv', \Maatwebsite\Excel\Excel::CSV);
+    }
+
+    public function importTemplate()
+    {
+        $headers = ['employee_id','full_name','email','password','department','designation',
+                    'employment_type','work_location','team','joining_date'];
+        $filename = 'employees_import_template.csv';
+        $callback = function () use ($headers) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, $headers);
+            fputcsv($handle, ['EMP-001','John Doe','john@example.com','Password@123','Engineering',
+                              'Developer','full_time','office','Backend Team',date('Y-m-d')]);
+            fclose($handle);
+        };
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,xls,csv|max:2048']);
+
+        $import = new EmployeesImport();
+        Excel::import($import, $request->file('file'));
+
+        $msg = "Import complete: {$import->imported} imported, {$import->skipped} skipped.";
+        if (!empty($import->errors)) {
+            $msg .= ' Errors: ' . implode('; ', array_slice($import->errors, 0, 3));
+        }
+
+        return back()->with('success', $msg);
     }
 
     private function getAttendancePercentage(Employee $employee): float

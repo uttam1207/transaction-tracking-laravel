@@ -34,13 +34,22 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="form-check">
             <input class="form-check-input" type="checkbox" name="remember" id="remember">
             <label class="form-check-label small" for="remember">Remember me</label>
         </div>
         <a href="{{ route('password.request') }}" class="small text-decoration-none text-primary">Forgot password?</a>
     </div>
+
+    @if(config('services.recaptcha.site_key'))
+    <div class="mb-3">
+        <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+        @error('g-recaptcha-response')
+            <div class="text-danger small mt-1">{{ $message }}</div>
+        @enderror
+    </div>
+    @endif
 
     <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
         <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
