@@ -579,18 +579,16 @@
     });
     </script>
 
-    <!-- Laravel Echo / Real-time WebSocket -->
-    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <!-- Laravel Echo / Real-time WebSocket (Laravel Reverb) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>
     <script>
-    // Initialise Laravel Echo with Pusher-compatible WebSocket (Reverb / Soketi)
+    // Initialise Laravel Echo with Laravel Reverb
     window.Echo = new LaravelEcho.default({
-        broadcaster: 'pusher',
-        key:         '{{ config('broadcasting.connections.pusher.key') }}',
-        wsHost:      '{{ config('broadcasting.connections.pusher.options.host', '127.0.0.1') }}',
-        wsPort:      {{ config('broadcasting.connections.pusher.options.port', 6001) }},
-        wssPort:     {{ config('broadcasting.connections.pusher.options.port', 6001) }},
-        cluster:     '{{ config('broadcasting.connections.pusher.options.cluster', 'mt1') }}',
+        broadcaster: 'reverb',
+        key:         '{{ env('REVERB_APP_KEY') }}',
+        wsHost:      '{{ env('REVERB_HOST', '127.0.0.1') }}',
+        wsPort:      {{ env('REVERB_PORT', 8080) }},
+        wssPort:     {{ env('REVERB_PORT', 8080) }},
         forceTLS:    false,
         enabledTransports: ['ws', 'wss'],
         auth: {
