@@ -12,6 +12,7 @@ use Database\Seeders\FraudRuleSeeder;
 use Database\Seeders\HolidaySeeder;
 use Database\Seeders\TransactionSeeder;
 use Database\Seeders\ServicePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
             HolidaySeeder::class,
             TransactionSeeder::class,
             ServicePermissionSeeder::class,
+            RoleSeeder::class,
         ]);
     }
 }

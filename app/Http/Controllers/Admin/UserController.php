@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -55,7 +56,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:super_admin,admin,manager,employee,auditor,viewer',
+            'role' => ['required', 'string', \Illuminate\Validation\Rule::in(Role::pluck('name')->toArray())],
             'department_id' => 'nullable|exists:departments,id',
             'password' => 'required|min:8|confirmed',
             'status' => 'required|in:active,inactive,pending,suspended',
@@ -100,7 +101,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:super_admin,admin,manager,employee,auditor,viewer',
+            'role' => ['required', 'string', \Illuminate\Validation\Rule::in(Role::pluck('name')->toArray())],
             'department_id' => 'nullable|exists:departments,id',
             'status' => 'required|in:active,inactive,pending,suspended',
         ]);

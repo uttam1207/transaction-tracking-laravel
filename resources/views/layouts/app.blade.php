@@ -604,6 +604,10 @@
                     <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
                     <span class="nav-label">Wallets</span>
                 </a>
+                <a href="{{ route('admin.roles.index') }}" class="sidebar-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
+                    <span class="nav-label">Roles</span>
+                </a>
                 <a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
                     <span class="nav-label">Permissions</span>

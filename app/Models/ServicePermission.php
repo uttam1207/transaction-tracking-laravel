@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use App\Models\User;
 
 class ServicePermission extends Model
 {
@@ -37,8 +38,13 @@ class ServicePermission extends Model
         return in_array($user->role, $permission->allowed_roles ?? []);
     }
 
-    public static function clearCache(string $serviceKey): void
+    public static function clearCache(string $serviceKey = ''): void
     {
-        Cache::forget("svc_perm_{$serviceKey}");
+        if ($serviceKey) {
+            Cache::forget("svc_perm_{$serviceKey}");
+            return;
+        }
+        // Clear cache for all services
+        static::pluck('service_key')->each(fn($key) => Cache::forget("svc_perm_{$key}"));
     }
 }

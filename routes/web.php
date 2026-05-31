@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ServicePermissionController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
@@ -191,6 +192,9 @@ Route::prefix('admin')
 
         Route::get('/permissions', [ServicePermissionController::class, 'index'])->name('permissions.index');
         Route::put('/permissions/{servicePermission}', [ServicePermissionController::class, 'update'])->name('permissions.update');
+
+        // Role Management
+        Route::resource('roles', RoleController::class)->except(['show']);
     });
 });
 

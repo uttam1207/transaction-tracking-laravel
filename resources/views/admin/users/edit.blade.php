@@ -92,9 +92,9 @@
                             <label class="flabel">Role <span class="req">*</span></label>
                             <select name="role" class="form-select @error('role') is-invalid @enderror" required
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                @foreach(['super_admin','admin','manager','employee','auditor','viewer'] as $r)
-                                    <option value="{{ $r }}" {{ old('role', $user->role) === $r ? 'selected' : '' }}>
-                                        {{ ucwords(str_replace('_', ' ', $r)) }}
+                                @foreach(\App\Models\Role::where('is_active', true)->orderBy('sort_order')->get() as $r)
+                                    <option value="{{ $r->name }}" {{ old('role', $user->role) === $r->name ? 'selected' : '' }}>
+                                        {{ $r->display_name ?: ucwords(str_replace('_', ' ', $r->name)) }}
                                     </option>
                                 @endforeach
                             </select>
