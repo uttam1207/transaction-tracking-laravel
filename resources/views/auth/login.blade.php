@@ -1,31 +1,40 @@
 @extends('layouts.auth')
-@section('title', 'Login')
-@section('subtitle', 'Sign in to your account')
+@section('title', 'Welcome back')
+@section('subtitle', 'Sign in to your account to continue')
 
 @section('content')
 <form method="POST" action="{{ route('login') }}">
     @csrf
-    <div class="mb-3">
-        <label for="email" class="form-label">Email Address</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-            <input type="email" name="email" id="email" value="{{ old('email') }}"
+
+    {{-- Email --}}
+    <div class="auth-field">
+        <label for="email">Email Address</label>
+        <div class="auth-input-wrap">
+            <i class="bi bi-envelope input-icon"></i>
+            <input type="email" name="email" id="email"
+                   value="{{ old('email') }}"
                    class="form-control @error('email') is-invalid @enderror"
-                   placeholder="you@example.com" required autofocus>
+                   placeholder="you@company.com" required autofocus>
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>
     </div>
 
-    <div class="mb-3">
-        <label for="password" class="form-label">Password</label>
-        <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+    {{-- Password --}}
+    <div class="auth-field">
+        <label for="password">
+            Password
+            <a href="{{ route('password.request') }}"
+               class="float-end text-decoration-none"
+               style="color:#4f46e5; font-weight:500;">Forgot password?</a>
+        </label>
+        <div class="auth-input-wrap">
+            <i class="bi bi-lock input-icon"></i>
             <input type="password" name="password" id="password"
-                   class="form-control @error('password') is-invalid @enderror"
+                   class="form-control pe-5 @error('password') is-invalid @enderror"
                    placeholder="••••••••" required>
-            <button type="button" class="btn btn-outline-secondary password-toggle" data-target="password">
+            <button type="button" class="password-toggle" data-target="password">
                 <i class="bi bi-eye"></i>
             </button>
             @error('password')
@@ -34,16 +43,18 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="remember" id="remember">
-            <label class="form-check-label small" for="remember">Remember me</label>
-        </div>
-        <a href="{{ route('password.request') }}" class="small text-decoration-none text-primary">Forgot password?</a>
+    {{-- Remember me --}}
+    <div class="d-flex align-items-center mb-4">
+        <input class="form-check-input me-2" type="checkbox" name="remember" id="remember"
+               style="border-radius:5px; cursor:pointer;">
+        <label class="form-check-label small" for="remember" style="color:#6b7280; cursor:pointer;">
+            Keep me signed in for 30 days
+        </label>
     </div>
 
+    {{-- reCAPTCHA --}}
     @if(config('services.recaptcha.site_key'))
-    <div class="mb-3">
+    <div class="mb-4">
         <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
         @error('g-recaptcha-response')
             <div class="text-danger small mt-1">{{ $message }}</div>
@@ -51,19 +62,28 @@
     </div>
     @endif
 
-    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+    <button type="submit" class="btn btn-auth">
         <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
     </button>
 </form>
 
-<div class="text-center mt-4">
-    <span class="small text-muted">Don't have an account?</span>
-    <a href="{{ route('register') }}" class="small text-primary text-decoration-none fw-semibold ms-1">Create Account</a>
+<div class="text-center mt-4" style="font-size:.875rem; color:#6b7280;">
+    Don't have an account?
+    <a href="{{ route('register') }}" class="fw-semibold text-decoration-none ms-1" style="color:#4f46e5;">
+        Create one free
+    </a>
 </div>
 
-<div class="text-center mt-3 p-3 rounded" style="background: #f0f4ff;">
-    <div class="small text-muted mb-1"><strong>Demo Credentials</strong></div>
-    <div class="small">Admin: <code>admin@demo.com</code> / <code>Admin@123</code></div>
-    <div class="small">Employee: <code>emp@demo.com</code> / <code>Admin@123</code></div>
+{{-- Demo credentials --}}
+<div class="demo-box">
+    <div class="demo-title">Demo Credentials</div>
+    <div class="demo-row">
+        <span>Admin</span>
+        <span><code>admin@demo.com</code> / <code>Admin@123</code></span>
+    </div>
+    <div class="demo-row">
+        <span>Employee</span>
+        <span><code>emp@demo.com</code> / <code>Admin@123</code></span>
+    </div>
 </div>
 @endsection
