@@ -29,6 +29,7 @@ class DashboardService
             'fraud_alerts_critical' => FraudAlert::critical()->open()->count(),
             'active_users' => User::active()->count(),
             'total_employees' => Employee::active()->count(),
+            'active_employees' => Employee::active()->count(),
             'present_today' => Attendance::whereDate('date', $today)->whereIn('status', ['present', 'late'])->count(),
             'on_leave_today' => Leave::where('status', 'approved')
                 ->where('from_date', '<=', $today)
