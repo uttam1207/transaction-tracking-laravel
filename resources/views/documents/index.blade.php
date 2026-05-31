@@ -53,7 +53,8 @@
     @foreach($documents as $doc)
     <div class="col-md-6 col-lg-4">
         <div class="card h-100 border hover-shadow">
-            <div class="card-body">
+            <a href="{{ route('documents.preview', $doc) }}" target="_blank"
+               class="card-body text-decoration-none text-body d-block">
                 <div class="d-flex align-items-start gap-3">
                     <div class="fs-1">
                         <i class="bi {{ $doc->file_icon }}"></i>
@@ -71,9 +72,12 @@
                                 {{ $doc->file_size_formatted }}
                             </span>
                         </div>
+                        <div class="text-primary mt-2" style="font-size:.72rem">
+                            <i class="bi bi-eye me-1"></i>Click to view
+                        </div>
                     </div>
                 </div>
-            </div>
+            </a>
             <div class="card-footer bg-transparent py-2 px-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-2">
@@ -84,6 +88,10 @@
                         </div>
                     </div>
                     <div class="d-flex gap-1">
+                        <a href="{{ route('documents.preview', $doc) }}" target="_blank"
+                           class="btn btn-sm btn-outline-secondary py-0 px-2" title="View in browser">
+                            <i class="bi bi-eye"></i>
+                        </a>
                         <a href="{{ route('documents.download', $doc) }}"
                            class="btn btn-sm btn-outline-primary py-0 px-2" title="Download">
                             <i class="bi bi-download"></i>

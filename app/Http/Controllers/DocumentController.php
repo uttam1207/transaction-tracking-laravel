@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -52,6 +53,18 @@ class DocumentController extends Controller
         ]);
 
         return redirect()->route('documents.index')->with('success', 'Document uploaded successfully.');
+    }
+
+    public function preview(Document $document)
+    {
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'File not found.');
+        }
+
+        // Serve inline so the browser opens it (PDF viewer, image, etc.)
+        return Storage::disk('public')->response($document->file_path, $document->file_name, [
+            'Content-Disposition' => 'inline; filename="' . $document->file_name . '"',
+        ]);
     }
 
     public function download(Document $document)
