@@ -168,9 +168,6 @@ textarea.form-control { height: auto !important; }
                         <div class="input-currency-wrap">
                             <select name="currency" class="form-select currency-select">
                                 <option value="INR" selected>INR</option>
-                                <option value="USD">USD</option>
-                                <option value="EUR">EUR</option>
-                                <option value="GBP">GBP</option>
                             </select>
                             <input type="number" name="amount" class="form-control amount-input" step="0.01" min="0.01" placeholder="0.00" required>
                         </div>
