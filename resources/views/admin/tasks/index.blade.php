@@ -135,10 +135,7 @@
                     <td>
                         <div class="d-flex gap-1">
                             @if(in_array($ts,['review','in_progress']))
-                            <form action="{{ route('admin.tasks.approve', $task) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="act-btn act-green" title="Approve"><i class="bi bi-check2"></i></button>
-                            </form>
+                            <button class="act-btn act-green" title="Approve" onclick="approveTask('{{ route('admin.tasks.approve', $task) }}')"><i class="bi bi-check2"></i></button>
                             @endif
                             <button class="act-btn act-edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="bi bi-pencil"></i></button>
                             <button class="act-btn act-delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="bi bi-trash"></i></button>
@@ -166,7 +163,7 @@
                 <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2 text-primary"></i>Create New Task</h6>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.tasks.store') }}" method="POST">
+            <form id="createTaskForm" action="{{ route('admin.tasks.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="row g-3">
@@ -218,13 +215,47 @@
 
 @push('scripts')
 <script>
+const CSRF = () => document.querySelector('meta[name=csrf-token]').content;
+
+// Create task via fetch (prevent plain form submit showing raw JSON)
+document.getElementById('createTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('[type=submit]');
+    btn.disabled = true;
+    fetch(this.action, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF() },
+        body: new FormData(this)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+            APP.toast('Task created!');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            btn.disabled = false;
+            APP.toast(data.message || 'Error creating task.', 'danger');
+        }
+    }).catch(() => { btn.disabled = false; });
+});
+
+function approveTask(url) {
+    APP.confirm('Approve task?', 'Mark this task as approved.', function() {
+        fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF() }
+        }).then(r => r.json()).then(data => {
+            if (data.success) { APP.toast('Task approved!'); setTimeout(() => location.reload(), 800); }
+        });
+    });
+}
+
 function deleteTask(id) {
     APP.confirm('Delete task?', 'This cannot be undone.', function() {
         fetch(`/admin/tasks/${id}`, {
             method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+            headers: { 'X-CSRF-TOKEN': CSRF() }
         }).then(r => r.json()).then(data => {
-            if (data.success) { APP.toast('Task deleted!'); setTimeout(() => location.reload(), 1000); }
+            if (data.success) { APP.toast('Task deleted!'); setTimeout(() => location.reload(), 800); }
         });
     });
 }
