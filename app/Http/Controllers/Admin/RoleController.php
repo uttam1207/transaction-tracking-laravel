@@ -13,10 +13,18 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::orderBy('sort_order')->orderBy('id')->get()->map(function ($role) {
-            $role->users_count = User::where('role', $role->name)->count();
-            return $role;
-        });
+        try {
+            $roles = Role::orderBy('sort_order')->orderBy('id')->get()->map(function ($role) {
+                $role->users_count = User::where('role', $role->name)->count();
+                return $role;
+            });
+        } catch (\Throwable $e) {
+            // Fallback if migration hasn't run yet on this environment
+            $roles = Role::orderBy('id')->get()->map(function ($role) {
+                $role->users_count = User::where('role', $role->name)->count();
+                return $role;
+            });
+        }
 
         return view('admin.roles.index', compact('roles'));
     }

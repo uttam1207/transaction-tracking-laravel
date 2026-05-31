@@ -76,7 +76,7 @@
                 <div class="row g-2">
                     @foreach($services as $svc)
                     <div class="col-md-6">
-                        <label style="display:flex;align-items:center;gap-10px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:border-color .2s,background .2s;gap:10px;"
+                        <label style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;transition:border-color .2s,background .2s;"
                                class="svc-label" data-id="{{ $svc->id }}">
                             <input type="checkbox" name="service_permissions[]" value="{{ $svc->id }}"
                                    class="svc-check" style="width:16px;height:16px;accent-color:#4f46e5;flex-shrink:0;cursor:pointer;">
