@@ -7,142 +7,128 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h5 class="mb-0 fw-bold">User Profile</h5>
-        <div class="text-muted small">Detailed view for {{ $user->name }}</div>
-    </div>
-    <div class="d-flex gap-2">
-        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-primary btn-sm">
+
+<a href="{{ route('admin.users.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Users</a>
+
+@php
+    $statusColor = match($user->status) { 'active'=>'active', 'inactive'=>'inactive', 'suspended'=>'danger', default=>'warning' };
+@endphp
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{{ $user->avatar_url }}" class="rounded-circle"
+                style="width:56px;height:56px;border:2.5px solid rgba(255,255,255,.4);object-fit:cover;" alt="">
+            <div>
+                <h4 style="margin:0;font-weight:800;">{{ $user->name }}</h4>
+                <p style="opacity:.8;margin:2px 0 0;font-size:.85rem;">{{ $user->email }}</p>
+            </div>
+        </div>
+        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);">
             <i class="bi bi-pencil me-1"></i>Edit User
-        </a>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left me-1"></i>Back
         </a>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Profile Card -->
+    {{-- Left: Profile --}}
     <div class="col-lg-4">
-        <div class="card text-center">
-            <div class="card-body py-4">
-                <img src="{{ $user->avatar_url }}" class="rounded-circle border mb-3" width="90" height="90" alt="">
-                <h6 class="fw-bold mb-1">{{ $user->name }}</h6>
-                <div class="text-muted small mb-2">{{ $user->email }}</div>
-                <span class="badge bg-primary-subtle text-primary">{{ ucwords(str_replace('_', ' ', $user->role)) }}</span>
-                <div class="mt-2">
-                    @if($user->status === 'active')
-                        <span class="badge bg-success-subtle text-success">Active</span>
-                    @elseif($user->status === 'inactive')
-                        <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
-                    @elseif($user->status === 'suspended')
-                        <span class="badge bg-danger-subtle text-danger">Suspended</span>
-                    @else
-                        <span class="badge bg-warning-subtle text-warning">Pending</span>
-                    @endif
-                </div>
+        <div class="info-card text-center" style="padding:24px 20px;">
+            <img src="{{ $user->avatar_url }}" class="rounded-circle mx-auto mb-3"
+                style="width:88px;height:88px;border:3px solid #e0e7ff;object-fit:cover;display:block;" alt="">
+            <div style="font-size:1.05rem;font-weight:800;color:#111827;">{{ $user->name }}</div>
+            <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">{{ $user->email }}</div>
+            <div class="d-flex align-items-center justify-content-center gap-2 mt-3">
+                <span style="background:#ede9fe;color:#7c3aed;padding:3px 12px;border-radius:20px;font-size:.75rem;font-weight:700;">
+                    {{ ucwords(str_replace('_', ' ', $user->role)) }}
+                </span>
+                <span class="spill spill-{{ $statusColor }}" style="font-size:.75rem;">{{ ucfirst($user->status) }}</span>
             </div>
-            <div class="card-footer bg-transparent text-start">
-                <div class="d-flex flex-column gap-2 small">
+
+            <div style="border-top:1px solid #f3f4f6;margin-top:20px;padding-top:16px;text-align:left;">
+                <dl class="dl">
                     @if($user->phone)
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="bi bi-telephone me-1"></i>Phone</span>
-                        <span>{{ $user->phone }}</span>
-                    </div>
+                    <dt><i class="bi bi-telephone me-1 text-muted"></i>Phone</dt>
+                    <dd>{{ $user->phone }}</dd>
                     @endif
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="bi bi-at me-1"></i>Username</span>
-                        <span>{{ $user->username }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="bi bi-building me-1"></i>Department</span>
-                        <span>{{ $user->department?->name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="bi bi-calendar me-1"></i>Joined</span>
-                        <span>{{ $user->created_at->format('d M Y') }}</span>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span class="text-muted"><i class="bi bi-clock me-1"></i>Last Login</span>
-                        <span>{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</span>
-                    </div>
-                </div>
+                    <dt><i class="bi bi-at me-1 text-muted"></i>Username</dt>
+                    <dd style="font-family:monospace;color:#4f46e5;font-weight:700;">{{ $user->username }}</dd>
+                    <dt><i class="bi bi-building me-1 text-muted"></i>Department</dt>
+                    <dd>{{ $user->department?->name ?? 'N/A' }}</dd>
+                    <dt><i class="bi bi-calendar me-1 text-muted"></i>Joined</dt>
+                    <dd>{{ $user->created_at->format('d M Y') }}</dd>
+                    <dt><i class="bi bi-clock me-1 text-muted"></i>Last Login</dt>
+                    <dd>{{ $user->last_login_at?->diffForHumans() ?? 'Never' }}</dd>
+                </dl>
             </div>
         </div>
     </div>
 
-    <!-- Right Column -->
+    {{-- Right: Activity --}}
     <div class="col-lg-8">
-        <!-- Login History -->
-        <div class="card mb-4">
-            <div class="card-header py-3">
-                <h6 class="mb-0 fw-semibold">Recent Login History</h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">IP Address</th>
-                                <th>Browser / Device</th>
-                                <th>Status</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($user->loginHistories->take(10) as $login)
-                            <tr>
-                                <td class="ps-3 small">{{ $login->ip_address ?? 'N/A' }}</td>
-                                <td class="small">{{ $login->user_agent ? Str::limit($login->user_agent, 40) : 'N/A' }}</td>
-                                <td>
-                                    @if($login->status === 'success')
-                                        <span class="badge bg-success-subtle text-success">Success</span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger">Failed</span>
-                                    @endif
-                                </td>
-                                <td class="small text-muted">{{ $login->created_at->diffForHumans() }}</td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="text-center py-4 text-muted">No login history</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+        <div class="table-card mb-3">
+            <div class="card-header"><span class="card-title">Recent Login History</span></div>
+            <div class="table-responsive">
+                <table class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>IP Address</th>
+                            <th>Browser / Device</th>
+                            <th>Status</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($user->loginHistories->take(10) as $login)
+                        <tr>
+                            <td style="font-family:monospace;font-size:.82rem;color:#4f46e5;">{{ $login->ip_address ?? 'N/A' }}</td>
+                            <td style="font-size:.8rem;color:#6b7280;max-width:180px;">{{ $login->user_agent ? Str::limit($login->user_agent, 40) : 'N/A' }}</td>
+                            <td>
+                                <span class="spill spill-{{ $login->status === 'success' ? 'success' : 'danger' }}" style="font-size:.7rem;">
+                                    {{ ucfirst($login->status ?? 'unknown') }}
+                                </span>
+                            </td>
+                            <td style="font-size:.78rem;color:#9ca3af;">{{ $login->created_at->diffForHumans() }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="4">
+                            <div class="empty-state"><i class="bi bi-clock-history"></i><p>No login history</p></div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Audit Logs -->
-        <div class="card">
-            <div class="card-header py-3">
-                <h6 class="mb-0 fw-semibold">Recent Activity</h6>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3">Action</th>
-                                <th>Description</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($user->auditLogs->take(10) as $log)
-                            <tr>
-                                <td class="ps-3">
-                                    <span class="badge bg-primary-subtle text-primary small">{{ $log->action }}</span>
-                                </td>
-                                <td class="small">{{ Str::limit($log->description ?? $log->event ?? '', 60) }}</td>
-                                <td class="small text-muted">{{ $log->created_at->diffForHumans() }}</td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="3" class="text-center py-4 text-muted">No activity found</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+        <div class="table-card">
+            <div class="card-header"><span class="card-title">Recent Activity</span></div>
+            <div class="table-responsive">
+                <table class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>Description</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($user->auditLogs->take(10) as $log)
+                        <tr>
+                            <td>
+                                <span style="background:#eff6ff;color:#2563eb;padding:3px 9px;border-radius:6px;font-size:.72rem;font-weight:700;font-family:monospace;">
+                                    {{ $log->action }}
+                                </span>
+                            </td>
+                            <td style="font-size:.82rem;color:#6b7280;">{{ Str::limit($log->description ?? $log->event ?? '', 60) }}</td>
+                            <td style="font-size:.78rem;color:#9ca3af;">{{ $log->created_at->diffForHumans() }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="3">
+                            <div class="empty-state"><i class="bi bi-activity"></i><p>No activity found</p></div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

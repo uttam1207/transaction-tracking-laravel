@@ -1,189 +1,365 @@
 @extends('layouts.app')
-@section('title', 'Transaction Details')
+@section('title', 'Transaction — '.$transaction->transaction_id)
 
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('admin.transactions.index') }}">Transactions</a></li>
     <li class="breadcrumb-item active">{{ $transaction->transaction_id }}</li>
 @endsection
 
+@push('styles')
+<style>
+.detail-hero {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+.detail-hero::before {
+    content: ''; position: absolute; top: -50px; right: -30px;
+    width: 180px; height: 180px; background: rgba(255,255,255,.06); border-radius: 50%;
+}
+.tx-id-hero {
+    font-family: 'JetBrains Mono','Fira Code',monospace;
+    font-size: 1.1rem; font-weight: 800; letter-spacing: -.3px;
+}
+.hero-status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700;
+    backdrop-filter: blur(8px);
+}
+.hero-status-pill.success  { background: rgba(34,197,94,.2);  color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+.hero-status-pill.failed   { background: rgba(239,68,68,.2);  color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
+.hero-status-pill.pending  { background: rgba(234,179,8,.2);  color: #fde047; border: 1px solid rgba(234,179,8,.3); }
+.hero-status-pill.processing { background: rgba(59,130,246,.2); color: #93c5fd; border: 1px solid rgba(59,130,246,.3); }
+.hero-status-pill.cancelled  { background: rgba(107,114,128,.2); color: #d1d5db; border: 1px solid rgba(107,114,128,.3); }
+.hero-status-pill.reversed   { background: rgba(139,92,246,.2); color: #c4b5fd; border: 1px solid rgba(139,92,246,.3); }
+.hero-flagged-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(239,68,68,.25); color: #fca5a5; border: 1px solid rgba(239,68,68,.35);
+    padding: 6px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700;
+    backdrop-filter: blur(8px);
+}
+
+.info-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+.info-card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #6b7280;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.info-card-header i { color: #4f46e5; font-size: .9rem; }
+.info-card-body { padding: 20px; }
+
+.detail-label { font-size: .72rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; }
+.detail-val   { font-size: .9rem; color: #111827; font-weight: 500; }
+.detail-item  { margin-bottom: 16px; }
+.detail-item:last-child { margin-bottom: 0; }
+
+.amount-big { font-size: 2rem; font-weight: 800; color: #16a34a; letter-spacing: -.5px; line-height: 1; }
+.amount-type-debit .amount-big { color: #dc2626; }
+
+.party-box {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.party-box .party-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #9ca3af; margin-bottom: 6px; }
+.party-box .party-name  { font-size: .9rem; font-weight: 700; color: #111827; }
+.party-box .party-meta  { font-size: .75rem; color: #6b7280; margin-top: 2px; }
+
+.risk-gauge-wrap { text-align: center; padding: 8px 0 16px; }
+.risk-score-num  { font-size: 3rem; font-weight: 900; line-height: 1; }
+.risk-score-num.low  { color: #16a34a; }
+.risk-score-num.mid  { color: #d97706; }
+.risk-score-num.high { color: #dc2626; }
+.risk-bar-full { height: 10px; border-radius: 6px; background: #e5e7eb; overflow: hidden; margin: 10px 0 6px; }
+.risk-bar-fill { height: 100%; border-radius: 6px; }
+.risk-bar-fill.low  { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.risk-bar-fill.mid  { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.risk-bar-fill.high { background: linear-gradient(90deg, #ef4444, #f87171); }
+.risk-level-badge {
+    display: inline-flex; align-items: center;
+    padding: 5px 14px; border-radius: 20px; font-size: .78rem; font-weight: 700;
+}
+.risk-level-badge.low  { background: #dcfce7; color: #16a34a; }
+.risk-level-badge.mid  { background: #fef3c7; color: #92400e; }
+.risk-level-badge.high { background: #fee2e2; color: #dc2626; }
+
+.timeline-item { display: flex; gap: 14px; padding-bottom: 20px; position: relative; }
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item:not(:last-child)::before {
+    content: ''; position: absolute; left: 15px; top: 32px; bottom: 0;
+    width: 2px; background: #f3f4f6;
+}
+.tl-dot {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: #ede9fe; color: #7c3aed; font-size: .85rem;
+    position: relative; z-index: 1;
+}
+.tl-action { font-size: .85rem; font-weight: 700; color: #111827; }
+.tl-meta   { font-size: .75rem; color: #9ca3af; margin-top: 2px; }
+.tl-badge  { display: inline-flex; align-items: center; gap: 4px; }
+
+.update-status-card .form-select, .update-status-card .form-control {
+    border-radius: 8px; font-size: .85rem; border: 1.5px solid #e5e7eb;
+}
+.update-status-card .form-select:focus, .update-status-card .form-control:focus {
+    border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+}
+
+.fraud-alert-item {
+    background: #fff8f0;
+    border: 1px solid #fed7aa;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.fraud-alert-item:last-child { margin-bottom: 0; }
+.fa-severity { display: inline-flex; padding: 2px 8px; border-radius: 6px; font-size: .7rem; font-weight: 700; }
+.fa-severity.critical { background: #fee2e2; color: #dc2626; }
+.fa-severity.high     { background: #fed7aa; color: #c2410c; }
+.fa-severity.medium   { background: #fef3c7; color: #92400e; }
+.fa-severity.low      { background: #dcfce7; color: #16a34a; }
+
+.back-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: .82rem; color: #6b7280; text-decoration: none;
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #e5e7eb;
+    background: #fff; font-weight: 600;
+    transition: background .15s, color .15s;
+}
+.back-btn:hover { background: #f3f4f6; color: #374151; }
+</style>
+@endpush
+
 @section('content')
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h5 class="mb-1 fw-bold">{{ $transaction->transaction_id }}</h5>
-        <div class="text-muted small">Created {{ $transaction->created_at->format('M d, Y H:i:s') }}</div>
-    </div>
-    <div class="d-flex gap-2">
-        <span class="badge bg-{{ $transaction->status_badge }}-subtle text-{{ $transaction->status_badge }} fs-6 px-3 py-2">
-            {{ ucfirst($transaction->status) }}
-        </span>
-        @if($transaction->is_flagged)
-            <span class="badge bg-danger fs-6 px-3 py-2"><i class="bi bi-flag-fill me-1"></i>Flagged</span>
-        @endif
+
+{{-- Back + Hero --}}
+<div class="mb-3">
+    <a href="{{ route('admin.transactions.index') }}" class="back-btn">
+        <i class="bi bi-arrow-left"></i>Back to Transactions
+    </a>
+</div>
+
+<div class="detail-hero">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <div style="font-size:.72rem; opacity:.6; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;">Transaction</div>
+            <div class="tx-id-hero">{{ $transaction->transaction_id }}</div>
+            <div style="font-size:.8rem; opacity:.65; margin-top:4px;">
+                <i class="bi bi-clock me-1"></i>{{ $transaction->created_at->format('M d, Y · H:i:s') }}
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="hero-status-pill {{ $transaction->status }}">
+                <span style="width:7px;height:7px;border-radius:50%;background:currentColor;"></span>
+                {{ ucfirst($transaction->status) }}
+            </span>
+            @if($transaction->is_flagged)
+                <span class="hero-flagged-pill"><i class="bi bi-flag-fill"></i>Flagged for Fraud</span>
+            @endif
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
-    <!-- Transaction Details -->
+    {{-- Left Column --}}
     <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header py-3"><h6 class="mb-0 fw-semibold">Transaction Details</h6></div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <div class="small text-muted">Amount</div>
-                            <div class="h4 fw-bold text-success">{{ $transaction->currency }} {{ number_format($transaction->amount, 2) }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">Category</div>
-                            <div class="fw-semibold">{{ $transaction->category }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">Payment Method</div>
-                            <div>{{ $transaction->payment_method ?? 'N/A' }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">Reference</div>
-                            <div>{{ $transaction->reference ?? 'N/A' }}</div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <div class="small text-muted">Type</div>
-                            <span class="badge bg-{{ $transaction->type == 'debit' ? 'danger' : 'success' }}-subtle text-{{ $transaction->type == 'debit' ? 'danger' : 'success' }}">
-                                {{ ucfirst($transaction->type) }}
-                            </span>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">Fee</div>
-                            <div>{{ $transaction->currency }} {{ number_format($transaction->fee, 2) }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">Net Amount</div>
-                            <div class="fw-semibold">{{ $transaction->currency }} {{ number_format($transaction->net_amount, 2) }}</div>
-                        </div>
-                        <div class="mb-3">
-                            <div class="small text-muted">IP Address</div>
-                            <div>{{ $transaction->ip_address ?? 'N/A' }}
-                                @if($transaction->country) <span class="badge bg-secondary-subtle text-secondary">{{ $transaction->country }}</span> @endif
-                            </div>
+
+        {{-- Amount + Core Details --}}
+        <div class="info-card">
+            <div class="info-card-header"><i class="bi bi-credit-card"></i>Transaction Details</div>
+            <div class="info-card-body">
+                <div class="row g-0 mb-4 pb-4" style="border-bottom:1px solid #f3f4f6;">
+                    <div class="col-auto {{ $transaction->type == 'debit' ? 'amount-type-debit' : '' }}">
+                        <div class="detail-label">Net Amount</div>
+                        <div class="amount-big">{{ $transaction->currency }} {{ number_format($transaction->net_amount, 2) }}</div>
+                        <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+                            <span style="background:{{ $transaction->type=='debit'?'#fee2e2':'#dcfce7' }};color:{{ $transaction->type=='debit'?'#dc2626':'#16a34a' }};padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;">{{ ucfirst($transaction->type) }}</span>
+                            <span style="font-size:.78rem;color:#9ca3af;">Fee: {{ $transaction->currency }} {{ number_format($transaction->fee, 2) }}</span>
                         </div>
                     </div>
                 </div>
-
-                <hr>
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <h6 class="small text-muted text-uppercase fw-bold mb-2">Sender</h6>
-                        <div class="mb-1"><strong>{{ $transaction->sender_name ?? 'N/A' }}</strong></div>
-                        <div class="small text-muted">Account: {{ $transaction->sender_account ?? 'N/A' }}</div>
-                        <div class="small text-muted">Bank: {{ $transaction->sender_bank ?? 'N/A' }}</div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Gross Amount</div>
+                        <div class="detail-val fw-bold">{{ $transaction->currency }} {{ number_format($transaction->amount, 2) }}</div>
                     </div>
-                    <div class="col-md-6">
-                        <h6 class="small text-muted text-uppercase fw-bold mb-2">Receiver</h6>
-                        <div class="mb-1"><strong>{{ $transaction->receiver_name ?? 'N/A' }}</strong></div>
-                        <div class="small text-muted">Account: {{ $transaction->receiver_account ?? 'N/A' }}</div>
-                        <div class="small text-muted">Bank: {{ $transaction->receiver_bank ?? 'N/A' }}</div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Category</div>
+                        <div class="detail-val">{{ ucfirst($transaction->category) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Payment Method</div>
+                        <div class="detail-val">{{ str_replace('_',' ', ucfirst($transaction->payment_method ?? 'N/A')) }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Reference</div>
+                        <div class="detail-val" style="font-family:monospace;font-size:.8rem;">{{ $transaction->reference ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">IP Address</div>
+                        <div class="detail-val" style="font-family:monospace;font-size:.8rem;">{{ $transaction->ip_address ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Country</div>
+                        <div class="detail-val">{{ $transaction->country ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Device ID</div>
+                        <div class="detail-val" style="font-family:monospace;font-size:.78rem;">{{ $transaction->device_id ?? 'N/A' }}</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="detail-label">Processed At</div>
+                        <div class="detail-val" style="font-size:.82rem;">{{ $transaction->processed_at ? \Carbon\Carbon::parse($transaction->processed_at)->format('M d, H:i') : 'N/A' }}</div>
                     </div>
                 </div>
 
                 @if($transaction->description)
-                    <hr>
-                    <div class="small text-muted mb-1">Description</div>
-                    <p class="mb-0">{{ $transaction->description }}</p>
+                <div class="mt-3 pt-3" style="border-top:1px solid #f3f4f6;">
+                    <div class="detail-label">Description</div>
+                    <div class="detail-val">{{ $transaction->description }}</div>
+                </div>
                 @endif
             </div>
         </div>
 
-        <!-- Transaction Timeline -->
-        <div class="card">
-            <div class="card-header py-3"><h6 class="mb-0 fw-semibold">Activity Timeline</h6></div>
-            <div class="card-body">
-                @forelse($transaction->logs as $log)
-                <div class="d-flex gap-3 mb-3">
-                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:32px;height:32px;min-width:32px;">
-                        <i class="bi bi-arrow-right-circle small"></i>
+        {{-- Sender / Receiver --}}
+        <div class="info-card">
+            <div class="info-card-header"><i class="bi bi-arrow-left-right"></i>Transfer Parties</div>
+            <div class="info-card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="party-box">
+                            <div class="party-label"><i class="bi bi-box-arrow-up-right me-1"></i>Sender</div>
+                            <div class="party-name">{{ $transaction->sender_name ?? 'N/A' }}</div>
+                            <div class="party-meta">Account: {{ $transaction->sender_account ?? 'N/A' }}</div>
+                            <div class="party-meta">Bank: {{ $transaction->sender_bank ?? 'N/A' }}</div>
+                        </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="party-box">
+                            <div class="party-label"><i class="bi bi-box-arrow-in-down-right me-1"></i>Receiver</div>
+                            <div class="party-name">{{ $transaction->receiver_name ?? 'N/A' }}</div>
+                            <div class="party-meta">Account: {{ $transaction->receiver_account ?? 'N/A' }}</div>
+                            <div class="party-meta">Bank: {{ $transaction->receiver_bank ?? 'N/A' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Timeline --}}
+        <div class="info-card">
+            <div class="info-card-header"><i class="bi bi-clock-history"></i>Activity Timeline</div>
+            <div class="info-card-body">
+                @forelse($transaction->logs as $log)
+                <div class="timeline-item">
+                    <div class="tl-dot"><i class="bi bi-arrow-right-circle"></i></div>
                     <div>
-                        <div class="small fw-semibold">{{ ucwords(str_replace('_', ' ', $log->action)) }}</div>
+                        <div class="tl-action">{{ ucwords(str_replace('_', ' ', $log->action)) }}</div>
                         @if($log->from_status && $log->to_status)
-                            <div class="small text-muted">
-                                <span class="badge bg-secondary-subtle text-secondary">{{ $log->from_status }}</span>
-                                <i class="bi bi-arrow-right mx-1"></i>
-                                <span class="badge bg-primary-subtle text-primary">{{ $log->to_status }}</span>
-                            </div>
+                        <div class="tl-badge mt-1">
+                            <span style="background:#f3f4f6;color:#374151;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:600;">{{ $log->from_status }}</span>
+                            <i class="bi bi-arrow-right mx-1" style="color:#9ca3af;font-size:.7rem;"></i>
+                            <span style="background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:5px;font-size:.72rem;font-weight:600;">{{ $log->to_status }}</span>
+                        </div>
                         @endif
-                        @if($log->notes) <div class="small text-muted">{{ $log->notes }}</div> @endif
-                        <div class="small text-muted">{{ $log->performer?->name ?? 'System' }} &bull; {{ $log->created_at->format('M d, H:i') }}</div>
+                        @if($log->notes)<div style="font-size:.78rem;color:#6b7280;margin-top:3px;">{{ $log->notes }}</div>@endif
+                        <div class="tl-meta"><i class="bi bi-person me-1"></i>{{ $log->performer?->name ?? 'System' }} &bull; {{ $log->created_at->format('M d, Y H:i') }}</div>
                     </div>
                 </div>
                 @empty
-                <p class="text-muted small">No activity yet</p>
+                <p style="font-size:.85rem;color:#9ca3af;text-align:center;padding:16px 0;margin:0;">No activity recorded yet</p>
                 @endforelse
             </div>
         </div>
+
     </div>
 
-    <!-- Risk & Fraud Panel -->
+    {{-- Right Column --}}
     <div class="col-lg-4">
-        <!-- Risk Score -->
-        <div class="card mb-4">
-            <div class="card-header py-3"><h6 class="mb-0 fw-semibold">Risk Assessment</h6></div>
-            <div class="card-body text-center">
-                @php $riskColor = $transaction->risk_score >= 70 ? 'danger' : ($transaction->risk_score >= 40 ? 'warning' : 'success'); @endphp
-                <div class="display-4 fw-bold text-{{ $riskColor }} mb-1">{{ $transaction->risk_score }}</div>
-                <div class="text-muted small mb-3">Risk Score / 100</div>
-                <div class="progress mb-3" style="height: 8px;">
-                    <div class="progress-bar bg-{{ $riskColor }}" style="width: {{ $transaction->risk_score }}%"></div>
+
+        {{-- Risk Score --}}
+        <div class="info-card">
+            @php $riskClass = $transaction->risk_score >= 70 ? 'high' : ($transaction->risk_score >= 40 ? 'mid' : 'low'); @endphp
+            <div class="info-card-header"><i class="bi bi-shield-check"></i>Risk Assessment</div>
+            <div class="info-card-body risk-gauge-wrap">
+                <div class="risk-score-num {{ $riskClass }}">{{ $transaction->risk_score }}</div>
+                <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">out of 100</div>
+                <div class="risk-bar-full">
+                    <div class="risk-bar-fill {{ $riskClass }}" style="width:{{ $transaction->risk_score }}%"></div>
                 </div>
-                <span class="badge bg-{{ $riskColor }}-subtle text-{{ $riskColor }} fs-6 px-3 py-2">
+                <span class="risk-level-badge {{ $riskClass }}">
+                    <i class="bi bi-{{ $riskClass=='high'?'exclamation-triangle-fill':($riskClass=='mid'?'dash-circle-fill':'check-circle-fill') }} me-1"></i>
                     {{ ucfirst($transaction->risk_level) }} Risk
                 </span>
             </div>
         </div>
 
-        <!-- Update Status -->
-        <div class="card mb-4">
-            <div class="card-header py-3"><h6 class="mb-0 fw-semibold">Update Status</h6></div>
-            <div class="card-body">
-                <div class="mb-2">
-                    <label class="form-label small">New Status</label>
-                    <select id="newStatus" class="form-select form-select-sm">
+        {{-- Update Status --}}
+        <div class="info-card update-status-card">
+            <div class="info-card-header"><i class="bi bi-pencil-square"></i>Update Status</div>
+            <div class="info-card-body">
+                <div class="mb-3">
+                    <label style="font-size:.75rem;font-weight:600;color:#374151;display:block;margin-bottom:6px;">New Status</label>
+                    <select id="newStatus" class="form-select">
                         @foreach(['pending','processing','success','failed','cancelled','reversed'] as $s)
-                            <option value="{{ $s }}" {{ $transaction->status == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
+                            <option value="{{ $s }}" {{ $transaction->status==$s?'selected':'' }}>{{ ucfirst($s) }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label small">Notes</label>
-                    <textarea id="statusNotes" class="form-control form-control-sm" rows="2"></textarea>
+                    <label style="font-size:.75rem;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Notes</label>
+                    <textarea id="statusNotes" class="form-control" rows="2" placeholder="Optional notes…" style="resize:none;"></textarea>
                 </div>
-                <button class="btn btn-primary btn-sm w-100" onclick="updateStatus()">Update Status</button>
+                <button class="btn btn-primary btn-sm w-100" onclick="updateStatus()">
+                    <i class="bi bi-check-lg me-1"></i>Update Status
+                </button>
             </div>
         </div>
 
-        <!-- Fraud Alerts -->
+        {{-- Fraud Alerts --}}
         @if($transaction->fraudAlerts->count())
-        <div class="card">
-            <div class="card-header py-3">
-                <h6 class="mb-0 fw-semibold text-danger">
-                    <i class="bi bi-shield-exclamation me-1"></i>Fraud Alerts ({{ $transaction->fraudAlerts->count() }})
-                </h6>
+        <div class="info-card">
+            <div class="info-card-header" style="background:#fff8f0;border-bottom-color:#fed7aa;">
+                <i class="bi bi-shield-exclamation" style="color:#ea580c;"></i>
+                <span style="color:#c2410c;">Fraud Alerts ({{ $transaction->fraudAlerts->count() }})</span>
             </div>
-            <div class="card-body">
+            <div class="info-card-body">
                 @foreach($transaction->fraudAlerts as $alert)
-                <div class="d-flex gap-2 mb-3 p-2 rounded bg-danger-subtle">
-                    <span class="badge bg-{{ $alert->severity_badge }}-subtle text-{{ $alert->severity_badge }} align-self-start">{{ $alert->severity }}</span>
-                    <div>
-                        <div class="small fw-semibold">{{ $alert->alert_type }}</div>
-                        <div class="small text-muted">{{ $alert->description }}</div>
-                        <div class="smaller text-muted">Score: {{ $alert->risk_score }}</div>
+                <div class="fraud-alert-item">
+                    <div class="d-flex align-items-start justify-content-between mb-1">
+                        <div style="font-size:.83rem;font-weight:700;color:#111827;">{{ $alert->alert_type }}</div>
+                        <span class="fa-severity {{ $alert->severity }}">{{ ucfirst($alert->severity) }}</span>
                     </div>
+                    <div style="font-size:.78rem;color:#6b7280;">{{ $alert->description }}</div>
+                    <div style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Risk score: <strong>{{ $alert->risk_score }}</strong></div>
                 </div>
                 @endforeach
             </div>
         </div>
         @endif
+
     </div>
 </div>
 @endsection
@@ -192,7 +368,7 @@
 <script>
 function updateStatus() {
     const status = document.getElementById('newStatus').value;
-    const notes = document.getElementById('statusNotes').value;
+    const notes  = document.getElementById('statusNotes').value;
     APP.ajax('/admin/transactions/{{ $transaction->id }}/status', 'POST', { status, notes })
         .done(res => { if (res.success) { APP.toast('Status updated!'); setTimeout(() => location.reload(), 1000); } });
 }

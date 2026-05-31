@@ -1,111 +1,110 @@
 @extends('layouts.app')
-
 @section('title', 'Employee Report')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h4 class="mb-0 fw-bold">Employee Performance Report</h4>
-        <p class="text-muted mb-0">Employee productivity and performance analytics</p>
-    </div>
-    <a href="{{ route('admin.reports.pdf', 'employees') }}" class="btn btn-outline-danger">
-        <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
-    </a>
-</div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-body">
-        <form method="GET" action="{{ route('admin.reports.employees') }}" class="row g-2">
-            <div class="col-md-3">
-                <select name="department" class="form-select">
-                    <option value="">All Departments</option>
-                    @foreach($departments ?? [] as $dept)
-                        <option value="{{ $dept->id }}" @selected(request('department') == $dept->id)>{{ $dept->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="month" class="form-select">
-                    @for($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" @selected(request('month', date('n')) == $m)>
-                            {{ date('F', mktime(0,0,0,$m,1)) }}
-                        </option>
-                    @endfor
-                </select>
-            </div>
-            <div class="col-md-2">
-                <select name="year" class="form-select">
-                    @for($y = date('Y'); $y >= date('Y') - 2; $y--)
-                        <option value="{{ $y }}" @selected(request('year', date('Y')) == $y)>{{ $y }}</option>
-                    @endfor
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Generate</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Employee</th>
-                        <th>Department</th>
-                        <th class="text-center">Tasks Completed</th>
-                        <th class="text-center">Hours Worked</th>
-                        <th class="text-center">Attendance %</th>
-                        <th class="text-center">Performance Score</th>
-                        <th class="text-center">Reports Submitted</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($employeeData ?? [] as $row)
-                    <tr>
-                        <td>
-                            <div class="d-flex align-items-center gap-2">
-                                <img src="{{ $row['avatar'] ?? 'https://ui-avatars.com/api/?name='.urlencode($row['name']).'&size=32&background=6366f1&color=fff' }}"
-                                    class="rounded-circle" width="32" height="32">
-                                <div>
-                                    <div class="fw-semibold">{{ $row['name'] }}</div>
-                                    <small class="text-muted">{{ $row['employee_id'] }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ $row['department'] ?? '—' }}</td>
-                        <td class="text-center fw-semibold text-success">{{ $row['tasks_completed'] ?? 0 }}</td>
-                        <td class="text-center">{{ number_format($row['hours_worked'] ?? 0, 1) }}h</td>
-                        <td class="text-center">
-                            @php $att = $row['attendance_pct'] ?? 0; @endphp
-                            <span class="badge bg-{{ $att >= 90 ? 'success' : ($att >= 75 ? 'warning' : 'danger') }}">
-                                {{ $att }}%
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            @php $score = $row['performance_score'] ?? 0; @endphp
-                            <div class="d-flex align-items-center gap-1 justify-content-center">
-                                <div class="progress" style="height: 6px; width: 60px;">
-                                    <div class="progress-bar bg-{{ $score >= 80 ? 'success' : ($score >= 60 ? 'warning' : 'danger') }}"
-                                        style="width: {{ $score }}%"></div>
-                                </div>
-                                <small>{{ $score }}%</small>
-                            </div>
-                        </td>
-                        <td class="text-center">{{ $row['reports_count'] ?? 0 }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center py-5 text-muted">
-                            <i class="bi bi-people fs-1 d-block mb-2"></i>No data available
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <h4>Employee Performance Report</h4>
+            <p>Employee productivity and performance analytics</p>
         </div>
+        <a href="{{ route('admin.reports.pdf', 'employees') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+        </a>
+    </div>
+</div>
+
+<div class="filter-card">
+    <form method="GET" action="{{ route('admin.reports.employees') }}" class="row g-2 align-items-end">
+        <div class="col-md-3">
+            <label class="flabel">Department</label>
+            <select name="department" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;font-size:.84rem;">
+                <option value="">All Departments</option>
+                @foreach($departments ?? [] as $dept)
+                    <option value="{{ $dept->id }}" @selected(request('department') == $dept->id)>{{ $dept->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="flabel">Month</label>
+            <select name="month" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;font-size:.84rem;">
+                @for($m = 1; $m <= 12; $m++)
+                    <option value="{{ $m }}" @selected(request('month', date('n')) == $m)>{{ date('F', mktime(0,0,0,$m,1)) }}</option>
+                @endfor
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="flabel">Year</label>
+            <select name="year" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;font-size:.84rem;">
+                @for($y = date('Y'); $y >= date('Y') - 2; $y--)
+                    <option value="{{ $y }}" @selected(request('year', date('Y')) == $y)>{{ $y }}</option>
+                @endfor
+            </select>
+        </div>
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-sm btn-primary-grad px-4">Generate</button>
+        </div>
+    </form>
+</div>
+
+<div class="table-card">
+    <div class="card-header"><span class="card-title">Employee Performance Data</span></div>
+    <div class="table-responsive">
+        <table class="table modern-table mb-0">
+            <thead>
+                <tr>
+                    <th>Employee</th>
+                    <th>Department</th>
+                    <th class="text-center">Tasks Done</th>
+                    <th class="text-center">Hours</th>
+                    <th class="text-center">Attendance</th>
+                    <th class="text-center">Performance</th>
+                    <th class="text-center">Reports</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($employeeData ?? [] as $row)
+                @php
+                    $att = $row['attendance_pct'] ?? 0;
+                    $sc = $row['performance_score'] ?? 0;
+                    $attColor = $att >= 90 ? '#16a34a' : ($att >= 75 ? '#d97706' : '#dc2626');
+                    $scColor = $sc >= 80 ? '#16a34a' : ($sc >= 60 ? '#d97706' : '#dc2626');
+                @endphp
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="{{ $row['avatar'] ?? 'https://ui-avatars.com/api/?name='.urlencode($row['name']).'&size=32&background=6366f1&color=fff' }}"
+                                class="rounded-circle" style="width:32px;height:32px;object-fit:cover;flex-shrink:0;" alt="">
+                            <div>
+                                <div style="font-weight:700;font-size:.87rem;color:#111827;">{{ $row['name'] }}</div>
+                                <div style="font-size:.72rem;color:#9ca3af;font-family:monospace;">{{ $row['employee_id'] }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size:.83rem;color:#374151;">{{ $row['department'] ?? '—' }}</td>
+                    <td class="text-center"><span style="font-weight:700;color:#16a34a;font-size:.85rem;">{{ $row['tasks_completed'] ?? 0 }}</span></td>
+                    <td class="text-center"><span style="background:#eff6ff;color:#2563eb;padding:2px 7px;border-radius:6px;font-size:.75rem;font-weight:700;">{{ number_format($row['hours_worked'] ?? 0, 1) }}h</span></td>
+                    <td class="text-center">
+                        <span class="spill spill-{{ $att >= 90 ? 'success' : ($att >= 75 ? 'warning' : 'danger') }}" style="font-size:.72rem;">{{ $att }}%</span>
+                    </td>
+                    <td class="text-center">
+                        <div style="display:flex;align-items:center;gap:6px;justify-content:center;min-width:90px;">
+                            <div style="flex:1;height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
+                                <div style="width:{{ $sc }}%;height:100%;background:{{ $scColor }};border-radius:3px;"></div>
+                            </div>
+                            <span style="font-size:.75rem;font-weight:700;color:{{ $scColor }};">{{ $sc }}%</span>
+                        </div>
+                    </td>
+                    <td class="text-center" style="font-weight:600;font-size:.85rem;">{{ $row['reports_count'] ?? 0 }}</td>
+                </tr>
+                @empty
+                <tr><td colspan="7">
+                    <div class="empty-state"><i class="bi bi-people"></i><p>No data available for selected period</p></div>
+                </td></tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection

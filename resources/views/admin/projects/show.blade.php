@@ -1,109 +1,201 @@
 @extends('layouts.app')
-
 @section('title', 'Project Details')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('admin.projects.index') }}">Projects</a></li>
+    <li class="breadcrumb-item active">{{ $project->name }}</li>
+@endsection
+
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{{ route('admin.projects.index') }}" class="text-decoration-none text-muted">
-            <i class="bi bi-arrow-left me-1"></i>Back to Projects
-        </a>
-        <h4 class="mb-0 fw-bold mt-1">{{ $project->name }}</h4>
+
+@php
+    $statusColors = ['planning'=>'info','active'=>'success','on_hold'=>'warning','completed'=>'secondary','cancelled'=>'danger'];
+    $statusGrad = ['planning'=>'#0ea5e9,#38bdf8','active'=>'#16a34a,#22c55e','on_hold'=>'#f59e0b,#fbbf24','completed'=>'#6366f1,#8b5cf6','cancelled'=>'#dc2626,#ef4444'];
+    $ps = $project->status ?? 'planning';
+    $grad = $statusGrad[$ps] ?? '4f46e5,#7c3aed';
+    $total = $project->tasks->count();
+    $done  = $project->tasks->where('status', 'completed')->count();
+    $pct   = $total > 0 ? round(($done / $total) * 100) : 0;
+    $pColor = $pct >= 75 ? '#16a34a' : ($pct >= 40 ? '#f59e0b' : '#dc2626');
+@endphp
+
+<a href="{{ route('admin.projects.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Projects</a>
+
+<div class="page-hero" style="background:linear-gradient(135deg,{{ $grad }});">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="spill spill-{{ $statusColors[$ps] ?? 'secondary' }}" style="font-size:.72rem;">
+                    {{ ucwords(str_replace('_', ' ', $ps)) }}
+                </span>
+                @if($project->code)
+                <span style="background:rgba(255,255,255,.2);color:#fff;padding:2px 8px;border-radius:6px;font-size:.7rem;font-weight:700;font-family:monospace;">
+                    {{ $project->code }}
+                </span>
+                @endif
+            </div>
+            <h4 style="font-weight:800;color:#fff;margin-bottom:4px;">{{ $project->name }}</h4>
+            <p style="font-size:.83rem;opacity:.75;color:#fff;margin:0;">
+                <i class="bi bi-person me-1"></i>{{ $project->manager->name ?? 'No Manager' }}
+                @if($project->department)&nbsp;·&nbsp;<i class="bi bi-building me-1"></i>{{ $project->department->name }}@endif
+            </p>
+        </div>
+        <div class="d-flex align-items-center gap-4">
+            <div class="page-hero-stat">
+                <div class="v">{{ $total }}</div>
+                <div class="l">Tasks</div>
+            </div>
+            <div class="hero-vr"></div>
+            <div class="page-hero-stat">
+                <div class="v" style="color:#86efac;">{{ $done }}</div>
+                <div class="l">Done</div>
+            </div>
+            <div class="hero-vr"></div>
+            <div class="page-hero-stat">
+                <div class="v" style="color:#fde047;">{{ $pct }}%</div>
+                <div class="l">Progress</div>
+            </div>
+        </div>
     </div>
-    @php
-        $statusColors = ['planning' => 'info', 'active' => 'success', 'on_hold' => 'warning', 'completed' => 'primary', 'cancelled' => 'danger'];
-        $ps = $project->status ?? 'planning';
-    @endphp
-    <span class="badge bg-{{ $statusColors[$ps] }} fs-6">{{ ucwords(str_replace('_',' ',$ps)) }}</span>
 </div>
 
-<div class="row g-4">
+<div class="row g-3">
+    {{-- Left Sidebar --}}
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-transparent fw-semibold">Project Info</div>
-            <div class="card-body">
-                @foreach([
-                    ['Code', $project->code ?? '—'],
-                    ['Manager', $project->manager->name ?? '—'],
-                    ['Department', $project->department->name ?? '—'],
-                    ['Start Date', \Carbon\Carbon::parse($project->start_date)->format('M d, Y')],
-                    ['End Date', $project->end_date ? \Carbon\Carbon::parse($project->end_date)->format('M d, Y') : '—'],
-                    ['Budget', $project->budget ? '$'.number_format($project->budget) : '—'],
-                    ['Total Tasks', $project->tasks->count()],
-                ] as [$label, $value])
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">{{ $label }}</span>
-                    <strong>{{ $value }}</strong>
-                </div>
-                @endforeach
+        {{-- Project Info --}}
+        <div class="info-card mb-3">
+            <div class="info-card-hdr"><i class="bi bi-folder2 me-2"></i>Project Info</div>
+            <div class="info-card-body">
+                <dl class="dl">
+                    <dt>Project Code</dt>
+                    <dd><span style="font-family:monospace;background:#f3f4f6;padding:2px 8px;border-radius:5px;font-size:.84rem;">{{ $project->code ?? '—' }}</span></dd>
+
+                    <dt>Manager</dt>
+                    <dd>{{ $project->manager->name ?? '—' }}</dd>
+
+                    <dt>Department</dt>
+                    <dd>{{ $project->department->name ?? '—' }}</dd>
+
+                    <dt>Start Date</dt>
+                    <dd>{{ \Carbon\Carbon::parse($project->start_date)->format('M d, Y') }}</dd>
+
+                    <dt>End Date</dt>
+                    <dd>
+                        @if($project->end_date)
+                            @php $endDate = \Carbon\Carbon::parse($project->end_date); @endphp
+                            <span style="color:{{ ($ps !== 'completed' && $endDate->isPast()) ? '#dc2626' : 'inherit' }};">
+                                {{ $endDate->format('M d, Y') }}
+                                @if($ps !== 'completed' && $endDate->isPast())
+                                    <span class="spill spill-danger ms-1" style="font-size:.65rem;">Overdue</span>
+                                @endif
+                            </span>
+                        @else
+                            —
+                        @endif
+                    </dd>
+
+                    <dt>Budget</dt>
+                    <dd>{{ $project->budget ? '$'.number_format($project->budget) : '—' }}</dd>
+
+                    <dt>Total Tasks</dt>
+                    <dd><strong style="color:#4f46e5;">{{ $total }}</strong></dd>
+                </dl>
             </div>
         </div>
 
-        {{-- Task Progress --}}
-        @php
-            $total = $project->tasks->count();
-            $done = $project->tasks->where('status', 'completed')->count();
-            $pct = $total > 0 ? round(($done / $total) * 100) : 0;
-        @endphp
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent fw-semibold">Overall Progress</div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-1">
-                    <small class="text-muted">{{ $done }} of {{ $total }} tasks done</small>
-                    <strong>{{ $pct }}%</strong>
+        {{-- Overall Progress --}}
+        <div class="info-card">
+            <div class="info-card-hdr"><i class="bi bi-bar-chart me-2"></i>Overall Progress</div>
+            <div class="info-card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span style="font-size:.83rem;color:#6b7280;">{{ $done }} of {{ $total }} tasks completed</span>
+                    <span style="font-size:.9rem;font-weight:800;color:{{ $pColor }};">{{ $pct }}%</span>
                 </div>
-                <div class="progress" style="height: 10px;">
-                    <div class="progress-bar bg-success" style="width: {{ $pct }}%"></div>
+                <div style="background:#e5e7eb;border-radius:8px;height:12px;overflow:hidden;">
+                    <div style="height:12px;border-radius:8px;width:{{ $pct }}%;background:{{ $pColor }};transition:width .4s;"></div>
+                </div>
+                <div class="row g-2 mt-3">
+                    @php
+                        $statusBreak = ['completed'=>['#16a34a','Completed'], 'in_progress'=>['#6366f1','In Progress'], 'pending'=>['#9ca3af','Pending'], 'review'=>['#f59e0b','In Review']];
+                    @endphp
+                    @foreach($statusBreak as $st => [$color, $label])
+                    @php $cnt = $project->tasks->where('status', $st)->count(); @endphp
+                    @if($cnt > 0)
+                    <div class="col-6">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:{{ $color }};flex-shrink:0;"></div>
+                            <span style="font-size:.78rem;color:#6b7280;">{{ $label }}</span>
+                            <span style="font-size:.78rem;font-weight:700;color:#111827;margin-left:auto;">{{ $cnt }}</span>
+                        </div>
+                    </div>
+                    @endif
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
 
+    {{-- Right Column --}}
     <div class="col-lg-8">
         @if($project->description)
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent fw-semibold">Description</div>
-            <div class="card-body"><p class="mb-0">{{ $project->description }}</p></div>
+        <div class="info-card mb-3">
+            <div class="info-card-hdr"><i class="bi bi-text-paragraph me-2"></i>Description</div>
+            <div class="info-card-body">
+                <p style="font-size:.87rem;color:#374151;line-height:1.6;margin:0;">{{ $project->description }}</p>
+            </div>
         </div>
         @endif
 
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent fw-semibold">Tasks ({{ $project->tasks->count() }})</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Task</th>
-                                <th>Assigned To</th>
-                                <th>Priority</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($project->tasks as $task)
-                            <tr>
-                                <td>{{ Str::limit($task->title, 35) }}</td>
-                                <td>{{ $task->assignedEmployee->full_name ?? '—' }}</td>
-                                <td>
-                                    @php $pc = ['low'=>'success','medium'=>'warning','high'=>'danger','urgent'=>'danger']; @endphp
-                                    <span class="badge bg-{{ $pc[$task->priority] ?? 'secondary' }}">{{ ucfirst($task->priority) }}</span>
-                                </td>
-                                <td><small>{{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d') : '—' }}</small></td>
-                                <td>
-                                    @php $sc = ['pending'=>'secondary','assigned'=>'info','in_progress'=>'primary','review'=>'warning','completed'=>'success','cancelled'=>'danger']; @endphp
-                                    <span class="badge bg-{{ $sc[$task->status] ?? 'secondary' }}">{{ ucwords(str_replace('_',' ',$task->status)) }}</span>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="5" class="text-center text-muted py-3">No tasks</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+        {{-- Tasks Table --}}
+        <div class="table-card">
+            <div class="card-header">
+                <span class="card-title">Tasks ({{ $total }})</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table modern-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Assigned To</th>
+                            <th>Priority</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($project->tasks as $task)
+                        @php
+                            $pc = ['low'=>'success','medium'=>'warning','high'=>'danger','urgent'=>'danger'];
+                            $sc = ['pending'=>'secondary','assigned'=>'info','in_progress'=>'warning','review'=>'info','completed'=>'success','cancelled'=>'danger'];
+                            $taskOverdue = $task->due_date && \Carbon\Carbon::parse($task->due_date)->isPast() && $task->status !== 'completed';
+                        @endphp
+                        <tr style="{{ $taskOverdue ? 'background:#fff5f5;' : '' }}">
+                            <td style="font-weight:600;font-size:.87rem;color:#111827;">{{ Str::limit($task->title, 40) }}</td>
+                            <td style="font-size:.83rem;color:#374151;">{{ $task->assignedEmployee->full_name ?? '—' }}</td>
+                            <td>
+                                <span class="spill spill-{{ $pc[$task->priority] ?? 'secondary' }}" style="font-size:.7rem;">
+                                    {{ ucfirst($task->priority) }}
+                                </span>
+                            </td>
+                            <td style="font-size:.82rem;color:{{ $taskOverdue ? '#dc2626' : '#6b7280' }};font-weight:{{ $taskOverdue ? '700' : '400' }};">
+                                {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('M d, Y') : '—' }}
+                            </td>
+                            <td>
+                                <span class="spill spill-{{ $sc[$task->status] ?? 'secondary' }}" style="font-size:.7rem;">
+                                    {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                </span>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="5">
+                            <div class="empty-state"><i class="bi bi-list-task"></i><p>No tasks for this project</p></div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
+
 @endsection

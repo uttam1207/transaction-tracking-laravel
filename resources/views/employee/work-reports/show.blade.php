@@ -1,52 +1,55 @@
 @extends('layouts.app')
-
 @section('title', 'Work Report Details')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{{ route('employee.work-reports.index') }}" class="text-decoration-none text-muted">
-            <i class="bi bi-arrow-left me-1"></i>Back to Reports
-        </a>
-        <h4 class="mb-0 fw-bold mt-1">
-            Work Report — {{ \Carbon\Carbon::parse($report->report_date)->format('d F Y') }}
-        </h4>
-    </div>
-    <div class="d-flex gap-2">
-        @php
-            $statusColors = ['draft' => 'secondary', 'submitted' => 'info', 'approved' => 'success', 'rejected' => 'danger'];
-            $st = $report->status ?? 'draft';
-        @endphp
-        <span class="badge bg-{{ $statusColors[$st] }} fs-6">{{ ucfirst($st) }}</span>
-        @if($report->status === 'draft')
-        <form action="{{ route('employee.work-reports.submit', $report) }}" method="POST">
-            @csrf
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-send me-1"></i>Submit
-            </button>
-        </form>
-        @endif
+
+<a href="{{ route('employee.work-reports.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Reports</a>
+
+@php
+    $st = $report->status ?? 'draft';
+    $score = $report->productivity_score ?? 0;
+    $scoreColor = $score >= 80 ? '#16a34a' : ($score >= 60 ? '#d97706' : '#dc2626');
+    $heroBg = $st === 'approved' ? 'linear-gradient(135deg,#14532d,#166534)' : ($st === 'rejected' ? 'linear-gradient(135deg,#7f1d1d,#991b1b)' : ($st === 'submitted' ? 'linear-gradient(135deg,#78350f,#92400e)' : 'linear-gradient(135deg,#1e1b4b,#312e81)'));
+@endphp
+
+<div class="page-hero" style="background:{{ $heroBg }};">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <h4>Work Report — {{ \Carbon\Carbon::parse($report->report_date)->format('d F Y') }}</h4>
+            <p style="opacity:.8;">{{ auth()->user()->name }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="spill spill-{{ $st === 'approved' ? 'success' : ($st === 'rejected' ? 'danger' : ($st === 'submitted' ? 'warning' : 'secondary')) }}" style="font-size:.85rem;padding:6px 16px;">{{ ucfirst($st) }}</span>
+            @if($report->status === 'draft')
+            <form action="{{ route('employee.work-reports.submit', $report) }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-primary-grad px-4">
+                    <i class="bi bi-send me-1"></i>Submit Report
+                </button>
+            </form>
+            @endif
+        </div>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent fw-semibold">Work Summary</div>
-            <div class="card-body">
-                <p>{{ $report->summary }}</p>
+        <div class="info-card">
+            <div class="info-card-hdr"><i class="bi bi-journal-text me-2"></i>Work Summary</div>
+            <div class="info-card-body">
+                <p style="font-size:.9rem;color:#374151;line-height:1.7;margin:0;">{{ $report->summary }}</p>
             </div>
         </div>
 
         @if($report->tasks_completed && count($report->tasks_completed))
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-transparent fw-semibold">Tasks Completed</div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
+        <div class="info-card mt-3">
+            <div class="info-card-hdr"><i class="bi bi-check2-all me-2"></i>Tasks Completed</div>
+            <div class="info-card-body">
+                <ul style="margin:0;padding:0;list-style:none;">
                     @foreach($report->tasks_completed as $task)
-                    <li class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        {{ $task }}
+                    <li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f3f4f6;">
+                        <i class="bi bi-check-circle-fill" style="color:#16a34a;margin-top:2px;flex-shrink:0;"></i>
+                        <span style="font-size:.85rem;color:#374151;">{{ $task }}</span>
                     </li>
                     @endforeach
                 </ul>
@@ -55,17 +58,17 @@
         @endif
 
         @if($report->reviewer_notes)
-        <div class="card border-0 shadow-sm border-{{ $st === 'rejected' ? 'danger' : 'success' }}">
-            <div class="card-header bg-transparent fw-semibold">
-                <i class="bi bi-chat-left-text me-2"></i>Reviewer Notes
+        <div class="info-card mt-3" style="border-left:4px solid {{ $st === 'rejected' ? '#dc2626' : '#16a34a' }};">
+            <div class="info-card-hdr" style="color:{{ $st === 'rejected' ? '#dc2626' : '#16a34a' }};">
+                <i class="bi bi-chat-quote me-2"></i>Reviewer Notes
             </div>
-            <div class="card-body">
-                <p class="mb-1">{{ $report->reviewer_notes }}</p>
+            <div class="info-card-body">
+                <p style="font-size:.88rem;color:#374151;margin-bottom:8px;">{{ $report->reviewer_notes }}</p>
                 @if($report->reviewedBy)
-                <small class="text-muted">
+                <div style="font-size:.78rem;color:#9ca3af;">
                     — {{ $report->reviewedBy->name }},
                     {{ \Carbon\Carbon::parse($report->reviewed_at)->format('M d, Y H:i') }}
-                </small>
+                </div>
                 @endif
             </div>
         </div>
@@ -73,40 +76,32 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-transparent fw-semibold">Report Details</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="text-muted small">Report Date</label>
-                    <div class="fw-semibold">{{ \Carbon\Carbon::parse($report->report_date)->format('d M Y') }}</div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted small">Hours Worked</label>
-                    <div class="fw-semibold fs-4">{{ number_format($report->hours_worked, 1) }}h</div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted small">Productivity Score</label>
-                    @php $score = $report->productivity_score ?? 0; @endphp
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="progress flex-fill" style="height: 8px;">
-                            <div class="progress-bar bg-{{ $score >= 80 ? 'success' : ($score >= 60 ? 'warning' : 'danger') }}"
-                                style="width: {{ $score }}%"></div>
+        <div class="info-card">
+            <div class="info-card-hdr"><i class="bi bi-info-circle me-2"></i>Report Details</div>
+            <div class="info-card-body">
+                <dl class="dl">
+                    <dt>Report Date</dt>
+                    <dd style="font-weight:600;">{{ \Carbon\Carbon::parse($report->report_date)->format('d M Y') }}</dd>
+                    <dt>Hours Worked</dt>
+                    <dd><span style="background:#eff6ff;color:#2563eb;padding:3px 10px;border-radius:6px;font-weight:700;">{{ number_format($report->hours_worked, 1) }}h</span></dd>
+                    <dt>Productivity Score</dt>
+                    <dd>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="flex:1;height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
+                                <div style="width:{{ $score }}%;height:100%;background:{{ $scoreColor }};border-radius:3px;"></div>
+                            </div>
+                            <span style="font-weight:700;color:{{ $scoreColor }};font-size:.83rem;">{{ $score }}%</span>
                         </div>
-                        <strong>{{ $score }}%</strong>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted small">Status</label>
-                    <div>
-                        <span class="badge bg-{{ $statusColors[$st] }} fs-6">{{ ucfirst($st) }}</span>
-                    </div>
-                </div>
-                @if($report->submitted_at)
-                <div class="mb-3">
-                    <label class="text-muted small">Submitted At</label>
-                    <div>{{ \Carbon\Carbon::parse($report->submitted_at)->format('M d, Y H:i') }}</div>
-                </div>
-                @endif
+                    </dd>
+                    <dt>Status</dt>
+                    <dd><span class="spill spill-{{ $st === 'approved' ? 'success' : ($st === 'rejected' ? 'danger' : ($st === 'submitted' ? 'warning' : 'secondary')) }}">{{ ucfirst($st) }}</span></dd>
+                    @if($report->submitted_at)
+                    <dt>Submitted At</dt>
+                    <dd>{{ \Carbon\Carbon::parse($report->submitted_at)->format('M d, Y H:i') }}</dd>
+                    @endif
+                    <dt>Created</dt>
+                    <dd>{{ $report->created_at->format('M d, Y') }}</dd>
+                </dl>
             </div>
         </div>
     </div>
