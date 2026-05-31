@@ -29,7 +29,7 @@ class WalletController extends Controller
     public function addMoney(Request $request, Wallet $wallet)
     {
         $request->validate([
-            'amount'      => 'required|numeric|min:1|max:10000000',
+            'amount'      => 'required|numeric|min:1|max:9999999999',
             'description' => 'required|string|max:255',
         ]);
 

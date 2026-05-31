@@ -10,6 +10,7 @@ use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\FraudAlert;
 use App\Models\Transaction;
+use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
@@ -22,8 +23,8 @@ class DashboardService
         return [
             'total_transactions' => Transaction::count(),
             'today_transactions' => Transaction::whereDate('created_at', $today)->count(),
-            'total_revenue' => Transaction::where('status', 'success')->sum('amount'),
-            'today_revenue' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
+            'wallet_balance' => (float) Wallet::company()->balance,
+            'today_transactions_amount' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
             'fraud_alerts' => FraudAlert::count(),
             'fraud_alerts_open' => FraudAlert::open()->count(),
             'fraud_alerts_critical' => FraudAlert::critical()->open()->count(),

@@ -10,7 +10,7 @@
                 <div class="page-hero-sub">Central company wallet — all transactions flow through this</div>
             </div>
             <div class="d-flex gap-2">
-                <button onclick="openAddMoney({{ $wallet->id }}, '{{ $wallet->balance }}')"
+                <button type="button" onclick="openAddMoney()"
                     class="btn btn-sm"
                     style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;"
                     @if($wallet->status === 'frozen') disabled @endif>
@@ -130,24 +130,33 @@
                 <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Add Money to Company Wallet</h6>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form id="addMoneyForm" method="POST">
+            <form id="addMoneyForm" action="{{ route('admin.wallets.addMoney', $wallet->id) }}" method="POST">
                 @csrf
                 <div class="modal-body" style="padding:24px;">
+                    @if($errors->any())
+                    <div class="alert alert-danger" style="border-radius:9px;font-size:.82rem;padding:10px 14px;">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        {{ $errors->first() }}
+                    </div>
+                    @endif
                     <div class="mb-3">
                         <label class="flabel">Current Balance</label>
-                        <input type="text" id="addMoneyCurrent" class="form-control" readonly
+                        <input type="text" class="form-control" readonly
+                               value="₹{{ number_format($wallet->balance, 2) }}"
                                style="border-radius:9px;border:1.5px solid #e5e7eb;background:#f9fafb;font-weight:700;color:#7c3aed;">
                     </div>
                     <div class="mb-3">
                         <label class="flabel">Amount to Add (₹) <span class="req">*</span></label>
-                        <input type="number" name="amount" id="addMoneyAmount" class="form-control"
+                        <input type="number" name="amount" class="form-control {{ $errors->has('amount') ? 'is-invalid' : '' }}"
                                min="1" step="0.01" placeholder="0.00" required
+                               value="{{ old('amount') }}"
                                style="border-radius:9px;border:1.5px solid #e5e7eb;">
                     </div>
                     <div class="mb-1">
                         <label class="flabel">Description <span class="req">*</span></label>
-                        <input type="text" name="description" class="form-control"
+                        <input type="text" name="description" class="form-control {{ $errors->has('description') ? 'is-invalid' : '' }}"
                                placeholder="e.g. Monthly fund allocation, Capital injection…" required
+                               value="{{ old('description') }}"
                                style="border-radius:9px;border:1.5px solid #e5e7eb;">
                     </div>
                 </div>
@@ -166,11 +175,15 @@
 
 @push('scripts')
 <script>
-function openAddMoney(walletId, currentBalance) {
-    document.getElementById('addMoneyCurrent').value =
-        '₹' + parseFloat(currentBalance).toLocaleString('en-IN', {minimumFractionDigits: 2});
-    document.getElementById('addMoneyForm').action = `/admin/wallets/${walletId}/add-money`;
+function openAddMoney() {
     new bootstrap.Modal(document.getElementById('addMoneyModal')).show();
 }
+
+// Auto-reopen modal if there were validation errors
+@if($errors->any())
+document.addEventListener('DOMContentLoaded', function() {
+    new bootstrap.Modal(document.getElementById('addMoneyModal')).show();
+});
+@endif
 </script>
 @endpush

@@ -223,19 +223,19 @@
 
 {{-- ── KPI Cards ── --}}
 <div class="row g-3 mb-4">
-    {{-- Total Revenue --}}
+    {{-- Wallet Balance --}}
     <div class="col-6 col-md-3">
         <div class="kpi-card green">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="kpi-label">Total Revenue</div>
-                    <div class="kpi-value text-success">₹{{ number_format($stats['total_revenue'], 0) }}</div>
+                    <div class="kpi-label">Wallet Balance</div>
+                    <div class="kpi-value text-success">₹{{ number_format($stats['wallet_balance'], 0) }}</div>
                     <div class="kpi-sub text-success">
-                        <i class="bi bi-arrow-up-short"></i>Today: ₹{{ number_format($stats['today_revenue'], 0) }}
+                        <i class="bi bi-arrow-up-short"></i>Today txns: ₹{{ number_format($stats['today_transactions_amount'], 0) }}
                     </div>
                 </div>
                 <div class="kpi-icon" style="background:rgba(16,185,129,.12); color:#10b981;">
-                    <i class="bi bi-currency-rupee"></i>
+                    <i class="bi bi-wallet2"></i>
                 </div>
             </div>
         </div>
@@ -388,7 +388,7 @@
     <div class="col-lg-6">
         <div class="chart-card h-100">
             <div class="chart-card-header">
-                <span class="chart-card-title"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Monthly Revenue Trend</span>
+                <span class="chart-card-title"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Monthly Transaction Trend</span>
             </div>
             <div class="chart-card-body">
                 <div id="revenueChart" style="height:230px;"></div>
@@ -428,8 +428,8 @@
                         <div class="small text-muted">Transactions</div>
                     </div>
                     <div class="col-3">
-                        <div class="fw-bold text-success fs-5">₹{{ number_format($stats['total_revenue'], 0) }}</div>
-                        <div class="small text-muted">Revenue</div>
+                        <div class="fw-bold text-success fs-5">₹{{ number_format($stats['wallet_balance'], 0) }}</div>
+                        <div class="small text-muted">Wallet</div>
                     </div>
                     <div class="col-3">
                         <div class="fw-bold text-danger fs-5">{{ $stats['fraud_alerts_open'] }}</div>
@@ -642,7 +642,7 @@ new ApexCharts(document.getElementById('attendanceChart'), {
 
 const revData = @json($monthlyRevenue);
 new ApexCharts(document.getElementById('revenueChart'), {
-    series: [{ name: 'Revenue', data: revData.revenue }],
+    series: [{ name: 'Transactions (₹)', data: revData.revenue }],
     chart: { type: 'bar', height: 230, toolbar: { show: false } },
     colors: ['#4f46e5'],
     xaxis: { categories: revData.labels, labels: { style: { fontSize: '10px' } } },
