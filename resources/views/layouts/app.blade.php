@@ -475,7 +475,8 @@
 
         {{-- Nav Items --}}
         <div class="sidebar-nav">
-            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+            @php $svcUser = auth()->user(); @endphp
+            @if($svcUser->isAdmin() || $svcUser->isManager())
 
                 <div class="nav-section-title">Main</div>
 
@@ -483,57 +484,78 @@
                     <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                     <span class="nav-label">Dashboard</span>
                 </a>
+                @if(\App\Models\ServicePermission::canAccess('transactions', $svcUser))
                 <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span>
                     <span class="nav-label">Transactions</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('fraud_alerts', $svcUser))
                 <a href="{{ route('admin.fraud-alerts.index') }}" class="sidebar-link {{ request()->routeIs('admin.fraud-alerts.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-shield-exclamation"></i></span>
                     <span class="nav-label">Fraud Alerts</span>
                     @php $fraudCount = \App\Models\FraudAlert::where('status','open')->count(); @endphp
                     @if($fraudCount > 0)<span class="badge bg-danger">{{ $fraudCount }}</span>@endif
                 </a>
+                @endif
 
                 <div class="nav-section-title">People</div>
 
+                @if(\App\Models\ServicePermission::canAccess('users', $svcUser))
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-people"></i></span>
                     <span class="nav-label">Users</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('employees', $svcUser))
                 <a href="{{ route('admin.employees.index') }}" class="sidebar-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
                     <span class="nav-label">Employees</span>
                 </a>
+                @endif
 
                 <div class="nav-section-title">Work Tracking</div>
 
+                @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
                 <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
                     <span class="nav-label">Attendance</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('tasks', $svcUser))
                 <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-kanban"></i></span>
                     <span class="nav-label">Tasks</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('work_reports', $svcUser))
                 <a href="{{ route('admin.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.work-reports.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-file-earmark-check"></i></span>
                     <span class="nav-label">Work Reports</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('timesheets', $svcUser))
                 <a href="{{ route('admin.timesheets.index') }}" class="sidebar-link {{ request()->routeIs('admin.timesheets.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-table"></i></span>
                     <span class="nav-label">Timesheets</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('teams', $svcUser))
                 <a href="{{ route('admin.teams.index') }}" class="sidebar-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
                     <span class="nav-label">Teams</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('shifts', $svcUser))
                 <a href="{{ route('admin.shifts.index') }}" class="sidebar-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
                     <span class="nav-label">Shifts</span>
                 </a>
+                @endif
 
                 <div class="nav-section-title">Reports</div>
 
+                @if(\App\Models\ServicePermission::canAccess('reports', $svcUser))
                 <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
                     <span class="nav-label">Tx Reports</span>
@@ -546,34 +568,55 @@
                     <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
                     <span class="nav-label">Audit Logs</span>
                 </a>
+                @endif
 
                 <div class="nav-section-title">Organisation</div>
 
+                @if(\App\Models\ServicePermission::canAccess('departments', $svcUser))
                 <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-building"></i></span>
                     <span class="nav-label">Departments</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('holidays', $svcUser))
                 <a href="{{ route('admin.holidays.index') }}" class="sidebar-link {{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-calendar-heart"></i></span>
                     <span class="nav-label">Holidays</span>
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('projects', $svcUser))
                 <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
                     <span class="nav-label">Projects</span>
                 </a>
+                @endif
 
                 <div class="nav-section-title">System</div>
 
+                @if(\App\Models\ServicePermission::canAccess('queue', $svcUser))
                 <a href="{{ route('admin.queue.index') }}" class="sidebar-link {{ request()->routeIs('admin.queue.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-cpu"></i></span>
                     <span class="nav-label">Queue Monitor</span>
                     @php $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count(); @endphp
                     @if($failedJobs > 0)<span class="badge bg-danger">{{ $failedJobs }}</span>@endif
                 </a>
+                @endif
+                @if(\App\Models\ServicePermission::canAccess('settings', $svcUser))
                 <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-gear"></i></span>
                     <span class="nav-label">Settings</span>
                 </a>
+                @endif
+                @if($svcUser->isSuperAdmin())
+                <a href="{{ route('admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
+                    <span class="nav-label">Wallets</span>
+                </a>
+                <a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
+                    <span class="nav-label">Permissions</span>
+                </a>
+                @endif
 
                 <div class="nav-section-title">Company</div>
 
@@ -605,6 +648,10 @@
                 <a href="{{ route('employee.attendance.leaves') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.leaves') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-calendar-x"></i></span>
                     <span class="nav-label">Leave Requests</span>
+                </a>
+                <a href="{{ route('employee.wallet.index') }}" class="sidebar-link {{ request()->routeIs('employee.wallet.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
+                    <span class="nav-label">My Wallet</span>
                 </a>
 
                 <div class="nav-section-title">Company</div>

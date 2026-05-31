@@ -3,6 +3,15 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
+use Database\Seeders\DepartmentSeeder;
+use Database\Seeders\UserSeeder;
+use Database\Seeders\EmployeeSeeder;
+use Database\Seeders\SettingSeeder;
+use Database\Seeders\FraudRuleSeeder;
+use Database\Seeders\HolidaySeeder;
+use Database\Seeders\TransactionSeeder;
+use Database\Seeders\ServicePermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -17,6 +26,7 @@ class DatabaseSeeder extends Seeder
             FraudRuleSeeder::class,
             HolidaySeeder::class,
             TransactionSeeder::class,
+            ServicePermissionSeeder::class,
         ]);
     }
 }

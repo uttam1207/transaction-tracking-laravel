@@ -9,6 +9,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Employee;
+use App\Models\Wallet;
+use App\Models\Department;
+use App\Models\LoginHistory;
+use App\Models\AppNotification;
+use App\Models\AuditLog;
+use App\Models\ActivityLog;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -40,6 +47,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function employee()
     {
         return $this->hasOne(Employee::class);
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
     }
 
     public function department()

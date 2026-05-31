@@ -21,6 +21,9 @@ use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\TeamController;
 use App\Http\Controllers\Admin\TimesheetController;
 use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController;
+use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\EmployeeWalletController;
+use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
@@ -178,6 +181,17 @@ Route::prefix('admin')
     Route::get('/settings/{group?}', [SettingController::class, 'index'])->name('settings.index');
     Route::post('/settings/{group}', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/test-smtp', [SettingController::class, 'testSmtp'])->name('settings.test-smtp');
+
+    // Wallet Management & Service Permissions — Super Admin only
+    Route::middleware('role:super_admin')->group(function () {
+        Route::get('/wallets', [WalletController::class, 'index'])->name('wallets.index');
+        Route::get('/wallets/{user}', [WalletController::class, 'show'])->name('wallets.show');
+        Route::post('/wallets/{wallet}/add-money', [WalletController::class, 'addMoney'])->name('wallets.addMoney');
+        Route::patch('/wallets/{wallet}/toggle-freeze', [WalletController::class, 'toggleFreeze'])->name('wallets.toggleFreeze');
+
+        Route::get('/permissions', [ServicePermissionController::class, 'index'])->name('permissions.index');
+        Route::put('/permissions/{servicePermission}', [ServicePermissionController::class, 'update'])->name('permissions.update');
+    });
 });
 
 // ============================================================
@@ -214,4 +228,7 @@ Route::prefix('employee')
 
     // Profile
     Route::get('/profile', fn() => view('employee.profile', ['user' => auth()->user()]))->name('profile');
+
+    // My Wallet
+    Route::get('/wallet', [EmployeeWalletController::class, 'index'])->name('wallet.index');
 });

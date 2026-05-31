@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'check.status' => \App\Http\Middleware\CheckUserStatus::class,
             'track.activity' => \App\Http\Middleware\TrackActivity::class,
+            'service' => \App\Http\Middleware\CheckServicePermission::class,
         ]);
 
         // API middleware
