@@ -649,8 +649,8 @@
                     <span class="nav-label">Leave Requests</span>
                 </a>
                 <a href="{{ route('employee.wallet.index') }}" class="sidebar-link {{ request()->routeIs('employee.wallet.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span>
-                    <span class="nav-label">My Revenue</span>
+                    <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
+                    <span class="nav-label">My Wallet</span>
                 </a>
 
 
