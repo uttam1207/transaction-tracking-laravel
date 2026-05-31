@@ -272,6 +272,11 @@
                 <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <i class="bi bi-gear"></i> Settings
                 </a>
+
+                <div class="nav-section-title">Company</div>
+                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                    <i class="bi bi-folder2-open"></i> Documents
+                </a>
             @else
                 <div class="nav-section-title">My Workspace</div>
                 <a href="{{ route('employee.dashboard') }}" class="sidebar-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
@@ -288,6 +293,11 @@
                 </a>
                 <a href="{{ route('employee.attendance.leaves') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.leaves') ? 'active' : '' }}">
                     <i class="bi bi-calendar-x"></i> Leave Requests
+                </a>
+
+                <div class="nav-section-title">Company</div>
+                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                    <i class="bi bi-folder2-open"></i> Documents
                 </a>
             @endif
         </div>

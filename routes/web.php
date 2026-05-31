@@ -25,6 +25,7 @@ use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardContro
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
+use App\Http\Controllers\DocumentController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes (Guest only)
@@ -54,6 +55,14 @@ Route::middleware(['auth'])->group(function () {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('success', 'Verification link sent!');
     })->middleware(['throttle:6,1'])->name('verification.send');
+});
+
+// Documents — accessible by all authenticated users
+Route::middleware(['auth', 'check.status'])->group(function () {
+    Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 });
 
 // Root redirect
