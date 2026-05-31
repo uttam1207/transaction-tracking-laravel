@@ -150,15 +150,63 @@ class EmployeeController extends Controller
 
     public function performance(Employee $employee)
     {
-        $stats = [
-            'tasks_completed' => $employee->tasks()->where('status', 'completed')->count(),
-            'tasks_pending' => $employee->tasks()->whereIn('status', ['pending', 'in_progress'])->count(),
-            'avg_work_hours' => round($employee->attendance()->whereMonth('date', now()->month)->avg('work_hours'), 2),
-            'attendance_percentage' => $this->getAttendancePercentage($employee),
-            'work_reports_submitted' => $employee->workReports()->where('status', 'submitted')->count(),
+        $employee->load('user', 'department', 'manager.user');
+
+        $now = now();
+
+        // Task stats
+        $tasks = $employee->tasks();
+        $taskStats = [
+            'total'     => (clone $tasks)->count(),
+            'completed' => (clone $tasks)->where('status', 'completed')->count(),
+            'in_progress' => (clone $tasks)->where('status', 'in_progress')->count(),
+            'pending'   => (clone $tasks)->whereIn('status', ['pending', 'assigned'])->count(),
+            'overdue'   => (clone $tasks)->whereNotIn('status', ['completed', 'cancelled'])
+                                ->whereNotNull('due_date')->where('due_date', '<', $now)->count(),
         ];
 
-        return response()->json($stats);
+        // Attendance stats this month
+        $attendance = $employee->attendance()->whereMonth('date', $now->month)->whereYear('date', $now->year);
+        $attendanceStats = [
+            'present'    => (clone $attendance)->whereIn('status', ['present', 'late'])->count(),
+            'absent'     => (clone $attendance)->where('status', 'absent')->count(),
+            'late'       => (clone $attendance)->where('status', 'late')->count(),
+            'percentage' => $this->getAttendancePercentage($employee),
+            'avg_hours'  => round((clone $attendance)->avg('work_hours') ?? 0, 1),
+        ];
+
+        // Work reports
+        $reportsStats = [
+            'total'     => $employee->workReports()->count(),
+            'approved'  => $employee->workReports()->where('status', 'approved')->count(),
+            'submitted' => $employee->workReports()->where('status', 'submitted')->count(),
+            'rejected'  => $employee->workReports()->where('status', 'rejected')->count(),
+        ];
+
+        // Monthly attendance chart (last 6 months)
+        $chartLabels = [];
+        $chartPresent = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = $now->copy()->subMonths($i);
+            $chartLabels[] = $month->format('M Y');
+            $chartPresent[] = $employee->attendance()
+                ->whereMonth('date', $month->month)
+                ->whereYear('date', $month->year)
+                ->whereIn('status', ['present', 'late'])
+                ->count();
+        }
+
+        // Recent tasks
+        $recentTasks = $employee->tasks()->with('project')
+            ->latest('updated_at')->limit(5)->get();
+
+        // Recent work reports
+        $recentReports = $employee->workReports()->latest()->limit(5)->get();
+
+        return view('admin.employees.performance', compact(
+            'employee', 'taskStats', 'attendanceStats', 'reportsStats',
+            'chartLabels', 'chartPresent', 'recentTasks', 'recentReports'
+        ));
     }
 
     public function exportExcel()
