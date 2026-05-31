@@ -157,10 +157,23 @@ class TransactionController extends Controller
             $this->fraudService->createAlert($transaction, $analysis);
         }
 
+        // If transaction created directly as success, update wallet immediately
+        if ($transaction->status === 'success' && $transaction->user_id) {
+            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            if ($wallet->status === 'active') {
+                $desc = 'Transaction ' . $transaction->transaction_id;
+                if ($transaction->type === 'credit') {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                } else {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                }
+            }
+        }
+
         TransactionLog::create([
             'transaction_id' => $transaction->id,
             'action' => 'created',
-            'to_status' => 'pending',
+            'to_status' => $transaction->status,
             'performed_by' => auth()->id(),
             'ip_address' => $request->ip(),
         ]);
