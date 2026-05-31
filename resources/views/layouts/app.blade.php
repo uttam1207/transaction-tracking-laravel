@@ -608,7 +608,7 @@
                 @if($svcUser->isSuperAdmin())
                 <a href="{{ route('admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
-                    <span class="nav-label">Wallets</span>
+                    <span class="nav-label">Wallet</span>
                 </a>
                 <a href="{{ route('admin.roles.index') }}" class="sidebar-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
@@ -649,8 +649,8 @@
                     <span class="nav-label">Leave Requests</span>
                 </a>
                 <a href="{{ route('employee.wallet.index') }}" class="sidebar-link {{ request()->routeIs('employee.wallet.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
-                    <span class="nav-label">My Wallet</span>
+                    <span class="nav-icon"><i class="bi bi-cash-stack"></i></span>
+                    <span class="nav-label">My Revenue</span>
                 </a>
 
 
