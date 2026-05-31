@@ -11,15 +11,26 @@ class WalletController extends Controller
 {
     public function index()
     {
+        // Ensure every user has a wallet record
+        $userIdsWithWallet = Wallet::pluck('user_id');
+        User::whereNotIn('id', $userIdsWithWallet)->each(function (User $user) {
+            Wallet::create([
+                'user_id'  => $user->id,
+                'balance'  => 0.00,
+                'currency' => 'INR',
+                'status'   => 'active',
+            ]);
+        });
+
         $wallets = Wallet::with('user')
-            ->orderByDesc('balance')
+            ->orderByDesc('updated_at')
             ->paginate(20);
 
         $stats = [
-            'total'        => Wallet::count(),
-            'total_balance'=> Wallet::sum('balance'),
-            'frozen'       => Wallet::where('status', 'frozen')->count(),
-            'active'       => Wallet::where('status', 'active')->count(),
+            'total'         => Wallet::count(),
+            'total_balance' => Wallet::sum('balance'),
+            'frozen'        => Wallet::where('status', 'frozen')->count(),
+            'active'        => Wallet::where('status', 'active')->count(),
         ];
 
         return view('admin.wallets.index', compact('wallets', 'stats'));
