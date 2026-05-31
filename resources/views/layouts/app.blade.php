@@ -18,10 +18,10 @@
     <style>
         :root {
             --sidebar-width: 260px;
-            --sidebar-bg: #1a1d23;
-            --sidebar-text: #a0aec0;
+            --sidebar-bg: #0f1117;
+            --sidebar-text: #8b95a8;
             --sidebar-active: #4f46e5;
-            --header-height: 60px;
+            --header-height: 64px;
         }
 
         [data-bs-theme="dark"] {
@@ -31,7 +31,7 @@
 
         body { font-family: 'Inter', sans-serif; }
 
-        /* Sidebar */
+        /* ── Sidebar Shell ── */
         .sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -39,89 +39,173 @@
             position: fixed;
             top: 0; left: 0;
             z-index: 1000;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease;
             overflow-y: auto;
             overflow-x: hidden;
-            scrollbar-width: thin;
+            scrollbar-width: none;
             display: flex;
             flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.06);
         }
+        .sidebar::-webkit-scrollbar { display: none; }
 
+        /* ── Brand ── */
         .sidebar-brand {
-            padding: 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            color: #fff;
-            font-weight: 700;
-            font-size: 1.2rem;
+            padding: 0 16px;
+            height: 64px;
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
-
         .sidebar-brand .brand-icon {
             width: 36px; height: 36px;
-            background: var(--sidebar-active);
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(79,70,229,.4);
+        }
+        .sidebar-brand .brand-name {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -.3px;
+        }
+        .sidebar-brand .brand-badge {
+            margin-left: auto;
+            background: rgba(79,70,229,.2);
+            color: #818cf8;
+            font-size: .6rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            border: 1px solid rgba(129,140,248,.2);
+            letter-spacing: .5px;
+            text-transform: uppercase;
         }
 
-        .sidebar-nav { padding: 16px 0; flex: 1; }
+        /* ── Nav ── */
+        .sidebar-nav { padding: 12px 0; flex: 1; }
 
         .nav-section-title {
-            color: rgba(255,255,255,0.35);
-            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,.25);
+            font-size: .6rem;
             font-weight: 700;
-            letter-spacing: 1.5px;
+            letter-spacing: 1.8px;
             text-transform: uppercase;
-            padding: 12px 20px 4px;
+            padding: 16px 20px 6px;
+        }
+        .nav-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,.06);
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 9px 20px;
+            margin: 1px 10px;
+            padding: 8px 12px;
             color: var(--sidebar-text);
             text-decoration: none;
-            font-size: 0.875rem;
-            border-radius: 0;
-            transition: all 0.2s;
+            font-size: .85rem;
+            font-weight: 500;
+            border-radius: 10px;
+            transition: all .18s;
             position: relative;
         }
-
-        .sidebar-link:hover, .sidebar-link.active {
+        .sidebar-link:hover {
+            color: #e2e8f0;
+            background: rgba(255,255,255,.06);
+        }
+        .sidebar-link.active {
             color: #fff;
-            background: rgba(79, 70, 229, 0.15);
+            background: linear-gradient(135deg, rgba(79,70,229,.35), rgba(124,58,237,.25));
+            box-shadow: inset 0 0 0 1px rgba(129,140,248,.15);
         }
-
-        .sidebar-link.active::before {
-            content: '';
-            position: absolute;
-            left: 0; top: 0; bottom: 0;
-            width: 3px;
-            background: var(--sidebar-active);
-            border-radius: 0 2px 2px 0;
+        .sidebar-link .nav-icon {
+            width: 30px; height: 30px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .95rem;
+            flex-shrink: 0;
+            background: rgba(255,255,255,.05);
+            transition: all .18s;
         }
-
-        .sidebar-link .bi {
-            font-size: 1rem;
-            width: 20px;
-            text-align: center;
+        .sidebar-link:hover .nav-icon {
+            background: rgba(255,255,255,.1);
         }
-
+        .sidebar-link.active .nav-icon {
+            background: rgba(79,70,229,.5);
+            color: #a5b4fc;
+        }
+        .sidebar-link .nav-label { flex: 1; }
         .sidebar-link .badge {
-            margin-left: auto;
-            font-size: 0.6rem;
+            font-size: .58rem;
+            padding: 2px 6px;
+            border-radius: 20px;
         }
 
-        /* Main Content */
+        /* ── Sidebar Footer ── */
+        .sidebar-footer {
+            padding: 12px;
+            border-top: 1px solid rgba(255,255,255,.06);
+            flex-shrink: 0;
+        }
+        .sidebar-user-card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.06);
+        }
+        .sidebar-user-card img { flex-shrink: 0; }
+        .sidebar-user-card .user-name {
+            color: #e2e8f0;
+            font-size: .82rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar-user-card .user-role {
+            color: var(--sidebar-text);
+            font-size: .68rem;
+        }
+        .sidebar-user-card .logout-btn {
+            margin-left: auto;
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: rgba(239,68,68,.1);
+            border: none;
+            color: #f87171;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .85rem;
+            cursor: pointer;
+            transition: background .15s;
+            flex-shrink: 0;
+        }
+        .sidebar-user-card .logout-btn:hover { background: rgba(239,68,68,.25); }
+
+        /* ── Main Content ── */
         .main-wrapper {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
-            transition: all 0.3s;
+            transition: margin-left 0.3s;
         }
 
-        /* Topbar */
+        /* ── Topbar ── */
         .topbar {
             height: var(--header-height);
             background: var(--bs-body-bg);
@@ -145,7 +229,6 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
-
         .stat-icon {
             width: 48px; height: 48px;
             border-radius: 12px;
@@ -170,7 +253,7 @@
             text-align: center;
         }
 
-        /* Mobile sidebar toggle */
+        /* Mobile */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
             .sidebar.show { transform: translateX(0); }
@@ -191,133 +274,175 @@
 <body>
     <!-- Sidebar -->
     <nav class="sidebar" id="sidebar">
+
+        {{-- Brand --}}
         <div class="sidebar-brand">
-            <div class="brand-icon">
-                <i class="bi bi-shield-check text-white"></i>
-            </div>
-            <span>TxMonitor</span>
+            <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+            <span class="brand-name">TxMonitor</span>
+            <span class="brand-badge">Pro</span>
         </div>
 
+        {{-- Nav Items --}}
         <div class="sidebar-nav">
             @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+
                 <div class="nav-section-title">Main</div>
+
                 <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
+                    <span class="nav-label">Dashboard</span>
                 </a>
                 <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
-                    <i class="bi bi-arrow-left-right"></i> Transactions
+                    <span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span>
+                    <span class="nav-label">Transactions</span>
                 </a>
                 <a href="{{ route('admin.fraud-alerts.index') }}" class="sidebar-link {{ request()->routeIs('admin.fraud-alerts.*') ? 'active' : '' }}">
-                    <i class="bi bi-shield-exclamation"></i> Fraud Alerts
+                    <span class="nav-icon"><i class="bi bi-shield-exclamation"></i></span>
+                    <span class="nav-label">Fraud Alerts</span>
                     @php $fraudCount = \App\Models\FraudAlert::where('status','open')->count(); @endphp
-                    @if($fraudCount > 0) <span class="badge bg-danger">{{ $fraudCount }}</span> @endif
+                    @if($fraudCount > 0)<span class="badge bg-danger">{{ $fraudCount }}</span>@endif
                 </a>
 
                 <div class="nav-section-title">People</div>
+
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <i class="bi bi-people"></i> Users
+                    <span class="nav-icon"><i class="bi bi-people"></i></span>
+                    <span class="nav-label">Users</span>
                 </a>
                 <a href="{{ route('admin.employees.index') }}" class="sidebar-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
-                    <i class="bi bi-person-badge"></i> Employees
+                    <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
+                    <span class="nav-label">Employees</span>
                 </a>
 
                 <div class="nav-section-title">Work Tracking</div>
+
                 <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
-                    <i class="bi bi-clock-history"></i> Attendance
+                    <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
+                    <span class="nav-label">Attendance</span>
                 </a>
                 <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
-                    <i class="bi bi-kanban"></i> Tasks
+                    <span class="nav-icon"><i class="bi bi-kanban"></i></span>
+                    <span class="nav-label">Tasks</span>
                 </a>
                 <a href="{{ route('admin.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.work-reports.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-check"></i> Work Reports
+                    <span class="nav-icon"><i class="bi bi-file-earmark-check"></i></span>
+                    <span class="nav-label">Work Reports</span>
                 </a>
                 <a href="{{ route('admin.timesheets.index') }}" class="sidebar-link {{ request()->routeIs('admin.timesheets.*') ? 'active' : '' }}">
-                    <i class="bi bi-table"></i> Timesheets
+                    <span class="nav-icon"><i class="bi bi-table"></i></span>
+                    <span class="nav-label">Timesheets</span>
                 </a>
                 <a href="{{ route('admin.teams.index') }}" class="sidebar-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
-                    <i class="bi bi-people-fill"></i> Teams
+                    <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="nav-label">Teams</span>
                 </a>
                 <a href="{{ route('admin.shifts.index') }}" class="sidebar-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-range"></i> Shifts
+                    <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
+                    <span class="nav-label">Shifts</span>
                 </a>
 
                 <div class="nav-section-title">Reports</div>
+
                 <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
-                    <i class="bi bi-bar-chart"></i> Tx Reports
+                    <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
+                    <span class="nav-label">Tx Reports</span>
                 </a>
                 <a href="{{ route('admin.reports.employees') }}" class="sidebar-link {{ request()->routeIs('admin.reports.employees') ? 'active' : '' }}">
-                    <i class="bi bi-graph-up"></i> HR Reports
+                    <span class="nav-icon"><i class="bi bi-graph-up"></i></span>
+                    <span class="nav-label">HR Reports</span>
                 </a>
                 <a href="{{ route('admin.reports.audit-logs') }}" class="sidebar-link {{ request()->routeIs('admin.reports.audit-logs') ? 'active' : '' }}">
-                    <i class="bi bi-journal-text"></i> Audit Logs
+                    <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
+                    <span class="nav-label">Audit Logs</span>
                 </a>
 
                 <div class="nav-section-title">Organisation</div>
+
                 <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
-                    <i class="bi bi-building"></i> Departments
+                    <span class="nav-icon"><i class="bi bi-building"></i></span>
+                    <span class="nav-label">Departments</span>
                 </a>
                 <a href="{{ route('admin.holidays.index') }}" class="sidebar-link {{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-heart"></i> Holidays
+                    <span class="nav-icon"><i class="bi bi-calendar-heart"></i></span>
+                    <span class="nav-label">Holidays</span>
                 </a>
                 <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
-                    <i class="bi bi-diagram-3"></i> Projects
+                    <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
+                    <span class="nav-label">Projects</span>
                 </a>
 
                 <div class="nav-section-title">System</div>
+
                 <a href="{{ route('admin.queue.index') }}" class="sidebar-link {{ request()->routeIs('admin.queue.*') ? 'active' : '' }}">
-                    <i class="bi bi-cpu"></i> Queue Monitor
+                    <span class="nav-icon"><i class="bi bi-cpu"></i></span>
+                    <span class="nav-label">Queue Monitor</span>
                     @php $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count(); @endphp
-                    @if($failedJobs > 0) <span class="badge bg-danger">{{ $failedJobs }}</span> @endif
+                    @if($failedJobs > 0)<span class="badge bg-danger">{{ $failedJobs }}</span>@endif
                 </a>
                 <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <i class="bi bi-gear"></i> Settings
+                    <span class="nav-icon"><i class="bi bi-gear"></i></span>
+                    <span class="nav-label">Settings</span>
                 </a>
 
                 <div class="nav-section-title">Company</div>
+
                 <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
-                    <i class="bi bi-folder2-open"></i> Documents
+                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
+                    <span class="nav-label">Documents</span>
                 </a>
+
             @else
+
                 <div class="nav-section-title">My Workspace</div>
+
                 <a href="{{ route('employee.dashboard') }}" class="sidebar-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-speedometer2"></i> Dashboard
+                    <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
+                    <span class="nav-label">Dashboard</span>
                 </a>
                 <a href="{{ route('employee.attendance.index') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
-                    <i class="bi bi-clock-history"></i> Attendance
+                    <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
+                    <span class="nav-label">Attendance</span>
                 </a>
                 <a href="{{ route('employee.tasks.index') }}" class="sidebar-link {{ request()->routeIs('employee.tasks.*') ? 'active' : '' }}">
-                    <i class="bi bi-list-task"></i> My Tasks
+                    <span class="nav-icon"><i class="bi bi-list-task"></i></span>
+                    <span class="nav-label">My Tasks</span>
                 </a>
                 <a href="{{ route('employee.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('employee.work-reports.*') ? 'active' : '' }}">
-                    <i class="bi bi-file-earmark-text"></i> Work Reports
+                    <span class="nav-icon"><i class="bi bi-file-earmark-text"></i></span>
+                    <span class="nav-label">Work Reports</span>
                 </a>
                 <a href="{{ route('employee.attendance.leaves') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.leaves') ? 'active' : '' }}">
-                    <i class="bi bi-calendar-x"></i> Leave Requests
+                    <span class="nav-icon"><i class="bi bi-calendar-x"></i></span>
+                    <span class="nav-label">Leave Requests</span>
                 </a>
 
                 <div class="nav-section-title">Company</div>
+
                 <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
-                    <i class="bi bi-folder2-open"></i> Documents
+                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
+                    <span class="nav-label">Documents</span>
                 </a>
+
             @endif
         </div>
 
-        <!-- Sidebar Footer -->
-        <div class="p-3 border-top" style="border-color: rgba(255,255,255,0.08) !important; margin-top: auto;">
-            <div class="d-flex align-items-center gap-2">
+        {{-- Footer User Card --}}
+        <div class="sidebar-footer">
+            <div class="sidebar-user-card">
                 <img src="{{ auth()->user()->avatar_url }}" class="rounded-circle" width="32" height="32" alt="">
-                <div class="flex-grow-1 overflow-hidden">
-                    <div class="text-white small fw-semibold text-truncate">{{ auth()->user()->name }}</div>
-                    <div style="color: var(--sidebar-text); font-size: 0.7rem;">{{ ucfirst(str_replace('_', ' ', auth()->user()->role)) }}</div>
+                <div style="flex:1; min-width:0;">
+                    <div class="user-name">{{ auth()->user()->name }}</div>
+                    <div class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</div>
                 </div>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-sm" style="color: var(--sidebar-text);" title="Logout">
+                    <button type="submit" class="logout-btn" title="Logout">
                         <i class="bi bi-box-arrow-right"></i>
                     </button>
                 </form>
             </div>
         </div>
+
     </nav>
 
     <!-- Main Wrapper -->
