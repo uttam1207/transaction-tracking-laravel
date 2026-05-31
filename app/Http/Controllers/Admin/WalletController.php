@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
@@ -56,14 +57,32 @@ class WalletController extends Controller
             'description' => 'required|string|max:255',
         ]);
 
-        $wallet->credit(
-            (float) $request->amount,
-            $request->description,
-            auth()->id()
-        );
+        $wallet->load('user');
+        $amount = (float) $request->amount;
+
+        // Credit wallet balance
+        $walletTxn = $wallet->credit($amount, $request->description, auth()->id());
+
+        // Create a Transaction record so it shows in the transactions list
+        Transaction::create([
+            'user_id'        => $wallet->user_id,
+            'category'       => 'deposit',
+            'type'           => 'credit',
+            'amount'         => $amount,
+            'currency'       => 'INR',
+            'fee'            => 0,
+            'net_amount'     => $amount,
+            'status'         => 'success',
+            'payment_method' => 'wallet',
+            'description'    => $request->description,
+            'sender_name'    => auth()->user()->name . ' (Super Admin)',
+            'receiver_name'  => $wallet->user->name,
+            'reference'      => 'WALLET-' . $walletTxn->id,
+            'processed_at'   => now(),
+        ]);
 
         return redirect()->route('admin.wallets.show', $wallet->user_id)
-            ->with('success', '₹' . number_format($request->amount, 2) . ' added to wallet successfully.');
+            ->with('success', '₹' . number_format($amount, 2) . ' added to wallet successfully.');
     }
 
     public function toggleFreeze(Wallet $wallet)

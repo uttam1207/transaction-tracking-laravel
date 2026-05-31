@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Services\FraudDetectionService;
 use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -152,6 +153,32 @@ class TransactionController extends Controller
             'status' => $request->status,
             'processed_at' => in_array($request->status, ['success', 'failed']) ? now() : null,
         ]);
+
+        // Update wallet balance when transaction succeeds (only once)
+        if ($request->status === 'success' && $oldStatus !== 'success' && $transaction->user_id) {
+            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            if ($wallet->status === 'active') {
+                $desc = 'Transaction ' . $transaction->transaction_id;
+                if ($transaction->type === 'credit') {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                } else {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                }
+            }
+        }
+
+        // Reverse wallet if transaction is reversed (only if was previously success)
+        if ($request->status === 'reversed' && $oldStatus === 'success' && $transaction->user_id) {
+            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            if ($wallet->status === 'active') {
+                $desc = 'Reversal of ' . $transaction->transaction_id;
+                if ($transaction->type === 'credit') {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                } else {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                }
+            }
+        }
 
         TransactionLog::create([
             'transaction_id' => $transaction->id,
