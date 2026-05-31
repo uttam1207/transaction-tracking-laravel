@@ -2,15 +2,15 @@
 
 namespace App\Services;
 
-use App\Models\Transaction;
-use App\Models\Employee;
-use App\Models\Attendance;
-use App\Models\FraudAlert;
+use Carbon\Carbon;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Leave;
+use App\Models\Employee;
+use App\Models\Attendance;
+use App\Models\FraudAlert;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardService
 {
@@ -24,6 +24,7 @@ class DashboardService
             'today_transactions' => Transaction::whereDate('created_at', $today)->count(),
             'total_revenue' => Transaction::where('status', 'success')->sum('amount'),
             'today_revenue' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
+            'fraud_alerts' => FraudAlert::count(),
             'fraud_alerts_open' => FraudAlert::open()->count(),
             'fraud_alerts_critical' => FraudAlert::critical()->open()->count(),
             'active_users' => User::active()->count(),
@@ -47,10 +48,10 @@ class DashboardService
             DB::raw('SUM(amount) as total_amount'),
             DB::raw('SUM(CASE WHEN status = "success" THEN amount ELSE 0 END) as successful_amount')
         )
-        ->where('created_at', '>=', now()->subDays($days))
-        ->groupBy(DB::raw('DATE(created_at)'))
-        ->orderBy('date')
-        ->get();
+            ->where('created_at', '>=', now()->subDays($days))
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('date')
+            ->get();
 
         return [
             'labels' => $data->pluck('date')->map(fn($d) => Carbon::parse($d)->format('M d'))->toArray(),
@@ -67,10 +68,10 @@ class DashboardService
             DB::raw('SUM(CASE WHEN status IN ("present", "late") THEN 1 ELSE 0 END) as present'),
             DB::raw('SUM(CASE WHEN status = "absent" THEN 1 ELSE 0 END) as absent')
         )
-        ->where('date', '>=', now()->subDays($days))
-        ->groupBy(DB::raw('DATE(date)'))
-        ->orderBy('date')
-        ->get();
+            ->where('date', '>=', now()->subDays($days))
+            ->groupBy(DB::raw('DATE(date)'))
+            ->orderBy('date')
+            ->get();
 
         return [
             'labels' => $data->pluck('date')->map(fn($d) => Carbon::parse($d)->format('M d'))->toArray(),
@@ -115,11 +116,11 @@ class DashboardService
             DB::raw('MONTH(created_at) as month'),
             DB::raw('SUM(CASE WHEN status = "success" THEN amount ELSE 0 END) as revenue')
         )
-        ->where('created_at', '>=', now()->subMonths(12))
-        ->groupBy('year', 'month')
-        ->orderBy('year')
-        ->orderBy('month')
-        ->get();
+            ->where('created_at', '>=', now()->subMonths(12))
+            ->groupBy('year', 'month')
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
 
         return [
             'labels' => $data->map(fn($r) => Carbon::createFromDate($r->year, $r->month, 1)->format('M Y'))->toArray(),
