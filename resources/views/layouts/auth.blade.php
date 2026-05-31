@@ -10,7 +10,8 @@
         * { box-sizing: border-box; }
 
         body {
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             margin: 0;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             display: flex;
@@ -20,7 +21,7 @@
         /* ── Left Panel ── */
         .auth-panel-left {
             width: 52%;
-            min-height: 100vh;
+            height: 100vh;
             background:
                 linear-gradient(
                     160deg,
@@ -34,7 +35,7 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 48px 56px;
+            padding: 36px 48px;
             position: relative;
             overflow: hidden;
         }
@@ -78,43 +79,43 @@
         }
         .auth-panel-left .hero h2 {
             color: #fff;
-            font-size: 2.1rem;
+            font-size: 1.7rem;
             font-weight: 800;
             line-height: 1.25;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             letter-spacing: -.5px;
             text-shadow: 0 2px 12px rgba(0,0,0,.3);
         }
         .auth-panel-left .hero p {
             color: rgba(255,255,255,.78);
-            font-size: .93rem;
-            line-height: 1.7;
+            font-size: .88rem;
+            line-height: 1.6;
             max-width: 380px;
         }
 
         /* Glass-card feature items */
-        .feature-list { margin-top: 32px; display: flex; flex-direction: column; gap: 10px; }
+        .feature-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
         .feature-item {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             color: rgba(255,255,255,.92);
-            font-size: .875rem;
+            font-size: .83rem;
             background: rgba(255,255,255,.08);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255,255,255,.12);
-            border-radius: 12px;
-            padding: 11px 14px;
+            border-radius: 10px;
+            padding: 9px 12px;
             transition: background .2s;
         }
         .feature-item:hover { background: rgba(255,255,255,.13); }
         .feature-item-icon {
-            width: 34px; height: 34px;
+            width: 30px; height: 30px;
             background: rgba(255,255,255,.15);
-            border-radius: 9px;
+            border-radius: 8px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            font-size: .95rem;
+            font-size: .85rem;
         }
 
         .auth-footer-quote {
@@ -133,12 +134,13 @@
         /* ── Right Panel ── */
         .auth-panel-right {
             width: 48%;
-            min-height: 100vh;
+            height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 48px 56px;
+            padding: 32px 48px;
             background: #fff;
+            overflow-y: auto;
         }
 
         .auth-form-wrap {
@@ -147,20 +149,20 @@
         }
 
         .auth-form-title {
-            font-size: 1.6rem;
+            font-size: 1.45rem;
             font-weight: 800;
             color: #111827;
             letter-spacing: -.5px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
         .auth-form-sub {
             color: #6b7280;
-            font-size: .9rem;
-            margin-bottom: 32px;
+            font-size: .85rem;
+            margin-bottom: 22px;
         }
 
         /* Inputs */
-        .auth-field { margin-bottom: 20px; }
+        .auth-field { margin-bottom: 16px; }
         .auth-field label {
             display: block;
             font-size: .8rem;
@@ -182,8 +184,8 @@
             padding-left: 40px;
             border-radius: 10px;
             border: 1.5px solid #e5e7eb;
-            height: 46px;
-            font-size: .9rem;
+            height: 42px;
+            font-size: .875rem;
             transition: border-color .2s, box-shadow .2s;
             background: #f9fafb;
         }
@@ -211,7 +213,7 @@
         /* Submit Button */
         .btn-auth {
             width: 100%;
-            height: 46px;
+            height: 42px;
             border-radius: 10px;
             font-size: .92rem;
             font-weight: 600;
@@ -239,8 +241,8 @@
             background: #f0f4ff;
             border: 1px solid #c7d2fe;
             border-radius: 10px;
-            padding: 14px 16px;
-            margin-top: 20px;
+            padding: 10px 14px;
+            margin-top: 14px;
         }
         .demo-box .demo-title {
             font-size: .72rem;
@@ -265,13 +267,13 @@
 
         /* Mobile */
         @media (max-width: 768px) {
-            body { flex-direction: column; }
+            body { flex-direction: column; height: auto; overflow: auto; }
             .auth-panel-left { display: none; }
             .auth-panel-right {
                 width: 100%;
-                padding: 32px 24px;
+                height: auto;
+                padding: 40px 24px;
                 align-items: flex-start;
-                padding-top: 48px;
             }
             .auth-form-wrap { max-width: 100%; }
         }
