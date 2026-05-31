@@ -282,10 +282,12 @@
         .page-hero::before {
             content:''; position:absolute; top:-50px; right:-40px;
             width:200px; height:200px; background:rgba(255,255,255,.05); border-radius:50%;
+            pointer-events:none;
         }
         .page-hero::after {
             content:''; position:absolute; bottom:-60px; right:80px;
             width:140px; height:140px; background:rgba(255,255,255,.04); border-radius:50%;
+            pointer-events:none;
         }
         .page-hero h4, .page-hero h5 { font-weight:800; letter-spacing:-.4px; margin-bottom:4px; }
         .page-hero p   { opacity:.7; font-size:.83rem; margin-bottom:0; }
