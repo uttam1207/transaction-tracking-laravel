@@ -34,14 +34,17 @@
         /* Sidebar */
         .sidebar {
             width: var(--sidebar-width);
-            min-height: 100vh;
+            height: 100vh;
             background: var(--sidebar-bg);
             position: fixed;
             top: 0; left: 0;
             z-index: 1000;
             transition: all 0.3s ease;
             overflow-y: auto;
+            overflow-x: hidden;
             scrollbar-width: thin;
+            display: flex;
+            flex-direction: column;
         }
 
         .sidebar-brand {
@@ -62,7 +65,7 @@
             display: flex; align-items: center; justify-content: center;
         }
 
-        .sidebar-nav { padding: 16px 0; }
+        .sidebar-nav { padding: 16px 0; flex: 1; }
 
         .nav-section-title {
             color: rgba(255,255,255,0.35);
