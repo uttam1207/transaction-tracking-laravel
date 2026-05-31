@@ -207,8 +207,8 @@
                 <div class="row g-2 text-center">
                     <div class="col-3"><div class="fw-bold text-primary">{{ $stats['total_transactions'] }}</div><div class="small text-muted">Transactions</div></div>
                     <div class="col-3"><div class="fw-bold text-success">${{ number_format($stats['total_revenue'],0) }}</div><div class="small text-muted">Revenue</div></div>
-                    <div class="col-3"><div class="fw-bold text-danger">{{ $stats['fraud_alerts'] }}</div><div class="small text-muted">Fraud Alerts</div></div>
-                    <div class="col-3"><div class="fw-bold text-info">{{ $stats['active_employees'] }}</div><div class="small text-muted">Active Employees</div></div>
+                    <div class="col-3"><div class="fw-bold text-danger">{{ $stats['fraud_alerts_open'] }}</div><div class="small text-muted">Fraud Alerts</div></div>
+                    <div class="col-3"><div class="fw-bold text-info">{{ $stats['total_employees'] }}</div><div class="small text-muted">Active Employees</div></div>
                 </div>
             </div>
         </div>
