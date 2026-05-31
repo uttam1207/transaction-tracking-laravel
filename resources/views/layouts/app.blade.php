@@ -486,6 +486,10 @@
                     <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                     <span class="nav-label">Dashboard</span>
                 </a>
+                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
+                    <span class="nav-label">Document</span>
+                </a>
                 @if(\App\Models\ServicePermission::canAccess('transactions', $svcUser))
                 <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span>
@@ -616,13 +620,6 @@
                 </a>
                 @endif
 
-                <div class="nav-section-title">Company</div>
-
-                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
-                    <span class="nav-label">Documents</span>
-                </a>
-
             @else
 
                 <div class="nav-section-title">My Workspace</div>
@@ -630,6 +627,10 @@
                 <a href="{{ route('employee.dashboard') }}" class="sidebar-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                     <span class="nav-label">Dashboard</span>
+                </a>
+                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
+                    <span class="nav-label">Document</span>
                 </a>
                 <a href="{{ route('employee.attendance.index') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
@@ -652,12 +653,6 @@
                     <span class="nav-label">My Wallet</span>
                 </a>
 
-                <div class="nav-section-title">Company</div>
-
-                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
-                    <span class="nav-label">Documents</span>
-                </a>
 
             @endif
         </div>
