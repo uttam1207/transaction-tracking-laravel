@@ -5,6 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\User;
+use App\Models\TransactionLog;
+use App\Models\FraudAlert;
 
 class Transaction extends Model
 {
@@ -12,9 +15,11 @@ class Transaction extends Model
 
     protected $fillable = [
         'transaction_id', 'user_id', 'category', 'type', 'amount', 'currency',
-        'fee', 'net_amount', 'status', 'payment_method', 'sender_name',
-        'sender_account', 'sender_bank', 'receiver_name', 'receiver_account',
-        'receiver_bank', 'reference', 'description', 'notes', 'metadata',
+        'fee', 'net_amount', 'status', 'payment_method',
+        'sender_name', 'sender_account', 'sender_bank', 'sender_mobile', 'sender_company',
+        'receiver_name', 'receiver_account', 'receiver_bank',
+        'receiver_mobile', 'receiver_company', 'receiver_address',
+        'reference', 'description', 'notes', 'metadata',
         'ip_address', 'country', 'device_id', 'is_flagged', 'risk_score',
         'fraud_reason', 'is_refunded', 'refund_transaction_id', 'processed_at',
         'attachments',
@@ -48,7 +53,7 @@ class Transaction extends Model
 
     public function refundTransaction()
     {
-        return $this->belongsTo(Transaction::class, 'refund_transaction_id');
+        return $this->belongsTo(self::class, 'refund_transaction_id');
     }
 
     public function scopeFlagged($query)

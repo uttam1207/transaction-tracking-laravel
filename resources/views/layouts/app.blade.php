@@ -490,14 +490,6 @@
                     <span class="nav-label">Transactions</span>
                 </a>
                 @endif
-                @if(\App\Models\ServicePermission::canAccess('fraud_alerts', $svcUser))
-                <a href="{{ route('admin.fraud-alerts.index') }}" class="sidebar-link {{ request()->routeIs('admin.fraud-alerts.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-shield-exclamation"></i></span>
-                    <span class="nav-label">Fraud Alerts</span>
-                    @php $fraudCount = \App\Models\FraudAlert::where('status','open')->count(); @endphp
-                    @if($fraudCount > 0)<span class="badge bg-danger">{{ $fraudCount }}</span>@endif
-                </a>
-                @endif
 
                 <div class="nav-section-title">People</div>
 

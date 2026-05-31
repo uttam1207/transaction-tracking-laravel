@@ -84,28 +84,62 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'category' => 'required|string',
-            'type' => 'required|in:debit,credit',
-            'amount' => 'required|numeric|min:0.01',
-            'currency' => 'required|string|size:3',
-            'payment_method' => 'nullable|string',
-            'sender_name' => 'nullable|string|max:255',
-            'sender_account' => 'nullable|string|max:100',
-            'receiver_name' => 'nullable|string|max:255',
-            'receiver_account' => 'nullable|string|max:100',
+            'category'          => 'required|string',
+            'type'              => 'required|in:debit,credit',
+            'amount'            => 'required|numeric|min:0.01',
+            'currency'          => 'required|string|size:3',
+            'payment_method'    => 'nullable|string',
+            'sender_name'       => 'nullable|string|max:255',
+            'sender_account'    => 'nullable|string|max:100',
+            'sender_mobile'     => 'nullable|string|max:20',
+            'sender_company'    => 'nullable|string|max:255',
+            'receiver_name'     => 'nullable|string|max:255',
+            'receiver_account'  => 'nullable|string|max:100',
+            'receiver_mobile'   => 'nullable|string|max:20',
+            'receiver_company'  => 'nullable|string|max:255',
+            'receiver_address'  => 'nullable|string|max:500',
+            'receipt'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
+
+        // Handle receipt upload
+        $attachments = [];
+        if ($request->hasFile('receipt') && $request->file('receipt')->isValid()) {
+            $path = $request->file('receipt')->store('receipts', 'public');
+            $attachments[] = [
+                'type'         => 'receipt',
+                'path'         => $path,
+                'original'     => $request->file('receipt')->getClientOriginalName(),
+                'uploaded_at'  => now()->toDateTimeString(),
+            ];
+        }
+
+        // Cash voucher metadata
+        $metadata = null;
+        if ($request->payment_method === 'cash' && $request->filled('cash_voucher_name')) {
+            $metadata = [
+                'cash_voucher' => [
+                    'company_name' => $request->cash_voucher_company,
+                    'name'         => $request->cash_voucher_name,
+                    'mobile'       => $request->cash_voucher_mobile,
+                    'address'      => $request->cash_voucher_address,
+                ],
+            ];
+        }
 
         $transaction = Transaction::create(array_merge(
             $request->only([
                 'category', 'type', 'amount', 'currency', 'fee', 'payment_method',
-                'sender_name', 'sender_account', 'sender_bank',
+                'sender_name', 'sender_account', 'sender_bank', 'sender_mobile', 'sender_company',
                 'receiver_name', 'receiver_account', 'receiver_bank',
-                'reference', 'description', 'notes',
+                'receiver_mobile', 'receiver_company', 'receiver_address',
+                'reference', 'description', 'notes', 'country', 'device_id',
             ]),
             [
-                'user_id' => auth()->id(),
-                'status' => 'pending',
-                'ip_address' => $request->ip(),
+                'user_id'     => $request->user_id ?: auth()->id(),
+                'status'      => $request->status ?? 'pending',
+                'ip_address'  => $request->ip(),
+                'attachments' => $attachments ?: null,
+                'metadata'    => $metadata,
             ]
         ));
 
