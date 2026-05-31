@@ -21,7 +21,16 @@
         .auth-panel-left {
             width: 52%;
             min-height: 100vh;
-            background: linear-gradient(145deg, #1e1b4b 0%, #312e81 35%, #4f46e5 70%, #7c3aed 100%);
+            background:
+                linear-gradient(
+                    160deg,
+                    rgba(15, 10, 60, .91)  0%,
+                    rgba(49, 46, 129, .85) 40%,
+                    rgba(79, 70, 229, .78) 70%,
+                    rgba(109, 40, 217, .72) 100%
+                ),
+                url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1400&q=80')
+                center / cover no-repeat;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -30,22 +39,14 @@
             overflow: hidden;
         }
 
-        /* decorative blobs */
+        /* subtle noise texture overlay */
         .auth-panel-left::before {
             content: '';
             position: absolute;
-            width: 400px; height: 400px;
-            background: rgba(255,255,255,.05);
-            border-radius: 50%;
-            top: -100px; right: -100px;
-        }
-        .auth-panel-left::after {
-            content: '';
-            position: absolute;
-            width: 300px; height: 300px;
-            background: rgba(255,255,255,.04);
-            border-radius: 50%;
-            bottom: -80px; left: -80px;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
         }
 
         .auth-brand {
@@ -56,17 +57,20 @@
         }
         .auth-brand-icon {
             width: 44px; height: 44px;
-            background: rgba(255,255,255,.2);
-            border-radius: 12px;
+            background: rgba(255,255,255,.18);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.25);
+            border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.3rem;
             color: #fff;
         }
         .auth-brand-name {
             color: #fff;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             font-weight: 700;
             letter-spacing: -.3px;
+            text-shadow: 0 1px 4px rgba(0,0,0,.3);
         }
 
         .auth-panel-left .hero {
@@ -74,41 +78,54 @@
         }
         .auth-panel-left .hero h2 {
             color: #fff;
-            font-size: 2rem;
+            font-size: 2.1rem;
             font-weight: 800;
             line-height: 1.25;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             letter-spacing: -.5px;
+            text-shadow: 0 2px 12px rgba(0,0,0,.3);
         }
         .auth-panel-left .hero p {
-            color: rgba(255,255,255,.72);
-            font-size: .95rem;
-            line-height: 1.65;
+            color: rgba(255,255,255,.78);
+            font-size: .93rem;
+            line-height: 1.7;
             max-width: 380px;
         }
 
-        .feature-list { margin-top: 36px; display: flex; flex-direction: column; gap: 16px; }
+        /* Glass-card feature items */
+        .feature-list { margin-top: 32px; display: flex; flex-direction: column; gap: 10px; }
         .feature-item {
             display: flex;
             align-items: center;
             gap: 14px;
-            color: rgba(255,255,255,.85);
-            font-size: .88rem;
+            color: rgba(255,255,255,.92);
+            font-size: .875rem;
+            background: rgba(255,255,255,.08);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 12px;
+            padding: 11px 14px;
+            transition: background .2s;
         }
+        .feature-item:hover { background: rgba(255,255,255,.13); }
         .feature-item-icon {
-            width: 36px; height: 36px;
-            background: rgba(255,255,255,.12);
-            border-radius: 10px;
+            width: 34px; height: 34px;
+            background: rgba(255,255,255,.15);
+            border-radius: 9px;
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
-            font-size: 1rem;
+            font-size: .95rem;
         }
 
         .auth-footer-quote {
             position: relative; z-index: 1;
-            border-left: 3px solid rgba(255,255,255,.3);
-            padding-left: 16px;
-            color: rgba(255,255,255,.6);
+            background: rgba(255,255,255,.07);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,.12);
+            border-left: 3px solid rgba(255,255,255,.4);
+            border-radius: 0 10px 10px 0;
+            padding: 12px 16px;
+            color: rgba(255,255,255,.65);
             font-size: .8rem;
             font-style: italic;
         }
