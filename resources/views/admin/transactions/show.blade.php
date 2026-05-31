@@ -192,17 +192,17 @@
                 <div class="row g-0 mb-4 pb-4" style="border-bottom:1px solid #f3f4f6;">
                     <div class="col-auto {{ $transaction->type == 'debit' ? 'amount-type-debit' : '' }}">
                         <div class="detail-label">Net Amount</div>
-                        <div class="amount-big">{{ $transaction->currency }} {{ number_format($transaction->net_amount, 2) }}</div>
+                        <div class="amount-big">₹{{ number_format($transaction->net_amount, 2) }}</div>
                         <div style="margin-top:6px; display:flex; gap:8px; align-items:center;">
                             <span style="background:{{ $transaction->type=='debit'?'#fee2e2':'#dcfce7' }};color:{{ $transaction->type=='debit'?'#dc2626':'#16a34a' }};padding:2px 8px;border-radius:6px;font-size:.72rem;font-weight:700;">{{ ucfirst($transaction->type) }}</span>
-                            <span style="font-size:.78rem;color:#9ca3af;">Fee: {{ $transaction->currency }} {{ number_format($transaction->fee, 2) }}</span>
+                            <span style="font-size:.78rem;color:#9ca3af;">Fee: ₹{{ number_format($transaction->fee, 2) }}</span>
                         </div>
                     </div>
                 </div>
                 <div class="row g-3">
                     <div class="col-md-3">
                         <div class="detail-label">Gross Amount</div>
-                        <div class="detail-val fw-bold">{{ $transaction->currency }} {{ number_format($transaction->amount, 2) }}</div>
+                        <div class="detail-val fw-bold">₹{{ number_format($transaction->amount, 2) }}</div>
                     </div>
                     <div class="col-md-3">
                         <div class="detail-label">Category</div>

@@ -32,7 +32,7 @@ class SearchController extends Controller
                 'icon'     => 'arrow-left-right',
                 'color'    => 'primary',
                 'title'    => $t->transaction_id,
-                'subtitle' => $t->sender_name . ' → ' . $t->receiver_name . ' · ' . $t->currency . ' ' . number_format($t->amount, 2),
+                'subtitle' => $t->sender_name . ' → ' . $t->receiver_name . ' · ₹' . number_format($t->amount, 2),
                 'url'      => route('admin.transactions.show', $t->id),
             ];
         }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('category');
             $table->string('type')->default('debit'); // debit, credit
             $table->decimal('amount', 15, 2);
-            $table->string('currency')->default('USD');
+            $table->string('currency')->default('INR');
             $table->decimal('fee', 10, 2)->default(0);
             $table->decimal('net_amount', 15, 2)->default(0);
             $table->enum('status', ['pending', 'processing', 'success', 'failed', 'cancelled', 'reversed'])->default('pending');

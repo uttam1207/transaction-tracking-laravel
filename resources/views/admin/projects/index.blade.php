@@ -104,7 +104,7 @@
                     </td>
                     <td style="font-size:.83rem;">
                         @if($project->budget)
-                            <span style="font-weight:700;color:#374151;">${{ number_format($project->budget) }}</span>
+                            <span style="font-weight:700;color:#374151;">₹{{ number_format($project->budget) }}</span>
                         @else <span style="color:#9ca3af;">—</span> @endif
                     </td>
                     <td>

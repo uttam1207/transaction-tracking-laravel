@@ -308,8 +308,8 @@
                         <div style="font-size:.74rem; color:#9ca3af;">{{ $tx->ip_address ?? '—' }}</div>
                     </td>
                     <td>
-                        <div style="font-weight:700; font-size:.88rem; color:#111827;">{{ $tx->currency }} {{ number_format($tx->amount, 2) }}</div>
-                        <div style="font-size:.74rem; color:#9ca3af;">Fee: {{ number_format($tx->fee, 2) }}</div>
+                        <div style="font-weight:700; font-size:.88rem; color:#111827;">₹{{ number_format($tx->amount, 2) }}</div>
+                        <div style="font-size:.74rem; color:#9ca3af;">Fee: ₹{{ number_format($tx->fee, 2) }}</div>
                     </td>
                     <td><span class="cat-pill">{{ $tx->category }}</span></td>
                     <td>

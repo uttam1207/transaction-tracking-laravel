@@ -47,7 +47,7 @@
             <label class="flabel">Currency</label>
             <select name="currency" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;font-size:.84rem;">
                 <option value="">All Currencies</option>
-                @foreach(['USD','EUR','GBP'] as $c)
+                @foreach(['INR'] as $c)
                     <option value="{{ $c }}" @selected(request('currency') === $c)>{{ $c }}</option>
                 @endforeach
             </select>
@@ -67,7 +67,7 @@
     </div>
     <div class="col-md-3">
         <div class="info-card text-center" style="padding:18px;border-top:4px solid #16a34a;">
-            <div style="font-size:1.8rem;font-weight:800;color:#16a34a;line-height:1;">${{ number_format($stats['total_amount'] ?? 0, 2) }}</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#16a34a;line-height:1;">₹{{ number_format($stats['total_amount'] ?? 0, 2) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Volume</div>
         </div>
     </div>
@@ -79,7 +79,7 @@
     </div>
     <div class="col-md-3">
         <div class="info-card text-center" style="padding:18px;border-top:4px solid #f59e0b;">
-            <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;line-height:1;">${{ number_format($stats['total_fees'] ?? 0, 2) }}</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;line-height:1;">₹{{ number_format($stats['total_fees'] ?? 0, 2) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Fees</div>
         </div>
     </div>
@@ -127,13 +127,13 @@
 const chartData = @json($chartData ?? ['labels' => [], 'amounts' => []]);
 new ApexCharts(document.querySelector('#txChart'), {
     chart: { type: 'area', height: 240, toolbar: { show: false } },
-    series: [{ name: 'Volume ($)', data: chartData.amounts }],
+    series: [{ name: 'Volume (₹)', data: chartData.amounts }],
     xaxis: { categories: chartData.labels },
     colors: ['#6366f1'],
     dataLabels: { enabled: false },
     stroke: { curve: 'smooth', width: 2 },
     fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.05 } },
-    tooltip: { y: { formatter: v => '$' + v.toLocaleString() } },
+    tooltip: { y: { formatter: v => '₹' + v.toLocaleString() } },
     grid: { borderColor: '#f3f4f6' }
 }).render();
 </script>

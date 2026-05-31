@@ -95,7 +95,7 @@
                     </dd>
 
                     <dt>Budget</dt>
-                    <dd>{{ $project->budget ? '$'.number_format($project->budget) : '—' }}</dd>
+                    <dd>{{ $project->budget ? '₹'.number_format($project->budget) : '—' }}</dd>
 
                     <dt>Total Tasks</dt>
                     <dd><strong style="color:#4f46e5;">{{ $total }}</strong></dd>

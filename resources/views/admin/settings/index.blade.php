@@ -67,8 +67,8 @@
                         <div class="col-md-6">
                             <label class="flabel">Default Currency</label>
                             <select name="default_currency" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                @foreach(['USD'=>'USD ($)','EUR'=>'EUR (€)','GBP'=>'GBP (£)'] as $val => $label)
-                                    <option value="{{ $val }}" @selected(($settings['default_currency'] ?? 'USD') === $val)>{{ $label }}</option>
+                                @foreach(['INR'=>'INR (₹)','USD'=>'USD ($)','EUR'=>'EUR (€)','GBP'=>'GBP (£)'] as $val => $label)
+                                    <option value="{{ $val }}" @selected(($settings['default_currency'] ?? 'INR') === $val)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>

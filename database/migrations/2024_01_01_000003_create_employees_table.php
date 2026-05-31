@@ -20,7 +20,7 @@ return new class extends Migration
             $table->date('leaving_date')->nullable();
             $table->string('employment_type')->default('full_time'); // full_time, part_time, contract
             $table->decimal('salary', 12, 2)->nullable();
-            $table->string('salary_currency')->default('USD');
+            $table->string('salary_currency')->default('INR');
             $table->string('bank_account')->nullable();
             $table->string('tax_id')->nullable();
             $table->json('emergency_contact')->nullable();

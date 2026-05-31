@@ -14,8 +14,8 @@ class SettingSeeder extends Seeder
             ['group' => 'general', 'key' => 'app_name', 'value' => 'Transaction Monitor', 'type' => 'string', 'label' => 'Application Name', 'is_public' => true],
             ['group' => 'general', 'key' => 'app_tagline', 'value' => 'Enterprise Transaction Monitoring', 'type' => 'string', 'label' => 'Tagline', 'is_public' => true],
             ['group' => 'general', 'key' => 'app_timezone', 'value' => 'UTC', 'type' => 'string', 'label' => 'Timezone'],
-            ['group' => 'general', 'key' => 'app_currency', 'value' => 'USD', 'type' => 'string', 'label' => 'Default Currency', 'is_public' => true],
-            ['group' => 'general', 'key' => 'app_currency_symbol', 'value' => '$', 'type' => 'string', 'label' => 'Currency Symbol', 'is_public' => true],
+            ['group' => 'general', 'key' => 'app_currency', 'value' => 'INR', 'type' => 'string', 'label' => 'Default Currency', 'is_public' => true],
+            ['group' => 'general', 'key' => 'app_currency_symbol', 'value' => '₹', 'type' => 'string', 'label' => 'Currency Symbol', 'is_public' => true],
             ['group' => 'general', 'key' => 'maintenance_mode', 'value' => '0', 'type' => 'boolean', 'label' => 'Maintenance Mode'],
             // Notification
             ['group' => 'notification', 'key' => 'email_notifications', 'value' => '1', 'type' => 'boolean', 'label' => 'Email Notifications'],
@@ -28,7 +28,7 @@ class SettingSeeder extends Seeder
             // Fraud
             ['group' => 'fraud', 'key' => 'auto_flag_threshold', 'value' => '50', 'type' => 'integer', 'label' => 'Auto Flag Risk Score Threshold'],
             ['group' => 'fraud', 'key' => 'auto_block_threshold', 'value' => '80', 'type' => 'integer', 'label' => 'Auto Block Risk Score Threshold'],
-            ['group' => 'fraud', 'key' => 'high_amount_threshold', 'value' => '10000', 'type' => 'integer', 'label' => 'High Amount Alert Threshold ($)'],
+            ['group' => 'fraud', 'key' => 'high_amount_threshold', 'value' => '10000', 'type' => 'integer', 'label' => 'High Amount Alert Threshold (₹)'],
         ];
 
         foreach ($settings as $setting) {

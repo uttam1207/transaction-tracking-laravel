@@ -13,7 +13,7 @@ class TransactionSeeder extends Seeder
         $users = User::pluck('id')->toArray();
         $categories = ['payment', 'transfer', 'refund', 'deposit', 'withdrawal', 'fee'];
         $statuses = ['pending', 'processing', 'success', 'failed', 'cancelled'];
-        $currencies = ['USD', 'EUR', 'GBP'];
+        $currencies = ['INR'];
         $countries = ['US', 'GB', 'CA', 'DE', 'FR', 'AU'];
         $paymentMethods = ['credit_card', 'debit_card', 'bank_transfer', 'paypal', 'crypto'];
 

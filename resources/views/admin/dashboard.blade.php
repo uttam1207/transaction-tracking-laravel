@@ -229,13 +229,13 @@
             <div class="d-flex justify-content-between align-items-start">
                 <div>
                     <div class="kpi-label">Total Revenue</div>
-                    <div class="kpi-value text-success">${{ number_format($stats['total_revenue'], 0) }}</div>
+                    <div class="kpi-value text-success">₹{{ number_format($stats['total_revenue'], 0) }}</div>
                     <div class="kpi-sub text-success">
-                        <i class="bi bi-arrow-up-short"></i>Today: ${{ number_format($stats['today_revenue'], 0) }}
+                        <i class="bi bi-arrow-up-short"></i>Today: ₹{{ number_format($stats['today_revenue'], 0) }}
                     </div>
                 </div>
                 <div class="kpi-icon" style="background:rgba(16,185,129,.12); color:#10b981;">
-                    <i class="bi bi-currency-dollar"></i>
+                    <i class="bi bi-currency-rupee"></i>
                 </div>
             </div>
         </div>
@@ -428,7 +428,7 @@
                         <div class="small text-muted">Transactions</div>
                     </div>
                     <div class="col-3">
-                        <div class="fw-bold text-success fs-5">${{ number_format($stats['total_revenue'], 0) }}</div>
+                        <div class="fw-bold text-success fs-5">₹{{ number_format($stats['total_revenue'], 0) }}</div>
                         <div class="small text-muted">Revenue</div>
                     </div>
                     <div class="col-3">
@@ -480,7 +480,7 @@
                                         <i class="bi bi-flag-fill text-danger ms-1" style="font-size:.7rem;"></i>
                                     @endif
                                 </td>
-                                <td class="fw-semibold small">{{ $tx->currency }} {{ number_format($tx->amount, 2) }}</td>
+                                <td class="fw-semibold small">₹{{ number_format($tx->amount, 2) }}</td>
                                 <td>
                                     <span class="badge rounded-pill bg-{{ $tx->status_badge }}-subtle text-{{ $tx->status_badge }}" style="font-size:.7rem;">
                                         {{ ucfirst($tx->status) }}
