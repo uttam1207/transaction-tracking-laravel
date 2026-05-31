@@ -159,7 +159,7 @@ class TransactionController extends Controller
 
         // If transaction created directly as success, update wallet immediately
         if ($transaction->status === 'success' && $transaction->user_id) {
-            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
                 if ($transaction->type === 'credit') {
@@ -203,7 +203,7 @@ class TransactionController extends Controller
 
         // Update wallet balance when transaction succeeds (only once)
         if ($request->status === 'success' && $oldStatus !== 'success' && $transaction->user_id) {
-            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
                 if ($transaction->type === 'credit') {
@@ -216,7 +216,7 @@ class TransactionController extends Controller
 
         // Reverse wallet if transaction is reversed (only if was previously success)
         if ($request->status === 'reversed' && $oldStatus === 'success' && $transaction->user_id) {
-            $wallet = Wallet::findOrCreateForUser($transaction->user_id);
+            $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Reversal of ' . $transaction->transaction_id;
                 if ($transaction->type === 'credit') {

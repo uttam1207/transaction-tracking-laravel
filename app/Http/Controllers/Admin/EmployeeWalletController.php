@@ -9,8 +9,7 @@ class EmployeeWalletController extends Controller
 {
     public function index()
     {
-        $wallet = Wallet::findOrCreateForUser(auth()->id());
-        $wallet->load('user');
+        $wallet = Wallet::company();
 
         $transactions = $wallet->transactions()
             ->with('performer')

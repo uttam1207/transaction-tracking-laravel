@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'My Wallet')
+@section('title', 'Company Wallet')
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
     <div class="page-hero-body">
-        <div class="page-hero-title"><i class="bi bi-wallet2 me-2"></i>My Wallet</div>
-        <div class="page-hero-sub">Your wallet balance and transaction history</div>
+        <div class="page-hero-title"><i class="bi bi-wallet2 me-2"></i>Company Wallet</div>
+        <div class="page-hero-sub">Company balance and transaction history</div>
     </div>
 </div>
 

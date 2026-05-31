@@ -186,7 +186,6 @@ Route::prefix('admin')
     // Wallet Management & Service Permissions — Super Admin only
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/wallets', [WalletController::class, 'index'])->name('wallets.index');
-        Route::get('/wallets/{user}', [WalletController::class, 'show'])->name('wallets.show');
         Route::post('/wallets/{wallet}/add-money', [WalletController::class, 'addMoney'])->name('wallets.addMoney');
         Route::patch('/wallets/{wallet}/toggle-freeze', [WalletController::class, 'toggleFreeze'])->name('wallets.toggleFreeze');
 

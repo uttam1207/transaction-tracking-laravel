@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
@@ -11,42 +10,20 @@ class WalletController extends Controller
 {
     public function index()
     {
-        // Ensure every user has a wallet record
-        $userIdsWithWallet = Wallet::pluck('user_id');
-        User::whereNotIn('id', $userIdsWithWallet)->each(function (User $user) {
-            Wallet::create([
-                'user_id'  => $user->id,
-                'balance'  => 0.00,
-                'currency' => 'INR',
-                'status'   => 'active',
-            ]);
-        });
-
-        $wallets = Wallet::with('user')
-            ->orderByDesc('updated_at')
-            ->paginate(20);
-
-        $stats = [
-            'total'         => Wallet::count(),
-            'total_balance' => Wallet::sum('balance'),
-            'frozen'        => Wallet::where('status', 'frozen')->count(),
-            'active'        => Wallet::where('status', 'active')->count(),
-        ];
-
-        return view('admin.wallets.index', compact('wallets', 'stats'));
-    }
-
-    public function show(User $user)
-    {
-        $wallet = Wallet::findOrCreateForUser($user->id);
-        $wallet->load('user');
+        $wallet = Wallet::company();
 
         $transactions = $wallet->transactions()
             ->with('performer')
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
 
-        return view('admin.wallets.show', compact('wallet', 'transactions', 'user'));
+        $stats = [
+            'total_credited' => $wallet->transactions()->where('type', 'credit')->sum('amount'),
+            'total_debited'  => $wallet->transactions()->where('type', 'debit')->sum('amount'),
+            'txn_count'      => $wallet->transactions()->count(),
+        ];
+
+        return view('admin.wallets.index', compact('wallet', 'transactions', 'stats'));
     }
 
     public function addMoney(Request $request, Wallet $wallet)
@@ -56,14 +33,11 @@ class WalletController extends Controller
             'description' => 'required|string|max:255',
         ]);
 
-        $wallet->load('user');
         $amount = (float) $request->amount;
-
-        // Credit wallet balance only — no transaction record created
         $wallet->credit($amount, $request->description, auth()->id());
 
-        return redirect()->route('admin.wallets.show', $wallet->user_id)
-            ->with('success', '₹' . number_format($amount, 2) . ' added to wallet successfully.');
+        return redirect()->route('admin.wallets.index')
+            ->with('success', '₹' . number_format($amount, 2) . ' added to company wallet successfully.');
     }
 
     public function toggleFreeze(Wallet $wallet)

@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use App\Models\WalletTransaction;
 
 class Wallet extends Model
 {
@@ -64,12 +66,19 @@ class Wallet extends Model
         });
     }
 
-    public static function findOrCreateForUser(int $userId): self
+    /** Returns the single company-wide wallet (creates it if missing). */
+    public static function company(): self
     {
-        return static::firstOrCreate(['user_id' => $userId], [
+        return static::firstOrCreate(['user_id' => null], [
             'balance'  => 0.00,
             'currency' => 'INR',
             'status'   => 'active',
         ]);
+    }
+
+    /** @deprecated Use Wallet::company() — there is only one company wallet. */
+    public static function findOrCreateForUser(int $userId): self
+    {
+        return static::company();
     }
 }
