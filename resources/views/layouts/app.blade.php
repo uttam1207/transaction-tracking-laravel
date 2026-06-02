@@ -847,33 +847,44 @@
 
     // Load Notifications
     function loadNotifications() {
-        $.get('/api/v1/notifications', function(res) {
+        $.get('/notifications', function(res) {
             if (res.success) {
                 const count = res.unread_count;
-                document.getElementById('notifCount').textContent = count > 0 ? count : '';
-                document.getElementById('notifCount').style.display = count > 0 ? 'block' : 'none';
+                const badge = document.getElementById('notifCount');
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.style.display = 'block';
+                } else {
+                    badge.textContent = '';
+                    badge.style.display = 'none';
+                }
 
                 const list = document.getElementById('notifList');
-                if (res.data.length === 0) {
-                    list.innerHTML = '<div class="dropdown-item text-muted small text-center py-3">No notifications</div>';
+                if (!res.data || res.data.length === 0) {
+                    list.innerHTML = '<div class="dropdown-item text-muted small text-center py-3"><i class="bi bi-bell-slash me-1"></i>No notifications</div>';
                     return;
                 }
 
                 list.innerHTML = res.data.slice(0, 10).map(n => `
-                    <a class="dropdown-item py-2 ${n.is_read ? '' : 'bg-primary bg-opacity-10'}" href="${n.link || '#'}" onclick="markRead(${n.id})">
-                        <div class="d-flex gap-2">
-                            <div class="text-${getNotifColor(n.type)} mt-1">
+                    <a class="dropdown-item py-2 ${n.is_read ? '' : 'bg-primary bg-opacity-10'}"
+                       href="${n.link || '#'}" onclick="markRead(event,${n.id})">
+                        <div class="d-flex gap-2 align-items-start">
+                            <div class="text-${getNotifColor(n.type)} mt-1" style="flex-shrink:0;">
                                 <i class="bi bi-${n.icon || 'bell'}"></i>
                             </div>
-                            <div>
-                                <div class="small fw-semibold">${n.title}</div>
-                                <div class="small text-muted">${n.message}</div>
-                                <div class="smaller text-muted">${new Date(n.created_at).toLocaleString()}</div>
+                            <div style="min-width:0;">
+                                <div class="small fw-semibold" style="white-space:normal;">${n.title}</div>
+                                <div class="small text-muted" style="white-space:normal;font-size:.75rem;">${n.message}</div>
+                                <div class="text-muted" style="font-size:.7rem;">${new Date(n.created_at).toLocaleString()}</div>
                             </div>
+                            ${!n.is_read ? '<span style="width:7px;height:7px;border-radius:50%;background:#4f46e5;flex-shrink:0;margin-top:5px;"></span>' : ''}
                         </div>
                     </a>
                 `).join('');
             }
+        }).fail(function() {
+            document.getElementById('notifList').innerHTML =
+                '<div class="dropdown-item text-muted small text-center py-3">Could not load notifications</div>';
         });
     }
 
@@ -881,16 +892,18 @@
         return { success: 'success', warning: 'warning', danger: 'danger', fraud: 'danger', task: 'info' }[type] || 'primary';
     }
 
-    function markRead(id) {
-        $.post(`/api/v1/notifications/${id}/read`, { _token: APP.csrfToken });
+    function markRead(e, id) {
+        $.post(`/notifications/${id}/read`, { _token: APP.csrfToken });
+        // Don't prevent navigation — let href handle it
     }
 
     function markAllRead() {
-        $.post('/api/v1/notifications/read-all', { _token: APP.csrfToken }, () => loadNotifications());
+        $.post('/notifications/read-all', { _token: APP.csrfToken }, () => loadNotifications());
     }
 
-    // Load notifications on page load
+    // Load notifications on page load + poll every 60 seconds
     loadNotifications();
+    setInterval(loadNotifications, 60000);
 
     // ── Global Search ────────────────────────────────────────────────────────
     const searchInput = document.getElementById('globalSearch');

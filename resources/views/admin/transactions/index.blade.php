@@ -255,6 +255,41 @@
     </form>
 </div>
 
+{{-- Batch Action Bar (hidden until rows are selected) --}}
+<div id="batchBar" style="display:none;" class="mb-3">
+    <div style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);border-radius:12px;padding:12px 20px;
+                display:flex;align-items:center;gap:14px;flex-wrap:wrap;color:#fff;">
+        <div style="font-size:.85rem;font-weight:700;">
+            <i class="bi bi-check2-square me-2"></i>
+            <span id="batchCount">0</span> selected
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            <select id="batchStatus" class="form-select form-select-sm"
+                    style="width:auto;border-radius:8px;border:1.5px solid rgba(255,255,255,.3);
+                           background:rgba(255,255,255,.12);color:#fff;font-size:.8rem;font-weight:600;
+                           min-width:150px;">
+                <option value="">— Change Status —</option>
+                @foreach(['pending','processing','success','failed','cancelled','reversed'] as $s)
+                    <option value="{{ $s }}" style="color:#111;background:#fff;">{{ ucfirst($s) }}</option>
+                @endforeach
+            </select>
+            <button type="button" onclick="applyBatch()"
+                    style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.35);
+                           border-radius:8px;color:#fff;font-size:.8rem;font-weight:700;
+                           padding:6px 14px;cursor:pointer;">
+                <i class="bi bi-check-lg me-1"></i>Apply
+            </button>
+            <button type="button" onclick="clearBatch()"
+                    style="background:transparent;border:1.5px solid rgba(255,255,255,.25);
+                           border-radius:8px;color:rgba(255,255,255,.75);font-size:.8rem;
+                           padding:6px 12px;cursor:pointer;">
+                <i class="bi bi-x-lg me-1"></i>Clear
+            </button>
+        </div>
+        <div id="batchResult" style="font-size:.78rem;margin-left:auto;opacity:.85;"></div>
+    </div>
+</div>
+
 {{-- Table Card --}}
 <div class="tx-table-card">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -295,8 +330,10 @@
             <tbody>
                 @forelse($transactions as $tx)
                 @php $riskClass = $tx->risk_score >= 70 ? 'risk-high' : ($tx->risk_score >= 40 ? 'risk-mid' : 'risk-low'); @endphp
-                <tr class="{{ $tx->is_flagged ? 'flagged-row' : '' }}">
-                    <td class="ps-3"><input type="checkbox" value="{{ $tx->id }}" class="tx-check" style="border-radius:4px;"></td>
+                <tr class="{{ $tx->is_flagged ? 'flagged-row' : '' }}"
+                    style="cursor:pointer;"
+                    onclick="rowClick(event, '{{ route('admin.transactions.show', $tx) }}')">
+                    <td class="ps-3"><input type="checkbox" value="{{ $tx->id }}" class="tx-check" style="border-radius:4px;" onclick="event.stopPropagation();"></td>
                     <td>
                         <a href="{{ route('admin.transactions.show', $tx) }}" class="tx-id-link">{{ $tx->transaction_id }}</a>
                         @if($tx->is_flagged)
@@ -325,10 +362,12 @@
                         </div>
                     </td>
                     <td style="font-size:.78rem; color:#6b7280; white-space:nowrap;">{{ $tx->created_at->format('M d, H:i') }}</td>
-                    <td>
+                    <td onclick="event.stopPropagation();">
                         <div class="d-flex gap-1">
                             <a href="{{ route('admin.transactions.show', $tx) }}" class="action-btn view" title="View"><i class="bi bi-eye"></i></a>
-                            <button class="action-btn edit" onclick="changeStatus({{ $tx->id }}, '{{ $tx->status }}')" title="Update Status"><i class="bi bi-pencil"></i></button>
+                            <a href="{{ route('admin.transactions.edit', $tx) }}" class="action-btn edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <button class="action-btn" onclick="changeStatus({{ $tx->id }}, '{{ $tx->status }}')" title="Update Status"
+                                    style="background:#dbeafe;color:#2563eb;"><i class="bi bi-arrow-repeat"></i></button>
                         </div>
                     </td>
                 </tr>
@@ -386,6 +425,15 @@
 
 @push('scripts')
 <script>
+// ── Row click (navigate to show page unless clicking checkbox/button/link) ──
+function rowClick(e, url) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' ||
+        e.target.tagName === 'A'     || e.target.closest('a') ||
+        e.target.closest('button')   || e.target.closest('input')) return;
+    window.location.href = url;
+}
+
+// ── Status Modal ──
 function changeStatus(txId, currentStatus) {
     document.getElementById('statusTxId').value = txId;
     document.getElementById('newStatus').value = currentStatus;
@@ -399,8 +447,52 @@ function submitStatusChange() {
         .done(res => { if (res.success) { APP.toast('Status updated!'); setTimeout(() => location.reload(), 1000); } })
         .fail(() => APP.toast('Failed to update status', 'error'));
 }
+
+// ── Select All + batch bar ──
+function updateBatchBar() {
+    const checked = document.querySelectorAll('.tx-check:checked');
+    const bar = document.getElementById('batchBar');
+    document.getElementById('batchCount').textContent = checked.length;
+    bar.style.display = checked.length > 0 ? 'block' : 'none';
+    document.getElementById('batchResult').textContent = '';
+}
+
 document.getElementById('selectAll')?.addEventListener('change', function () {
     document.querySelectorAll('.tx-check').forEach(c => c.checked = this.checked);
+    updateBatchBar();
 });
+
+document.querySelectorAll('.tx-check').forEach(c => {
+    c.addEventListener('change', updateBatchBar);
+});
+
+function clearBatch() {
+    document.querySelectorAll('.tx-check').forEach(c => c.checked = false);
+    document.getElementById('selectAll').checked = false;
+    updateBatchBar();
+}
+
+function applyBatch() {
+    const ids    = [...document.querySelectorAll('.tx-check:checked')].map(c => parseInt(c.value));
+    const status = document.getElementById('batchStatus').value;
+    if (!status) { APP.toast('Please select a status to apply', 'warning'); return; }
+    if (!ids.length) { APP.toast('No transactions selected', 'warning'); return; }
+
+    APP.confirm(
+        `Update ${ids.length} transaction(s)?`,
+        `All selected transactions will be set to "${status}".`,
+        () => {
+            APP.ajax('/admin/transactions/batch-update', 'POST', { ids, status })
+                .done(res => {
+                    if (res.success) {
+                        document.getElementById('batchResult').textContent = '✓ ' + res.message;
+                        APP.toast(res.message);
+                        setTimeout(() => location.reload(), 1200);
+                    }
+                })
+                .fail(() => APP.toast('Batch update failed', 'error'));
+        }
+    );
+}
 </script>
 @endpush

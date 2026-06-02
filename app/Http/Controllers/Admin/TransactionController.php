@@ -173,10 +173,17 @@ class TransactionController extends Controller
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
-                if ($transaction->type === 'credit') {
-                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
-                } else {
-                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                try {
+                    if ($transaction->type === 'credit') {
+                        $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    } else {
+                        $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    }
+                } catch (\RuntimeException $e) {
+                    // Revert to pending if wallet debit fails
+                    $transaction->update(['status' => 'pending']);
+                    return redirect()->route('admin.transactions.show', $transaction)
+                        ->with('warning', 'Transaction created but status set to pending — ' . $e->getMessage());
                 }
             }
         }
@@ -217,10 +224,16 @@ class TransactionController extends Controller
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
-                if ($transaction->type === 'credit') {
-                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
-                } else {
-                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                try {
+                    if ($transaction->type === 'credit') {
+                        $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    } else {
+                        $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    }
+                } catch (\RuntimeException $e) {
+                    // Revert status change if wallet operation fails
+                    $transaction->update(['status' => $oldStatus]);
+                    return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
                 }
             }
         }
@@ -230,10 +243,15 @@ class TransactionController extends Controller
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Reversal of ' . $transaction->transaction_id;
-                if ($transaction->type === 'credit') {
-                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
-                } else {
-                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                try {
+                    if ($transaction->type === 'credit') {
+                        $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    } else {
+                        $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    }
+                } catch (\RuntimeException $e) {
+                    $transaction->update(['status' => $oldStatus]);
+                    return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
                 }
             }
         }
@@ -252,6 +270,105 @@ class TransactionController extends Controller
             'success' => true,
             'message' => 'Transaction status updated.',
             'status' => $transaction->status,
+        ]);
+    }
+
+    public function edit(Transaction $transaction)
+    {
+        $users = User::active()->orderBy('name')->get();
+        return view('admin.transactions.edit', compact('transaction', 'users'));
+    }
+
+    public function update(Request $request, Transaction $transaction)
+    {
+        $request->validate([
+            'category'         => 'required|string',
+            'payment_method'   => 'nullable|string',
+            'sender_name'      => 'nullable|string|max:255',
+            'sender_account'   => 'nullable|string|max:100',
+            'sender_bank'      => 'nullable|string|max:255',
+            'sender_mobile'    => 'nullable|string|max:20',
+            'sender_company'   => 'nullable|string|max:255',
+            'receiver_name'    => 'nullable|string|max:255',
+            'receiver_account' => 'nullable|string|max:100',
+            'receiver_bank'    => 'nullable|string|max:255',
+            'receiver_mobile'  => 'nullable|string|max:20',
+            'receiver_company' => 'nullable|string|max:255',
+            'receiver_address' => 'nullable|string|max:500',
+            'reference'        => 'nullable|string|max:255',
+            'description'      => 'nullable|string|max:1000',
+            'notes'            => 'nullable|string|max:1000',
+        ]);
+
+        $transaction->update($request->only([
+            'category', 'payment_method',
+            'sender_name', 'sender_account', 'sender_bank', 'sender_mobile', 'sender_company',
+            'receiver_name', 'receiver_account', 'receiver_bank',
+            'receiver_mobile', 'receiver_company', 'receiver_address',
+            'reference', 'description', 'notes',
+        ]));
+
+        TransactionLog::create([
+            'transaction_id' => $transaction->id,
+            'action'         => 'edited',
+            'to_status'      => $transaction->status,
+            'performed_by'   => auth()->id(),
+            'notes'          => 'Transaction details updated.',
+            'ip_address'     => $request->ip(),
+        ]);
+
+        return redirect()->route('admin.transactions.show', $transaction)
+                         ->with('success', 'Transaction updated successfully.');
+    }
+
+    public function downloadPdf(Transaction $transaction)
+    {
+        $transaction->load('user', 'logs.performer');
+        $pdf = Pdf::loadView('admin.transactions.receipt', compact('transaction'))
+                  ->setPaper('a4', 'portrait');
+        return $pdf->download('receipt_' . $transaction->transaction_id . '.pdf');
+    }
+
+    public function batchUpdate(Request $request)
+    {
+        $request->validate([
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer|exists:transactions,id',
+            'status' => 'required|in:pending,processing,success,failed,cancelled,reversed',
+        ]);
+
+        $transactions = Transaction::whereIn('id', $request->ids)->get();
+        $updated = 0;
+
+        foreach ($transactions as $transaction) {
+            $oldStatus = $transaction->status;
+            $transaction->update(['status' => $request->status]);
+
+            if ($request->status === 'success' && $oldStatus !== 'success') {
+                $wallet = Wallet::company();
+                if ($wallet->status === 'active') {
+                    $desc = 'Transaction ' . $transaction->transaction_id;
+                    $transaction->type === 'credit'
+                        ? $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
+                        : $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                }
+            }
+
+            TransactionLog::create([
+                'transaction_id' => $transaction->id,
+                'action'         => 'status_changed',
+                'from_status'    => $oldStatus,
+                'to_status'      => $request->status,
+                'performed_by'   => auth()->id(),
+                'notes'          => 'Batch status update.',
+                'ip_address'     => $request->ip(),
+            ]);
+            $updated++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$updated} transaction(s) updated to " . $request->status . '.',
         ]);
     }
 

@@ -154,9 +154,25 @@
 @section('content')
 
 {{-- Back + Hero --}}
-<div class="mb-3">
+<div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
     <a href="{{ route('admin.transactions.index') }}" class="back-btn">
         <i class="bi bi-arrow-left"></i>Back to Transactions
+    </a>
+    <a href="{{ route('admin.transactions.edit', $transaction) }}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+              padding:6px 14px;border-radius:8px;border:1px solid #fcd34d;
+              background:#fef3c7;color:#d97706;text-decoration:none;transition:background .15s;"
+       onmouseover="this.style.background='#fde68a'"
+       onmouseout="this.style.background='#fef3c7'">
+        <i class="bi bi-pencil-square"></i>Edit
+    </a>
+    <a href="{{ route('admin.transactions.receipt', $transaction) }}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+              padding:6px 14px;border-radius:8px;border:1px solid #c4b5fd;
+              background:#ede9fe;color:#7c3aed;text-decoration:none;transition:background .15s;"
+       onmouseover="this.style.background='#ddd6fe'"
+       onmouseout="this.style.background='#ede9fe'">
+        <i class="bi bi-file-earmark-pdf"></i>Download Receipt
     </a>
 </div>
 
@@ -295,6 +311,47 @@
             </div>
         </div>
 
+        {{-- Attachments --}}
+        @if($transaction->attachments && count($transaction->attachments) > 0)
+        <div class="info-card">
+            <div class="info-card-header"><i class="bi bi-paperclip"></i>Attachments ({{ count($transaction->attachments) }})</div>
+            <div class="info-card-body">
+                <div class="row g-2">
+                    @foreach($transaction->attachments as $att)
+                    @php
+                        $filename = $att['original'] ?? basename($att['path']);
+                        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+                        $isPdf = $ext === 'pdf';
+                        $icon = $isPdf ? 'bi-file-earmark-pdf-fill' : 'bi-file-earmark-image-fill';
+                        $iconColor = $isPdf ? '#dc2626' : '#2563eb';
+                    @endphp
+                    <div class="col-md-6">
+                        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+                            <i class="bi {{ $icon }}" style="font-size:1.5rem;color:{{ $iconColor }};flex-shrink:0;"></i>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:.82rem;font-weight:600;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                    {{ $filename }}
+                                </div>
+                                <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">
+                                    {{ ucfirst($att['type'] ?? 'file') }}
+                                    @if(isset($att['uploaded_at'])) &bull; {{ \Carbon\Carbon::parse($att['uploaded_at'])->format('d M Y') }} @endif
+                                </div>
+                            </div>
+                            <a href="{{ asset('storage/' . $att['path']) }}" target="_blank"
+                               style="display:inline-flex;align-items:center;justify-content:center;
+                                      width:30px;height:30px;border-radius:7px;
+                                      background:#ede9fe;color:#7c3aed;text-decoration:none;flex-shrink:0;"
+                               title="Open attachment">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Timeline --}}
         <div class="info-card">
             <div class="info-card-header"><i class="bi bi-clock-history"></i>Activity Timeline</div>
@@ -397,7 +454,14 @@ function updateStatus() {
     const status = document.getElementById('newStatus').value;
     const notes  = document.getElementById('statusNotes').value;
     APP.ajax('/admin/transactions/{{ $transaction->id }}/status', 'POST', { status, notes })
-        .done(res => { if (res.success) { APP.toast('Status updated!'); setTimeout(() => location.reload(), 1000); } });
+        .done(res => {
+            if (res.success) { APP.toast('Status updated!'); setTimeout(() => location.reload(), 1000); }
+            else { APP.toast(res.message || 'Update failed', 'error'); }
+        })
+        .fail(xhr => {
+            const msg = xhr.responseJSON?.message || 'Status update failed';
+            APP.toast(msg, 'error');
+        });
 }
 </script>
 @endpush

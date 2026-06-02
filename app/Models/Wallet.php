@@ -50,7 +50,17 @@ class Wallet extends Model
     public function debit(float $amount, string $description, int $performedBy, ?string $reference = null): WalletTransaction
     {
         return DB::transaction(function () use ($amount, $description, $performedBy, $reference) {
+            // Refresh inside the transaction to prevent race conditions
+            $this->refresh();
             $before = (float) $this->balance;
+
+            if ($before < $amount) {
+                throw new \RuntimeException(
+                    'Insufficient wallet balance. Available: ₹' . number_format($before, 2) .
+                    ', Required: ₹' . number_format($amount, 2)
+                );
+            }
+
             $after  = $before - $amount;
             $this->update(['balance' => $after]);
 

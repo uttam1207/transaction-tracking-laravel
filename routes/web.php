@@ -70,6 +70,31 @@ Route::middleware(['auth', 'check.status'])->group(function () {
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
 });
 
+// Notification routes — all authenticated users (web session, no Sanctum needed)
+Route::middleware(['auth', 'check.status'])->group(function () {
+    Route::get('/notifications', function () {
+        $user = auth()->user();
+        $notifications = $user->appNotifications()->latest()->take(20)->get();
+        return response()->json([
+            'success'      => true,
+            'data'         => $notifications,
+            'unread_count' => $user->appNotifications()->where('is_read', false)->count(),
+        ]);
+    })->name('notifications.index');
+
+    Route::post('/notifications/{id}/read', function (int $id) {
+        $n = auth()->user()->appNotifications()->find($id);
+        if ($n) $n->update(['is_read' => true, 'read_at' => now()]);
+        return response()->json(['success' => true]);
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->appNotifications()->where('is_read', false)
+              ->update(['is_read' => true, 'read_at' => now()]);
+        return response()->json(['success' => true]);
+    })->name('notifications.read-all');
+});
+
 // Root redirect
 Route::get('/', function () {
     return auth()->check() ? redirect(auth()->user()->getDashboardRoute()) : redirect()->route('login');
@@ -101,8 +126,10 @@ Route::prefix('admin')
     Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
 
     // Transaction Management
-    Route::resource('transactions', TransactionController::class)->except(['edit']);
+    Route::resource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status');
+    Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'downloadPdf'])->name('transactions.receipt');
+    Route::post('/transactions/batch-update', [TransactionController::class, 'batchUpdate'])->name('transactions.batch-update');
     Route::get('/transactions-export/csv', [TransactionController::class, 'exportCsv'])->name('transactions.export.csv');
     Route::get('/transactions-export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
     Route::get('/transactions-export/excel', [TransactionController::class, 'exportExcel'])->name('transactions.export.excel');
