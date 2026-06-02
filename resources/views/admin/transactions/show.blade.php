@@ -252,6 +252,8 @@
                         <div class="party-box">
                             <div class="party-label"><i class="bi bi-box-arrow-up-right me-1"></i>Sender</div>
                             <div class="party-name">{{ $transaction->sender_name ?? 'N/A' }}</div>
+                            @if($transaction->sender_mobile)<div class="party-meta"><i class="bi bi-phone me-1"></i>{{ $transaction->sender_mobile }}</div>@endif
+                            @if($transaction->sender_company)<div class="party-meta"><i class="bi bi-building me-1"></i>{{ $transaction->sender_company }}</div>@endif
                             <div class="party-meta">Account: {{ $transaction->sender_account ?? 'N/A' }}</div>
                             <div class="party-meta">Bank: {{ $transaction->sender_bank ?? 'N/A' }}</div>
                         </div>
@@ -260,10 +262,35 @@
                         <div class="party-box">
                             <div class="party-label"><i class="bi bi-box-arrow-in-down-right me-1"></i>Receiver</div>
                             <div class="party-name">{{ $transaction->receiver_name ?? 'N/A' }}</div>
+                            @if($transaction->receiver_mobile)<div class="party-meta"><i class="bi bi-phone me-1"></i>{{ $transaction->receiver_mobile }}</div>@endif
+                            @if($transaction->receiver_company)<div class="party-meta"><i class="bi bi-building me-1"></i>{{ $transaction->receiver_company }}</div>@endif
+                            @if($transaction->receiver_address)<div class="party-meta"><i class="bi bi-geo-alt me-1"></i>{{ $transaction->receiver_address }}</div>@endif
                             <div class="party-meta">Account: {{ $transaction->receiver_account ?? 'N/A' }}</div>
                             <div class="party-meta">Bank: {{ $transaction->receiver_bank ?? 'N/A' }}</div>
                         </div>
                     </div>
+                    {{-- Account Owner (company user or external person) --}}
+                    @php
+                        $extOwner = $transaction->metadata['external_owner'] ?? null;
+                    @endphp
+                    @if($transaction->user || $extOwner)
+                    <div class="col-md-6">
+                        <div class="party-box" style="border-color:#c4b5fd;background:#f5f3ff;">
+                            <div class="party-label" style="color:#7c3aed;"><i class="bi bi-person-circle me-1"></i>Account Owner</div>
+                            @if($extOwner)
+                                <div class="party-name">{{ $extOwner['name'] }}</div>
+                                @if(!empty($extOwner['mobile']))<div class="party-meta"><i class="bi bi-phone me-1"></i>{{ $extOwner['mobile'] }}</div>@endif
+                                @if(!empty($extOwner['company']))<div class="party-meta"><i class="bi bi-building me-1"></i>{{ $extOwner['company'] }}</div>@endif
+                                @if(!empty($extOwner['address']))<div class="party-meta"><i class="bi bi-geo-alt me-1"></i>{{ $extOwner['address'] }}</div>@endif
+                                <div class="party-meta" style="color:#a78bfa;">External Person</div>
+                            @elseif($transaction->user)
+                                <div class="party-name">{{ $transaction->user->name }}</div>
+                                <div class="party-meta">{{ $transaction->user->email }}</div>
+                                <div class="party-meta" style="color:#7c3aed;">{{ ucfirst(str_replace('_',' ',$transaction->user->role)) }}</div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -247,12 +247,38 @@ textarea.form-control { height: auto !important; }
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Account Owner</label>
-                        <select name="user_id" class="form-select">
-                            <option value="">Select User</option>
+                        {{-- Toggle --}}
+                        <div class="d-flex mb-2" style="gap:6px;">
+                            <button type="button" id="ownerTypeCompany" onclick="setOwnerType('company')"
+                                style="flex:1;font-size:.72rem;padding:4px 0;border-radius:7px;border:1.5px solid #4f46e5;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;">
+                                <i class="bi bi-person-badge me-1"></i>Company User
+                            </button>
+                            <button type="button" id="ownerTypeExternal" onclick="setOwnerType('external')"
+                                style="flex:1;font-size:.72rem;padding:4px 0;border-radius:7px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-weight:600;cursor:pointer;">
+                                <i class="bi bi-person-plus me-1"></i>External Person
+                            </button>
+                        </div>
+                        {{-- Company User dropdown --}}
+                        <select name="user_id" id="ownerCompanySelect" class="form-select">
+                            <option value="">None — not linked</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
                             @endforeach
                         </select>
+                        {{-- External Person inputs --}}
+                        <div id="ownerExternalFields" style="display:none;">
+                            <input type="text" name="account_owner_name" class="form-control mb-2"
+                                   placeholder="Full name (e.g. Rajesh Kumar)" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="input-group mb-2">
+                                <span class="input-group-text" style="border-radius:9px 0 0 9px;border:1.5px solid #e5e7eb;border-right:none;background:#f3f4f6;font-size:.8rem;color:#6b7280;">+91</span>
+                                <input type="text" name="account_owner_mobile" class="form-control"
+                                       placeholder="Mobile number (optional)" style="border-radius:0 9px 9px 0 !important;">
+                            </div>
+                            <input type="text" name="account_owner_company" class="form-control mb-2"
+                                   placeholder="Company / Organisation (optional)" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="text" name="account_owner_address" class="form-control"
+                                   placeholder="Address (optional)" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Reference Number</label>
@@ -494,6 +520,32 @@ textarea.form-control { height: auto !important; }
 
 @push('scripts')
 <script>
+// Account Owner toggle
+function setOwnerType(type) {
+    const companyBtn  = document.getElementById('ownerTypeCompany');
+    const externalBtn = document.getElementById('ownerTypeExternal');
+    const companyDiv  = document.getElementById('ownerCompanySelect');
+    const externalDiv = document.getElementById('ownerExternalFields');
+
+    const activeStyle   = 'flex:1;font-size:.72rem;padding:4px 0;border-radius:7px;border:1.5px solid #4f46e5;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;';
+    const inactiveStyle = 'flex:1;font-size:.72rem;padding:4px 0;border-radius:7px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-weight:600;cursor:pointer;';
+
+    if (type === 'company') {
+        companyBtn.style.cssText  = activeStyle;
+        externalBtn.style.cssText = inactiveStyle;
+        companyDiv.style.display  = 'block';
+        externalDiv.style.display = 'none';
+        companyDiv.name = 'user_id';
+    } else {
+        externalBtn.style.cssText = activeStyle;
+        companyBtn.style.cssText  = inactiveStyle;
+        companyDiv.style.display  = 'none';
+        externalDiv.style.display = 'block';
+        companyDiv.name = ''; // disable user_id when external
+        companyDiv.value = '';
+    }
+}
+
 // Show/hide cash voucher + notice based on payment method
 const paymentMethod = document.getElementById('paymentMethod');
 const cashVoucherSection = document.getElementById('cashVoucherSection');

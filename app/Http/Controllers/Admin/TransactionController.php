@@ -97,8 +97,12 @@ class TransactionController extends Controller
             'receiver_account'  => 'nullable|string|max:100',
             'receiver_mobile'   => 'nullable|string|max:20',
             'receiver_company'  => 'nullable|string|max:255',
-            'receiver_address'  => 'nullable|string|max:500',
-            'receipt'           => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'receiver_address'         => 'nullable|string|max:500',
+            'receipt'                  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'account_owner_name'       => 'nullable|string|max:255',
+            'account_owner_mobile'     => 'nullable|string|max:20',
+            'account_owner_company'    => 'nullable|string|max:255',
+            'account_owner_address'    => 'nullable|string|max:500',
         ]);
 
         // Handle receipt upload
@@ -113,18 +117,25 @@ class TransactionController extends Controller
             ];
         }
 
-        // Cash voucher metadata
-        $metadata = null;
+        // Build metadata: cash voucher + external account owner
+        $metadata = [];
         if ($request->payment_method === 'cash' && $request->filled('cash_voucher_name')) {
-            $metadata = [
-                'cash_voucher' => [
-                    'company_name' => $request->cash_voucher_company,
-                    'name'         => $request->cash_voucher_name,
-                    'mobile'       => $request->cash_voucher_mobile,
-                    'address'      => $request->cash_voucher_address,
-                ],
+            $metadata['cash_voucher'] = [
+                'company_name' => $request->cash_voucher_company,
+                'name'         => $request->cash_voucher_name,
+                'mobile'       => $request->cash_voucher_mobile,
+                'address'      => $request->cash_voucher_address,
             ];
         }
+        if ($request->filled('account_owner_name')) {
+            $metadata['external_owner'] = [
+                'name'    => $request->account_owner_name,
+                'mobile'  => $request->account_owner_mobile,
+                'company' => $request->account_owner_company,
+                'address' => $request->account_owner_address,
+            ];
+        }
+        $metadata = empty($metadata) ? null : $metadata;
 
         $transaction = Transaction::create(array_merge(
             $request->only([
@@ -158,7 +169,7 @@ class TransactionController extends Controller
         }
 
         // If transaction created directly as success, update wallet immediately
-        if ($transaction->status === 'success' && $transaction->user_id) {
+        if ($transaction->status === 'success') {
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
@@ -202,7 +213,7 @@ class TransactionController extends Controller
         ]);
 
         // Update wallet balance when transaction succeeds (only once)
-        if ($request->status === 'success' && $oldStatus !== 'success' && $transaction->user_id) {
+        if ($request->status === 'success' && $oldStatus !== 'success') {
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Transaction ' . $transaction->transaction_id;
@@ -215,7 +226,7 @@ class TransactionController extends Controller
         }
 
         // Reverse wallet if transaction is reversed (only if was previously success)
-        if ($request->status === 'reversed' && $oldStatus === 'success' && $transaction->user_id) {
+        if ($request->status === 'reversed' && $oldStatus === 'success') {
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Reversal of ' . $transaction->transaction_id;
