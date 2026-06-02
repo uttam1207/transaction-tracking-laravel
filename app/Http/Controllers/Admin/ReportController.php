@@ -7,6 +7,8 @@ use App\Models\Transaction;
 use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\Task;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
 use App\Models\WorkReport;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -92,18 +94,18 @@ class ReportController extends Controller
 
     public function financialSummary(Request $request)
     {
-        $year = (int) ($request->year ?? now()->year);
+        $year   = (int) ($request->year ?? now()->year);
+        $wallet = Wallet::company();
 
-        // Monthly credit vs debit
-        $monthly = Transaction::select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('SUM(CASE WHEN type="credit" AND status="success" THEN net_amount ELSE 0 END) as total_credit'),
-                DB::raw('SUM(CASE WHEN type="debit"  AND status="success" THEN net_amount ELSE 0 END) as total_debit'),
-                DB::raw('COUNT(*) as total_transactions'),
-                DB::raw('SUM(CASE WHEN status="success" THEN 1 ELSE 0 END) as success_count'),
-                DB::raw('SUM(CASE WHEN status="failed"  THEN 1 ELSE 0 END) as failed_count')
-            )
+        // ── Monthly credit vs debit from wallet_transactions ──────────────
+        $monthly = WalletTransaction::where('wallet_id', $wallet->id)
             ->whereYear('created_at', $year)
+            ->select(
+                DB::raw('MONTH(created_at) as month'),
+                DB::raw('SUM(CASE WHEN type = \'credit\' THEN amount ELSE 0 END) as total_credit'),
+                DB::raw('SUM(CASE WHEN type = \'debit\'  THEN amount ELSE 0 END) as total_debit'),
+                DB::raw('COUNT(*) as total_count')
+            )
             ->groupBy(DB::raw('MONTH(created_at)'))
             ->orderBy('month')
             ->get()
@@ -115,33 +117,42 @@ class ReportController extends Controller
         $debitData   = $months->map(fn($m) => (float) ($monthly[$m]->total_debit  ?? 0))->toArray();
         $netData     = $months->map(fn($m) => round(($monthly[$m]->total_credit ?? 0) - ($monthly[$m]->total_debit ?? 0), 2))->toArray();
 
-        // Top categories
-        $byCategory = Transaction::select('category',
+        // ── Breakdown by description source ───────────────────────────────
+        // Join wallet_transactions → transactions to get category; ungrouped → "Top-up / Manual"
+        $categoryRows = WalletTransaction::where('wallet_transactions.wallet_id', $wallet->id)
+            ->whereYear('wallet_transactions.created_at', $year)
+            ->leftJoin('transactions', 'wallet_transactions.reference', '=', 'transactions.transaction_id')
+            ->select(
+                DB::raw('COALESCE(transactions.category, \'top_up\') as category'),
                 DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(CASE WHEN status="success" THEN net_amount ELSE 0 END) as total')
+                DB::raw('SUM(wallet_transactions.amount) as total'),
+                DB::raw('SUM(CASE WHEN wallet_transactions.type = \'credit\' THEN wallet_transactions.amount ELSE 0 END) as credit_total'),
+                DB::raw('SUM(CASE WHEN wallet_transactions.type = \'debit\'  THEN wallet_transactions.amount ELSE 0 END) as debit_total')
             )
-            ->whereYear('created_at', $year)
-            ->groupBy('category')
+            ->groupBy(DB::raw('COALESCE(transactions.category, \'top_up\')'))
             ->orderByDesc('total')
             ->get();
 
-        // Year totals
+        // ── Year totals from wallet ────────────────────────────────────────
+        $base = WalletTransaction::where('wallet_id', $wallet->id)->whereYear('created_at', $year);
         $totals = [
-            'total_credit'  => (float) Transaction::where('type','credit')->where('status','success')->whereYear('created_at',$year)->sum('net_amount'),
-            'total_debit'   => (float) Transaction::where('type','debit') ->where('status','success')->whereYear('created_at',$year)->sum('net_amount'),
-            'total_txn'     => Transaction::whereYear('created_at',$year)->count(),
-            'success_count' => Transaction::where('status','success')->whereYear('created_at',$year)->count(),
-            'failed_count'  => Transaction::where('status','failed') ->whereYear('created_at',$year)->count(),
-            'flagged_count' => Transaction::where('is_flagged',true)  ->whereYear('created_at',$year)->count(),
+            'total_credit'    => (float) (clone $base)->where('type', 'credit')->sum('amount'),
+            'total_debit'     => (float) (clone $base)->where('type', 'debit') ->sum('amount'),
+            'total_movements' => (clone $base)->count(),
+            'current_balance' => (float) $wallet->balance,
+            'top_up_count'    => (clone $base)->where('type', 'credit')->whereNull('reference')->count(),
+            'top_up_total'    => (float) (clone $base)->where('type', 'credit')->whereNull('reference')->sum('amount'),
         ];
-        $totals['net_balance'] = $totals['total_credit'] - $totals['total_debit'];
+        $totals['net_change'] = $totals['total_credit'] - $totals['total_debit'];
 
-        $firstYear = (int) (Transaction::min(DB::raw('YEAR(created_at)')) ?? now()->year);
-        $years     = range($firstYear, now()->year);
+        // ── Available years ───────────────────────────────────────────────
+        $firstYear = (int) (WalletTransaction::where('wallet_id', $wallet->id)
+                        ->min(DB::raw('YEAR(created_at)')) ?? now()->year);
+        $years = range($firstYear, now()->year);
 
         return view('admin.reports.financial-summary', compact(
             'year', 'years', 'monthLabels', 'creditData', 'debitData', 'netData',
-            'byCategory', 'totals'
+            'categoryRows', 'totals'
         ));
     }
 
