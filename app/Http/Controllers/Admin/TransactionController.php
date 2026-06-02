@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\TransactionsExport;
 use App\Http\Controllers\Controller;
+use App\Mail\TransactionStatusMail;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Services\FraudDetectionService;
 use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TransactionController extends Controller
@@ -214,6 +216,24 @@ class TransactionController extends Controller
         ]);
 
         $oldStatus = $transaction->status;
+
+        // Status transition validation
+        $allowedTransitions = [
+            'pending'    => ['pending', 'processing', 'success', 'failed', 'cancelled'],
+            'processing' => ['pending', 'processing', 'success', 'failed', 'cancelled'],
+            'success'    => ['reversed'],
+            'failed'     => [],
+            'cancelled'  => [],
+            'reversed'   => [],
+        ];
+        $allowed = $allowedTransitions[$oldStatus] ?? [];
+        if ($request->status !== $oldStatus && !in_array($request->status, $allowed)) {
+            return response()->json([
+                'success' => false,
+                'message' => "Cannot change status from \"{$oldStatus}\" to \"{$request->status}\". " .
+                    ($allowed ? 'Allowed: ' . implode(', ', $allowed) : 'No changes allowed from this status.'),
+            ], 422);
+        }
         $transaction->update([
             'status' => $request->status,
             'processed_at' => in_array($request->status, ['success', 'failed']) ? now() : null,
@@ -265,6 +285,16 @@ class TransactionController extends Controller
             'notes' => $request->notes,
             'ip_address' => $request->ip(),
         ]);
+
+        // Send email notification to transaction owner
+        if ($transaction->user && $transaction->user->email) {
+            try {
+                Mail::to($transaction->user->email)
+                    ->queue(new TransactionStatusMail($transaction, $oldStatus));
+            } catch (\Exception $e) {
+                // Don't fail the status update if mail fails
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -372,12 +402,87 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function refund(Request $request, Transaction $transaction)
+    {
+        if ($transaction->status !== 'success') {
+            return response()->json(['success' => false, 'message' => 'Only successful transactions can be refunded.'], 422);
+        }
+        if ($transaction->is_refunded) {
+            return response()->json(['success' => false, 'message' => 'This transaction has already been refunded.'], 422);
+        }
+
+        // Create the reverse transaction
+        $refundTx = Transaction::create([
+            'user_id'        => $transaction->user_id,
+            'category'       => $transaction->category,
+            'type'           => $transaction->type === 'debit' ? 'credit' : 'debit',
+            'amount'         => $transaction->amount,
+            'currency'       => $transaction->currency,
+            'fee'            => 0,
+            'status'         => 'success',
+            'payment_method' => $transaction->payment_method,
+            'sender_name'    => $transaction->receiver_name,
+            'receiver_name'  => $transaction->sender_name,
+            'description'    => 'Refund for ' . $transaction->transaction_id,
+            'reference'      => $transaction->transaction_id,
+            'ip_address'     => $request->ip(),
+            'processed_at'   => now(),
+        ]);
+
+        // Mark original as refunded and reversed
+        $transaction->update([
+            'is_refunded'           => true,
+            'refund_transaction_id' => $refundTx->id,
+            'status'                => 'reversed',
+        ]);
+
+        // Reverse wallet side effect
+        $wallet = Wallet::company();
+        if ($wallet->status === 'active') {
+            $desc = 'Refund: ' . $transaction->transaction_id;
+            try {
+                // Original debit → refund credits back; original credit → refund debits back
+                if ($transaction->type === 'debit') {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id);
+                } else {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id);
+                }
+            } catch (\RuntimeException $e) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+        }
+
+        TransactionLog::create([
+            'transaction_id' => $transaction->id,
+            'action'         => 'refunded',
+            'from_status'    => 'success',
+            'to_status'      => 'reversed',
+            'performed_by'   => auth()->id(),
+            'notes'          => 'Refund processed → ' . $refundTx->transaction_id,
+            'ip_address'     => $request->ip(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Refund processed. New transaction: ' . $refundTx->transaction_id,
+        ]);
+    }
+
     public function exportCsv(Request $request)
     {
         $transactions = Transaction::with('user')
+            ->when($request->search, fn($q) => $q->where(function ($q2) use ($request) {
+                $q2->where('transaction_id', 'like', '%'.$request->search.'%')
+                   ->orWhere('sender_name', 'like', '%'.$request->search.'%')
+                   ->orWhere('receiver_name', 'like', '%'.$request->search.'%');
+            }))
             ->when($request->status, fn($q) => $q->where('status', $request->status))
             ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
             ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->amount_min, fn($q) => $q->where('amount', '>=', $request->amount_min))
+            ->when($request->amount_max, fn($q) => $q->where('amount', '<=', $request->amount_max))
+            ->when($request->is_flagged !== null && $request->is_flagged !== '', fn($q) => $q->where('is_flagged', $request->boolean('is_flagged')))
+            ->latest()
             ->get();
 
         $headers = [
@@ -404,7 +509,21 @@ class TransactionController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $transactions = Transaction::with('user')->latest()->limit(100)->get();
+        $transactions = Transaction::with('user')
+            ->when($request->search, fn($q) => $q->where(function ($q2) use ($request) {
+                $q2->where('transaction_id', 'like', '%'.$request->search.'%')
+                   ->orWhere('sender_name', 'like', '%'.$request->search.'%')
+                   ->orWhere('receiver_name', 'like', '%'.$request->search.'%');
+            }))
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->amount_min, fn($q) => $q->where('amount', '>=', $request->amount_min))
+            ->when($request->amount_max, fn($q) => $q->where('amount', '<=', $request->amount_max))
+            ->when($request->is_flagged !== null && $request->is_flagged !== '', fn($q) => $q->where('is_flagged', $request->boolean('is_flagged')))
+            ->latest()
+            ->limit(500)
+            ->get();
         $pdf = Pdf::loadView('admin.transactions.pdf', compact('transactions'));
         return $pdf->download('transactions_' . now()->format('Y-m-d') . '.pdf');
     }

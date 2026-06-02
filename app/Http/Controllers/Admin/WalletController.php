@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
@@ -35,6 +36,19 @@ class WalletController extends Controller
 
         $amount = (float) $request->amount;
         $wallet->credit($amount, $request->description, auth()->id());
+
+        AuditLog::create([
+            'user_id'        => auth()->id(),
+            'event'          => 'wallet_top_up',
+            'auditable_type' => Wallet::class,
+            'auditable_id'   => $wallet->id,
+            'new_values'     => ['amount' => $amount, 'description' => $request->description],
+            'ip_address'     => $request->ip(),
+            'user_agent'     => $request->userAgent(),
+            'url'            => $request->fullUrl(),
+            'module'         => 'wallet',
+            'description'    => auth()->user()->name . ' added ₹' . number_format($amount, 2) . ' to company wallet',
+        ]);
 
         return redirect()->route('admin.wallets.index')
             ->with('success', '₹' . number_format($amount, 2) . ' added to company wallet successfully.');

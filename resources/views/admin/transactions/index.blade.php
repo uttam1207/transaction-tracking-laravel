@@ -210,47 +210,69 @@
 
 {{-- Filters --}}
 <div class="filter-card">
-    <form method="GET" class="row g-2 align-items-end">
-        <div class="col-md-3">
-            <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Search</label>
-            <div class="position-relative">
-                <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.8rem;"></i>
-                <input type="text" name="search" class="form-control ps-4"
-                       placeholder="ID, sender, receiver…" value="{{ request('search') }}">
+    <form method="GET">
+        {{-- Row 1: main filters --}}
+        <div class="row g-2 align-items-end mb-2">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Search</label>
+                <div class="position-relative">
+                    <i class="bi bi-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;font-size:.8rem;"></i>
+                    <input type="text" name="search" class="form-control ps-4"
+                           placeholder="ID, sender, receiver…" value="{{ request('search') }}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    @foreach(['pending','processing','success','failed','cancelled','reversed'] as $s)
+                        <option value="{{ $s }}" {{ request('status')==$s?'selected':'' }}>{{ ucfirst($s) }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+            </div>
+            <div class="col-md-1">
+                <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Fraud</label>
+                <select name="is_flagged" class="form-select">
+                    <option value="">All</option>
+                    <option value="1" {{ request('is_flagged')=='1'?'selected':'' }}>Flagged</option>
+                    <option value="0" {{ request('is_flagged')=='0'?'selected':'' }}>Clean</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-filter btn-primary flex-grow-1">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                <a href="{{ route('admin.transactions.index') }}" class="btn btn-filter btn-outline-secondary px-3">
+                    <i class="bi bi-x-lg"></i>
+                </a>
             </div>
         </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Status</label>
-            <select name="status" class="form-select">
-                <option value="">All Status</option>
-                @foreach(['pending','processing','success','failed','cancelled','reversed'] as $s)
-                    <option value="{{ $s }}" {{ request('status')==$s?'selected':'' }}>{{ ucfirst($s) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">From Date</label>
-            <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">To Date</label>
-            <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-        </div>
-        <div class="col-md-1">
-            <label class="form-label small fw-semibold mb-1" style="color:#374151; font-size:.75rem;">Fraud</label>
-            <select name="is_flagged" class="form-select">
-                <option value="">All</option>
-                <option value="1" {{ request('is_flagged')=='1'?'selected':'' }}>Flagged</option>
-                <option value="0" {{ request('is_flagged')=='0'?'selected':'' }}>Clean</option>
-            </select>
-        </div>
-        <div class="col-md-2 d-flex gap-2">
-            <button type="submit" class="btn btn-filter btn-primary flex-grow-1">
-                <i class="bi bi-search me-1"></i>Filter
-            </button>
-            <a href="{{ route('admin.transactions.index') }}" class="btn btn-filter btn-outline-secondary px-3">
-                <i class="bi bi-x-lg"></i>
-            </a>
+        {{-- Row 2: amount range --}}
+        <div class="row g-2 align-items-end">
+            <div class="col-auto d-flex align-items-center" style="padding-bottom:2px;">
+                <span style="font-size:.73rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;">
+                    <i class="bi bi-currency-rupee me-1"></i>Amount Range
+                </span>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="amount_min" class="form-control" step="0.01" min="0"
+                       placeholder="Min amount" value="{{ request('amount_min') }}">
+            </div>
+            <div class="col-auto d-flex align-items-center" style="padding-bottom:2px;">
+                <span style="color:#9ca3af;font-size:.8rem;">—</span>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="amount_max" class="form-control" step="0.01" min="0"
+                       placeholder="Max amount" value="{{ request('amount_max') }}">
+            </div>
         </div>
     </form>
 </div>
@@ -300,10 +322,15 @@
             @endif
         </div>
         <div class="d-flex gap-2 align-items-center">
-            <a href="{{ route('admin.transactions.export.csv') }}" class="btn-export btn btn-outline-success">
+            @php
+                $exportParams = array_filter(request()->only(['search','status','date_from','date_to','amount_min','amount_max','is_flagged']));
+                $csvUrl  = route('admin.transactions.export.csv')  . ($exportParams ? '?'.http_build_query($exportParams) : '');
+                $pdfUrl  = route('admin.transactions.export.pdf')  . ($exportParams ? '?'.http_build_query($exportParams) : '');
+            @endphp
+            <a href="{{ $csvUrl }}" class="btn-export btn btn-outline-success">
                 <i class="bi bi-filetype-csv"></i>CSV
             </a>
-            <a href="{{ route('admin.transactions.export.pdf') }}" class="btn-export btn btn-outline-danger">
+            <a href="{{ $pdfUrl }}" class="btn-export btn btn-outline-danger">
                 <i class="bi bi-filetype-pdf"></i>PDF
             </a>
             <a href="{{ route('admin.transactions.create') }}" class="btn-new-tx">

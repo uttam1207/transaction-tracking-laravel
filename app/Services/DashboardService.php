@@ -57,6 +57,7 @@ class DashboardService
 
         return [
             'labels' => $data->pluck('date')->map(fn($d) => Carbon::parse($d)->format('M d'))->toArray(),
+            'dates'  => $data->pluck('date')->toArray(),
             'counts' => $data->pluck('count')->toArray(),
             'amounts' => $data->pluck('successful_amount')->toArray(),
         ];

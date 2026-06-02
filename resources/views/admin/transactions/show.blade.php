@@ -174,6 +174,22 @@
        onmouseout="this.style.background='#ede9fe'">
         <i class="bi bi-file-earmark-pdf"></i>Download Receipt
     </a>
+    @if($transaction->status === 'success' && !$transaction->is_refunded)
+    <button onclick="triggerRefund()"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+              padding:6px 14px;border-radius:8px;border:1px solid #fca5a5;
+              background:#fee2e2;color:#dc2626;cursor:pointer;transition:background .15s;"
+       onmouseover="this.style.background='#fecaca'"
+       onmouseout="this.style.background='#fee2e2'">
+        <i class="bi bi-arrow-counterclockwise"></i>Refund
+    </button>
+    @endif
+    @if($transaction->is_refunded)
+    <span style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+                 padding:6px 14px;border-radius:8px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;">
+        <i class="bi bi-check-circle"></i>Refunded
+    </span>
+    @endif
 </div>
 
 <div class="detail-hero">
@@ -462,6 +478,24 @@ function updateStatus() {
             const msg = xhr.responseJSON?.message || 'Status update failed';
             APP.toast(msg, 'error');
         });
+}
+
+function triggerRefund() {
+    APP.confirm(
+        'Process Refund?',
+        'This will create a reverse transaction for ₹{{ number_format($transaction->net_amount, 2) }} and mark this transaction as reversed. This cannot be undone.',
+        () => {
+            APP.ajax('/admin/transactions/{{ $transaction->id }}/refund', 'POST', {})
+                .done(res => {
+                    if (res.success) { APP.toast(res.message); setTimeout(() => location.reload(), 1500); }
+                    else { APP.toast(res.message || 'Refund failed', 'error'); }
+                })
+                .fail(xhr => {
+                    const msg = xhr.responseJSON?.message || 'Refund failed';
+                    APP.toast(msg, 'error');
+                });
+        }
+    );
 }
 </script>
 @endpush

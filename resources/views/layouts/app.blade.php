@@ -558,6 +558,10 @@
                     <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
                     <span class="nav-label">Tx Reports</span>
                 </a>
+                <a href="{{ route('admin.reports.financial-summary') }}" class="sidebar-link {{ request()->routeIs('admin.reports.financial-summary') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                    <span class="nav-label">Financial</span>
+                </a>
                 <a href="{{ route('admin.reports.employees') }}" class="sidebar-link {{ request()->routeIs('admin.reports.employees') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-graph-up"></i></span>
                     <span class="nav-label">HR Reports</span>
@@ -959,7 +963,55 @@
             });
         }
     });
+
+    // ── Session Timeout (30-minute inactivity auto-logout) ───────────────────
+    (function () {
+        const TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+        const WARN_MS    = 2  * 60 * 1000; // warn 2 minutes before
+        let timer, warnTimer, warnShown = false;
+
+        function resetTimer() {
+            clearTimeout(timer);
+            clearTimeout(warnTimer);
+            if (warnShown) { Swal.close(); warnShown = false; }
+
+            warnTimer = setTimeout(() => {
+                warnShown = true;
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Session Expiring',
+                    html: 'Your session will expire due to inactivity in <strong>2 minutes</strong>.<br>Click OK to stay logged in.',
+                    confirmButtonText: 'Stay Logged In',
+                    showCancelButton: true,
+                    cancelButtonText: 'Logout Now',
+                    timer: WARN_MS,
+                    timerProgressBar: true,
+                }).then(result => {
+                    warnShown = false;
+                    if (result.isDismissed && result.dismiss !== Swal.DismissReason.cancel) {
+                        resetTimer(); // user clicked OK or interacted
+                    } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.timer) {
+                        document.getElementById('sessionLogoutForm').submit();
+                    }
+                });
+            }, TIMEOUT_MS - WARN_MS);
+
+            timer = setTimeout(() => {
+                document.getElementById('sessionLogoutForm').submit();
+            }, TIMEOUT_MS);
+        }
+
+        ['mousemove','keydown','click','scroll','touchstart'].forEach(evt =>
+            document.addEventListener(evt, resetTimer, { passive: true })
+        );
+        resetTimer();
+    })();
     </script>
+
+    {{-- Hidden logout form for session timeout --}}
+    <form id="sessionLogoutForm" method="POST" action="{{ route('logout') }}" style="display:none;">
+        @csrf
+    </form>
 
     <!-- Laravel Echo / Real-time WebSocket (Laravel Reverb) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>

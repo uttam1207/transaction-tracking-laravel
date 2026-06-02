@@ -129,6 +129,7 @@ Route::prefix('admin')
     Route::resource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status');
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'downloadPdf'])->name('transactions.receipt');
+    Route::post('/transactions/{transaction}/refund', [TransactionController::class, 'refund'])->name('transactions.refund');
     Route::post('/transactions/batch-update', [TransactionController::class, 'batchUpdate'])->name('transactions.batch-update');
     Route::get('/transactions-export/csv', [TransactionController::class, 'exportCsv'])->name('transactions.export.csv');
     Route::get('/transactions-export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
@@ -160,6 +161,7 @@ Route::prefix('admin')
     Route::get('/reports/transactions', [ReportController::class, 'transactionReport'])->name('reports.transactions');
     Route::get('/reports/employees', [ReportController::class, 'employeeReport'])->name('reports.employees');
     Route::get('/reports/attendance', [ReportController::class, 'attendanceReport'])->name('reports.attendance');
+    Route::get('/reports/financial-summary', [ReportController::class, 'financialSummary'])->name('reports.financial-summary');
     Route::get('/reports/{type}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
 

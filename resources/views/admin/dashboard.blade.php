@@ -605,14 +605,35 @@ document.querySelectorAll('.widget-hide').forEach(btn => {
 // ── Charts ──
 const txData = @json($transactionChart);
 const txChart = new ApexCharts(document.getElementById('transactionChart'), {
-    series: [{ name: 'Volume ($)', data: txData.amounts }],
-    chart: { type: 'area', height: 280, toolbar: { show: false } },
+    series: [{ name: 'Volume (₹)', data: txData.amounts }],
+    chart: {
+        type: 'area', height: 280, toolbar: { show: false },
+        cursor: 'pointer',
+        events: {
+            dataPointSelection: function(event, chartContext, config) {
+                const date = (txData.dates || [])[config.dataPointIndex];
+                if (date) window.location.href = '/admin/transactions?date_from=' + date + '&date_to=' + date;
+            },
+        },
+    },
     stroke: { curve: 'smooth', width: 2 },
     fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.02 } },
     colors: ['#4f46e5'],
     xaxis: { categories: txData.labels, labels: { style: { fontSize: '11px' } } },
-    yaxis: { labels: { formatter: v => '$' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : v) } },
-    tooltip: { y: { formatter: v => '$' + Number(v).toLocaleString() } },
+    yaxis: { labels: { formatter: v => '₹' + (v >= 1000 ? (v/1000).toFixed(1)+'K' : v) } },
+    tooltip: {
+        custom: function({ series, seriesIndex, dataPointIndex }) {
+            const date  = (txData.labels || [])[dataPointIndex] || '';
+            const count = (txData.counts || [])[dataPointIndex] || 0;
+            const amt   = series[seriesIndex][dataPointIndex] || 0;
+            return '<div style="padding:8px 12px;font-size:12px;font-family:sans-serif;">' +
+                '<div style="font-weight:700;margin-bottom:4px;">' + date + '</div>' +
+                '<div>Transactions: <strong>' + count + '</strong></div>' +
+                '<div>Amount: <strong>₹' + Number(amt).toLocaleString() + '</strong></div>' +
+                '<div style="font-size:10px;color:#9ca3af;margin-top:4px;">Click to view</div>' +
+                '</div>';
+        },
+    },
     grid: { borderColor: 'rgba(0,0,0,0.04)' },
     dataLabels: { enabled: false },
 });
