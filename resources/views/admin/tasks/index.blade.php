@@ -137,7 +137,20 @@
                             @if(in_array($ts,['review','in_progress']))
                             <button class="act-btn act-green" title="Approve" onclick="approveTask('{{ route('admin.tasks.approve', $task) }}')"><i class="bi bi-check2"></i></button>
                             @endif
-                            <button class="act-btn act-edit" onclick="editTask({{ $task->id }})" title="Edit"><i class="bi bi-pencil"></i></button>
+                            <button class="act-btn act-edit" title="Edit"
+                                onclick="editTask({{ json_encode([
+                                    'id'              => $task->id,
+                                    'title'           => $task->title,
+                                    'description'     => $task->description,
+                                    'priority'        => $task->priority,
+                                    'status'          => $task->status,
+                                    'progress'        => $task->progress ?? 0,
+                                    'due_date'        => $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : '',
+                                    'estimated_hours' => $task->estimated_hours,
+                                    'assigned_to'     => $task->assigned_to,
+                                ]) }})">
+                                <i class="bi bi-pencil"></i>
+                            </button>
                             <button class="act-btn act-delete" onclick="deleteTask({{ $task->id }})" title="Delete"><i class="bi bi-trash"></i></button>
                         </div>
                     </td>
@@ -211,6 +224,78 @@
         </div>
     </div>
 </div>
+{{-- Edit Task Modal --}}
+<div class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold"><i class="bi bi-pencil me-2 text-warning"></i>Edit Task</h6>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editTaskForm">
+                @csrf
+                <input type="hidden" id="editTaskId">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="flabel">Task Title <span class="req">*</span></label>
+                            <input type="text" id="editTitle" name="title" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-12">
+                            <label class="flabel">Description</label>
+                            <textarea id="editDescription" name="description" class="form-control" rows="3" style="border-radius:9px;border:1.5px solid #e5e7eb;resize:none;"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Priority <span class="req">*</span></label>
+                            <select id="editPriority" name="priority" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Status <span class="req">*</span></label>
+                            <select id="editStatus" name="status" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                <option value="pending">Pending</option>
+                                <option value="assigned">Assigned</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="review">Review</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Assign To</label>
+                            <select id="editAssignedTo" name="assigned_to" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                <option value="">Unassigned</option>
+                                @foreach($employees ?? [] as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Due Date</label>
+                            <input type="date" id="editDueDate" name="due_date" class="form-control" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Estimated Hours</label>
+                            <input type="number" id="editEstimatedHours" name="estimated_hours" class="form-control" step="0.5" min="0" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="flabel">Progress (%)</label>
+                            <input type="number" id="editProgress" name="progress" class="form-control" min="0" max="100" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary-grad px-4">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -259,5 +344,41 @@ function deleteTask(id) {
         });
     });
 }
+
+function editTask(task) {
+    document.getElementById('editTaskId').value         = task.id;
+    document.getElementById('editTitle').value          = task.title;
+    document.getElementById('editDescription').value    = task.description ?? '';
+    document.getElementById('editPriority').value       = task.priority;
+    document.getElementById('editStatus').value         = task.status;
+    document.getElementById('editProgress').value       = task.progress ?? 0;
+    document.getElementById('editDueDate').value        = task.due_date ?? '';
+    document.getElementById('editEstimatedHours').value = task.estimated_hours ?? '';
+    document.getElementById('editAssignedTo').value     = task.assigned_to ?? '';
+    new bootstrap.Modal(document.getElementById('editTaskModal')).show();
+}
+
+document.getElementById('editTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id  = document.getElementById('editTaskId').value;
+    const btn = this.querySelector('[type=submit]');
+    btn.disabled = true;
+    const body = new FormData(this);
+    body.append('_method', 'PUT');
+    fetch(`/admin/tasks/${id}`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF() },
+        body: body
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('editTaskModal')).hide();
+            APP.toast('Task updated!');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            btn.disabled = false;
+            APP.toast(data.message || 'Error updating task.', 'error');
+        }
+    }).catch(() => { btn.disabled = false; });
+});
 </script>
 @endpush
