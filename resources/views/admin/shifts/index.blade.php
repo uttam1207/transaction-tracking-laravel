@@ -318,15 +318,19 @@
 
 @endsection
 
-@push('scripts')
-<script>
-// Shift default times keyed by shift key — used to auto-fill the edit modal
-const SHIFT_DEFAULTS = @json($shifts->mapWithKeys(fn($s) => [
+@php
+$shiftDefaults = $shifts->mapWithKeys(fn($s) => [
     $s->key => [
         'start' => $s->start_time ? substr($s->start_time, 0, 5) : '',
         'end'   => $s->end_time   ? substr($s->end_time,   0, 5) : '',
     ]
-]));
+]);
+@endphp
+
+@push('scripts')
+<script>
+// Shift default times keyed by shift key — used to auto-fill the edit modal
+const SHIFT_DEFAULTS = @json($shiftDefaults);
 
 function openEditModal(id, shiftType, start, end) {
     document.getElementById('editShiftForm').action = `/admin/shifts/employee/${id}`;
