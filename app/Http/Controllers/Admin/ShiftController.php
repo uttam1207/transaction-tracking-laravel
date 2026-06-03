@@ -5,19 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Shift;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ShiftController extends Controller
 {
-    // Predefined shift templates stored in settings/config
-    private array $defaultShifts = [
-        'morning'   => ['label' => 'Morning Shift',   'start' => '07:00', 'end' => '15:00'],
-        'day'       => ['label' => 'Day Shift',        'start' => '09:00', 'end' => '17:00'],
-        'evening'   => ['label' => 'Evening Shift',    'start' => '14:00', 'end' => '22:00'],
-        'night'     => ['label' => 'Night Shift',      'start' => '22:00', 'end' => '06:00'],
-        'flexible'  => ['label' => 'Flexible Hours',   'start' => null,    'end' => null],
-    ];
-
     public function index(Request $request)
     {
         $query = Employee::with(['user', 'department'])
@@ -32,16 +25,45 @@ class ShiftController extends Controller
 
         $employees   = $query->latest()->paginate(20);
         $departments = Department::orderBy('name')->get();
-        $shifts      = $this->defaultShifts;
+        $shifts      = Shift::where('is_active', true)->orderBy('name')->get();
 
-        // Count by shift type
-        $shiftCounts = collect($this->defaultShifts)->map(function ($shift, $key) {
-            return Employee::where('status', 'active')
-                ->whereJsonContains('shift_timing->type', $key)
-                ->count();
-        });
+        // Count employees per shift
+        $shiftCounts = $shifts->mapWithKeys(fn($s) => [
+            $s->key => Employee::where('status', 'active')
+                ->whereJsonContains('shift_timing->type', $s->key)
+                ->count()
+        ]);
 
         return view('admin.shifts.index', compact('employees', 'departments', 'shifts', 'shiftCounts'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'       => 'required|string|max:80',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time'   => 'nullable|date_format:H:i',
+            'color'      => 'nullable|string|max:20',
+        ]);
+
+        $key = Str::slug($request->name, '_');
+        // Ensure unique key
+        $base = $key;
+        $i = 2;
+        while (Shift::where('key', $key)->exists()) {
+            $key = $base . '_' . $i++;
+        }
+
+        Shift::create([
+            'key'        => $key,
+            'name'       => $request->name,
+            'start_time' => $request->start_time ?: null,
+            'end_time'   => $request->end_time   ?: null,
+            'color'      => $request->color ?? '#4f46e5',
+            'is_active'  => true,
+        ]);
+
+        return back()->with('success', "Shift type '{$request->name}' created.");
     }
 
     public function updateShift(Request $request, Employee $employee)
@@ -52,8 +74,11 @@ class ShiftController extends Controller
             'end_time'   => 'nullable|date_format:H:i',
         ]);
 
-        $shiftData = $this->defaultShifts[$request->shift_type] ?? ['label' => $request->shift_type];
-        $shiftData['type'] = $request->shift_type;
+        $shift = Shift::where('key', $request->shift_type)->first();
+        $shiftData = $shift ? $shift->toShiftArray() : [
+            'type' => $request->shift_type, 'label' => $request->shift_type,
+            'start' => null, 'end' => null,
+        ];
 
         if ($request->start_time) $shiftData['start'] = $request->start_time;
         if ($request->end_time)   $shiftData['end']   = $request->end_time;
@@ -63,19 +88,54 @@ class ShiftController extends Controller
         return back()->with('success', $employee->full_name . "'s shift updated to '{$shiftData['label']}'.");
     }
 
+    public function updateShiftType(Request $request, Shift $shift)
+    {
+        $request->validate([
+            'name'       => 'required|string|max:80',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time'   => 'nullable|date_format:H:i',
+            'color'      => 'nullable|string|max:20',
+        ]);
+
+        $shift->update([
+            'name'       => $request->name,
+            'start_time' => $request->start_time ?: null,
+            'end_time'   => $request->end_time   ?: null,
+            'color'      => $request->color ?? $shift->color,
+        ]);
+
+        return back()->with('success', "Shift type '{$shift->name}' updated.");
+    }
+
+    public function destroyShiftType(Shift $shift)
+    {
+        $shift->delete();
+        return back()->with('success', "Shift type '{$shift->name}' deleted.");
+    }
+
     public function bulkAssign(Request $request)
     {
         $request->validate([
-            'employee_ids' => 'required|array',
+            'employee_ids' => 'nullable|string',
             'shift_type'   => 'required|string',
         ]);
 
-        $shiftData = $this->defaultShifts[$request->shift_type]
-            ?? ['label' => $request->shift_type, 'type' => $request->shift_type];
-        $shiftData['type'] = $request->shift_type;
+        $shift = Shift::where('key', $request->shift_type)->first();
+        $shiftData = $shift ? $shift->toShiftArray() : [
+            'type' => $request->shift_type, 'label' => $request->shift_type,
+            'start' => null, 'end' => null,
+        ];
 
-        Employee::whereIn('id', $request->employee_ids)->update(['shift_timing' => $shiftData]);
+        // employee_ids arrives as a comma-separated string from the form
+        $ids = array_filter(explode(',', $request->employee_ids ?? ''));
 
-        return back()->with('success', 'Shift assigned to ' . count($request->employee_ids) . ' employee(s).');
+        if (empty($ids)) {
+            Employee::where('status', 'active')->update(['shift_timing' => $shiftData]);
+            return back()->with('success', 'Shift assigned to all active employees.');
+        }
+
+        Employee::whereIn('id', $ids)->update(['shift_timing' => $shiftData]);
+
+        return back()->with('success', 'Shift assigned to ' . count($ids) . ' employee(s).');
     }
 }

@@ -187,8 +187,12 @@ Route::prefix('admin')
 
     // Shift Management
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
-    Route::patch('/shifts/{employee}', [ShiftController::class, 'updateShift'])->name('shifts.update');
     Route::post('/shifts/bulk-assign', [ShiftController::class, 'bulkAssign'])->name('shifts.bulk-assign');
+    Route::patch('/shifts/employee/{employee}', [ShiftController::class, 'updateShift'])->name('shifts.update');
+    // Shift Type CRUD
+    Route::post('/shifts/types', [ShiftController::class, 'store'])->name('shifts.types.store');
+    Route::patch('/shifts/types/{shift}', [ShiftController::class, 'updateShiftType'])->name('shifts.types.update');
+    Route::delete('/shifts/types/{shift}', [ShiftController::class, 'destroyShiftType'])->name('shifts.types.destroy');
 
     // Work Report Review (Admin/Manager)
     Route::get('/work-reports', [AdminWorkReportController::class, 'index'])->name('work-reports.index');
