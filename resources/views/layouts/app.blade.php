@@ -40,14 +40,11 @@
             top: 0; left: 0;
             z-index: 1000;
             transition: transform 0.3s ease;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-width: none;
+            overflow: hidden;               /* brand + footer stay fixed */
             display: flex;
             flex-direction: column;
             border-right: 1px solid rgba(255,255,255,0.06);
         }
-        .sidebar::-webkit-scrollbar { display: none; }
 
         /* ── Brand ── */
         .sidebar-brand {
@@ -89,7 +86,18 @@
         }
 
         /* ── Nav ── */
-        .sidebar-nav { padding: 12px 0; flex: 1; }
+        .sidebar-nav {
+            padding: 12px 0;
+            flex: 1;
+            min-height: 0;          /* allows flex child to shrink and scroll */
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,.12) transparent;
+        }
+        .sidebar-nav::-webkit-scrollbar { width: 3px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.18); border-radius: 3px; }
 
         .nav-section-title {
             display: flex;
@@ -213,8 +221,30 @@
             position: sticky;
             top: 0; z-index: 999;
             display: flex; align-items: center;
-            padding: 0 24px;
-            gap: 16px;
+            padding: 0 20px;
+            gap: 14px;
+            backdrop-filter: blur(8px);
+        }
+        .topbar-action-btn {
+            width: 34px; height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--bs-border-color);
+            background: var(--bs-body-bg);
+            color: #6b7280;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .95rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background .15s, color .15s, border-color .15s;
+        }
+        .topbar-action-btn:hover {
+            background: #f3f4f6;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+        [data-bs-theme="dark"] .topbar-action-btn:hover {
+            background: rgba(255,255,255,.08);
+            color: #e2e8f0;
         }
 
         .page-content { padding: 24px; }
@@ -243,14 +273,17 @@
         .notif-bell { position: relative; }
         .notif-count {
             position: absolute;
-            top: -4px; right: -4px;
+            top: -3px; right: -3px;
             background: #ef4444;
             color: #fff;
-            font-size: 0.6rem;
-            padding: 1px 5px;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 1px 4px;
             border-radius: 10px;
-            min-width: 16px;
+            min-width: 15px;
             text-align: center;
+            border: 1.5px solid var(--bs-body-bg);
+            line-height: 1.4;
         }
 
         /* Mobile */
@@ -461,6 +494,71 @@
         .modal-content { border-radius:14px; border:none; box-shadow:0 20px 60px rgba(0,0,0,.15); }
         .modal-header  { border-bottom:1px solid #f3f4f6; padding:16px 20px; }
         .modal-footer  { border-top:1px solid #f3f4f6; padding:12px 20px; }
+
+        /* ── Breadcrumb ── */
+        .topbar-breadcrumb-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bs-tertiary-bg, #f3f4f6);
+            border: 1px solid var(--bs-border-color);
+            border-radius: 20px;
+            padding: 4px 12px 4px 5px;
+        }
+        .bc-home-btn {
+            width: 24px; height: 24px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            font-size: .65rem;
+            flex-shrink: 0;
+            text-decoration: none;
+            transition: opacity .15s;
+        }
+        .bc-home-btn:hover { opacity: .85; color: #fff; }
+        .topbar-breadcrumb-wrap .breadcrumb {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            font-size: .78rem;
+            flex-wrap: nowrap;
+            align-items: center;
+        }
+        .topbar-breadcrumb-wrap .breadcrumb-item {
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+            font-weight: 500;
+            white-space: nowrap;
+            line-height: 1;
+        }
+        .topbar-breadcrumb-wrap .breadcrumb-item + .breadcrumb-item::before {
+            content: '';
+            display: inline-block;
+            width: 5px; height: 8px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 10'%3E%3Cpath d='M1 1l4 4-4 4' stroke='%23d1d5db' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-size: contain;
+            padding: 0;
+            margin: 0 6px;
+            vertical-align: middle;
+            opacity: 1;
+            float: none;
+        }
+        .topbar-breadcrumb-wrap .breadcrumb-item a {
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color .15s;
+        }
+        .topbar-breadcrumb-wrap .breadcrumb-item a:hover { color: #4f46e5; }
+        .topbar-breadcrumb-wrap .breadcrumb-item.active {
+            color: #111827;
+            font-weight: 600;
+        }
+        [data-bs-theme="dark"] .topbar-breadcrumb-wrap .breadcrumb-item.active { color: #e2e8f0; }
+        [data-bs-theme="dark"] .topbar-breadcrumb-wrap { background: rgba(255,255,255,.05); }
     </style>
     @stack('styles')
 </head>
@@ -688,79 +786,102 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
 
-            <div class="d-none d-md-block">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb mb-0 small">
-                        <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Home</a></li>
-                        @yield('breadcrumb')
-                    </ol>
-                </nav>
+            <div class="d-none d-md-flex align-items-center topbar-breadcrumb-wrap">
+                <a href="{{ auth()->user()->isEmployee() ? route('employee.dashboard') : route('admin.dashboard') }}"
+                   class="bc-home-btn" title="Dashboard">
+                    <i class="bi bi-house-fill"></i>
+                </a>
+                @hasSection('breadcrumb')
+                <ol class="breadcrumb">
+                    @yield('breadcrumb')
+                </ol>
+                @endif
             </div>
 
             {{-- Global Search --}}
             @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-            <div class="position-relative d-none d-lg-block ms-3" style="width:280px" id="globalSearchWrapper">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="globalSearch" class="form-control border-start-0 ps-0"
-                           placeholder="Search transactions, users, employees..." autocomplete="off">
+            <div class="position-relative d-none d-lg-flex ms-2" style="width:260px;" id="globalSearchWrapper">
+                <div class="input-group" style="height:34px;">
+                    <span class="input-group-text border-end-0" style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-radius:10px 0 0 10px; padding:0 10px;">
+                        <i class="bi bi-search" style="color:#9ca3af; font-size:.8rem;"></i>
+                    </span>
+                    <input type="text" id="globalSearch"
+                           class="form-control border-start-0 ps-0"
+                           style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-left:none; border-radius:0 10px 10px 0; font-size:.8rem; height:34px;"
+                           placeholder="Search..." autocomplete="off">
                 </div>
-                <div id="searchDropdown" class="dropdown-menu w-100 shadow p-0 mt-1" style="display:none; max-height:400px; overflow-y:auto;"></div>
+                <div id="searchDropdown" class="dropdown-menu w-100 shadow-sm p-0 mt-1"
+                     style="display:none; max-height:400px; overflow-y:auto; border-radius:12px; border:1px solid #e5e7eb;"></div>
             </div>
             @endif
 
-            <div class="ms-auto d-flex align-items-center gap-3">
+            <div class="ms-auto d-flex align-items-center gap-2">
                 <!-- Language Switcher -->
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="dropdown" title="Language">
-                        <i class="bi bi-translate"></i>
-                        <span class="d-none d-md-inline small ms-1">{{ strtoupper(app()->getLocale()) }}</span>
+                    <button class="topbar-action-btn" data-bs-toggle="dropdown" title="Language"
+                            style="width:auto; padding:0 10px; gap:5px; border:1px solid var(--bs-border-color); background:var(--bs-body-bg); border-radius:10px; height:34px; display:flex; align-items:center; font-size:.78rem; font-weight:600; color:#6b7280; cursor:pointer;">
+                        <i class="bi bi-translate" style="font-size:.85rem;"></i>
+                        <span class="d-none d-md-inline">{{ strtoupper(app()->getLocale()) }}</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li><a class="dropdown-item small {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="?lang=en">&#127468;&#127463; English</a></li>
-                        <li><a class="dropdown-item small {{ app()->getLocale() === 'es' ? 'active' : '' }}" href="?lang=es">&#127466;&#127480; Español</a></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:12px; border:1px solid #e5e7eb; font-size:.83rem; min-width:140px;">
+                        <li><a class="dropdown-item rounded-2 {{ app()->getLocale() === 'en' ? 'active' : '' }}" href="?lang=en">&#127468;&#127463; English</a></li>
+                        <li><a class="dropdown-item rounded-2 {{ app()->getLocale() === 'es' ? 'active' : '' }}" href="?lang=es">&#127466;&#127480; Español</a></li>
                     </ul>
                 </div>
 
                 <!-- Theme Toggle -->
-                <button class="btn btn-sm btn-outline-secondary border-0" id="themeToggle" title="Toggle Theme">
+                <button class="topbar-action-btn" id="themeToggle" title="Toggle Theme">
                     <i class="bi bi-sun-fill" id="themeIcon"></i>
                 </button>
 
                 <!-- Notifications -->
                 <div class="dropdown notif-bell">
-                    <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="dropdown">
-                        <i class="bi bi-bell fs-5"></i>
-                        <span class="notif-count" id="notifCount">0</span>
+                    <button class="topbar-action-btn" data-bs-toggle="dropdown" title="Notifications">
+                        <i class="bi bi-bell"></i>
+                        <span class="notif-count" id="notifCount" style="display:none;"></span>
                     </button>
-                    <div class="dropdown-menu dropdown-menu-end shadow" style="width: 350px; max-height: 400px; overflow-y: auto;">
-                        <div class="dropdown-header d-flex justify-content-between align-items-center">
-                            <strong>Notifications</strong>
-                            <button class="btn btn-sm btn-link text-decoration-none" onclick="markAllRead()">Mark all read</button>
+                    <div class="dropdown-menu dropdown-menu-end shadow-sm" style="width:360px; max-height:420px; overflow-y:auto; border-radius:14px; border:1px solid #e5e7eb;">
+                        <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                            <span style="font-size:.82rem; font-weight:700; color:#111827;">Notifications</span>
+                            <button class="btn btn-link btn-sm text-decoration-none p-0" style="font-size:.75rem; color:#4f46e5;" onclick="markAllRead()">Mark all read</button>
                         </div>
                         <div id="notifList">
-                            <div class="dropdown-item text-muted small text-center py-3">Loading...</div>
+                            <div class="text-muted text-center py-4" style="font-size:.82rem;">Loading...</div>
                         </div>
                     </div>
                 </div>
 
+                <div style="width:1px; height:22px; background:var(--bs-border-color); margin:0 2px;"></div>
+
                 <!-- User Menu -->
                 <div class="dropdown">
-                    <button class="btn btn-sm d-flex align-items-center gap-2" data-bs-toggle="dropdown">
-                        <img src="{{ auth()->user()->avatar_url }}" class="rounded-circle" width="32" height="32" alt="">
-                        <span class="d-none d-md-inline small">{{ auth()->user()->name }}</span>
-                        <i class="bi bi-chevron-down small"></i>
+                    <button class="d-flex align-items-center gap-2 border-0 bg-transparent" data-bs-toggle="dropdown"
+                            style="cursor:pointer; padding:4px 8px; border-radius:10px; transition:background .15s;"
+                            onmouseenter="this.style.background='rgba(0,0,0,.05)'" onmouseleave="this.style.background='transparent'">
+                        <img src="{{ auth()->user()->avatar_url }}" class="rounded-circle" width="30" height="30" alt=""
+                             style="border: 2px solid #e5e7eb;">
+                        <div class="d-none d-md-block text-start" style="line-height:1.2;">
+                            <div style="font-size:.8rem; font-weight:700; color:#111827;">{{ auth()->user()->name }}</div>
+                            <div style="font-size:.68rem; color:#9ca3af;">{{ ucwords(str_replace('_',' ', auth()->user()->role)) }}</div>
+                        </div>
+                        <i class="bi bi-chevron-down d-none d-md-inline" style="font-size:.6rem; color:#9ca3af;"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow">
-                        <li><span class="dropdown-item-text small text-muted">{{ auth()->user()->email }}</span></li>
-                        <li><hr class="dropdown-divider"></li>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius:14px; border:1px solid #e5e7eb; min-width:200px; font-size:.83rem;">
+                        <li class="px-3 py-2" style="border-bottom:1px solid #f3f4f6;">
+                            <div style="font-weight:700; font-size:.82rem; color:#111827;">{{ auth()->user()->name }}</div>
+                            <div style="font-size:.72rem; color:#9ca3af;">{{ auth()->user()->email }}</div>
+                        </li>
                         @if(auth()->user()->isEmployee())
-                            <li><a class="dropdown-item" href="{{ route('employee.profile') }}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                        <li><a class="dropdown-item rounded-2 mt-1" href="{{ route('employee.profile') }}">
+                            <i class="bi bi-person me-2 text-indigo-600"></i>My Profile</a></li>
                         @endif
+                        <li><hr class="dropdown-divider my-1"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+                                <button class="dropdown-item rounded-2 text-danger">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </button>
                             </form>
                         </li>
                     </ul>
