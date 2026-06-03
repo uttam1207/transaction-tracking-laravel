@@ -275,7 +275,7 @@
                         <input type="time" name="end_time" id="editEndTime" class="form-control" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                     </div>
                 </div>
-                <p class="mt-2 mb-0" style="font-size:.75rem;color:#9ca3af;">Override times are optional — leave blank to use shift defaults.</p>
+                <p class="mt-2 mb-0" style="font-size:.75rem;color:#9ca3af;">Times auto-fill from shift defaults when you change the type above.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -320,13 +320,31 @@
 
 @push('scripts')
 <script>
+// Shift default times keyed by shift key — used to auto-fill the edit modal
+const SHIFT_DEFAULTS = @json($shifts->mapWithKeys(fn($s) => [
+    $s->key => [
+        'start' => $s->start_time ? substr($s->start_time, 0, 5) : '',
+        'end'   => $s->end_time   ? substr($s->end_time,   0, 5) : '',
+    ]
+]));
+
 function openEditModal(id, shiftType, start, end) {
     document.getElementById('editShiftForm').action = `/admin/shifts/employee/${id}`;
     document.getElementById('editShiftType').value = shiftType;
-    document.getElementById('editStartTime').value = start;
-    document.getElementById('editEndTime').value = end;
+    // Use stored times; if blank fall back to shift defaults
+    const def = SHIFT_DEFAULTS[shiftType] || {};
+    document.getElementById('editStartTime').value = start || def.start || '';
+    document.getElementById('editEndTime').value   = end   || def.end   || '';
     new bootstrap.Modal(document.getElementById('editShiftModal')).show();
 }
+
+// Auto-fill times when shift type changes
+document.getElementById('editShiftType').addEventListener('change', function () {
+    const def = SHIFT_DEFAULTS[this.value] || {};
+    document.getElementById('editStartTime').value = def.start || '';
+    document.getElementById('editEndTime').value   = def.end   || '';
+});
+
 function openEditShiftTypeModal(data) {
     document.getElementById('editShiftTypeForm').action = `/admin/shifts/types/${data.id}`;
     document.getElementById('editTypeName').value  = data.name;
@@ -335,6 +353,7 @@ function openEditShiftTypeModal(data) {
     document.getElementById('editTypeColor').value = data.color || '#6366f1';
     new bootstrap.Modal(document.getElementById('editShiftTypeModal')).show();
 }
+
 document.getElementById('selectAll').addEventListener('change', function () {
     document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
 });
