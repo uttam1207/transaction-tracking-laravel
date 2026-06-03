@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Login') — TxMonitor</title>
+    <title>@yield('title', 'Login') — AS Dairy Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -285,7 +285,7 @@
     <div class="auth-panel-left">
         <div class="auth-brand">
             <div class="auth-brand-icon"><i class="bi bi-shield-check"></i></div>
-            <span class="auth-brand-name">TxMonitor</span>
+            <span class="auth-brand-name">AS Dairy Dashboard</span>
         </div>
 
         <div class="hero">
@@ -325,7 +325,7 @@
                 <div class="auth-brand-icon" style="background:#4f46e5; border-radius:10px; width:36px; height:36px; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:#fff;">
                     <i class="bi bi-shield-check"></i>
                 </div>
-                <span style="font-weight:700; font-size:1rem; color:#111827;">TxMonitor</span>
+                <span style="font-weight:700; font-size:1rem; color:#111827;">AS Dairy Dashboard</span>
             </div>
 
             <div class="auth-form-title">@yield('title', 'Welcome back')</div>

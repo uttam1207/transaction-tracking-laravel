@@ -73,7 +73,7 @@
 {{-- Header --}}
 <div class="header">
     <div class="header-left">
-        <div class="brand">TxMonitor</div>
+        <div class="brand">AS Dairy Dashboard</div>
         <div class="brand-sub">Pro &nbsp;·&nbsp; Financial Management System</div>
     </div>
     <div class="header-right">
@@ -211,7 +211,7 @@
 @endif
 
 <div class="footer">
-    <strong>TxMonitor Pro</strong> &mdash; This is a computer-generated receipt and does not require a physical signature.
+    <strong>AS Dairy Dashboard</strong> &mdash; This is a computer-generated receipt and does not require a physical signature.
     &mdash; Printed on {{ now()->format('d M Y H:i') }}
     &mdash; Confidential
 </div>

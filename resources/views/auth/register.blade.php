@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 @section('title', 'Create account')
-@section('subtitle', 'Join TxMonitor — it only takes a minute')
+@section('subtitle', 'Join AS Dairy Dashboard — it only takes a minute')
 
 @section('content')
 <form method="POST" action="{{ route('register') }}">

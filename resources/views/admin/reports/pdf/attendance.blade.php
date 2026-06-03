@@ -64,7 +64,7 @@
 </table>
 
 <div class="footer">
-    TxMonitor Pro &mdash; Confidential Report &mdash; Exported {{ now()->format('d M Y H:i') }}
+    AS Dairy Dashboard &mdash; Confidential Report &mdash; Exported {{ now()->format('d M Y H:i') }}
 </div>
 
 </body>

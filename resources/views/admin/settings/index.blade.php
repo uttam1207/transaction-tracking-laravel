@@ -61,7 +61,7 @@
                         <div class="col-md-6">
                             <label class="flabel">Application Name</label>
                             <input type="text" name="app_name" class="form-control"
-                                value="{{ old('app_name', $settings['app_name'] ?? 'Transaction Monitor') }}"
+                                value="{{ old('app_name', $settings['app_name'] ?? 'AS Dairy Dashboard') }}"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">

@@ -33,7 +33,7 @@
 <p class="meta">
     Generated: {{ now()->format('d M Y, H:i') }}
     &nbsp;&bull;&nbsp; Total records: {{ count($transactions) }}
-    &nbsp;&bull;&nbsp; Exported by: TxMonitor Pro
+    &nbsp;&bull;&nbsp; Exported by: AS Dairy Dashboard
 </p>
 
 <table>
@@ -94,7 +94,7 @@
 </table>
 
 <div class="footer">
-    TxMonitor Pro &mdash; Confidential Document &mdash; Do not distribute &mdash; Exported {{ now()->format('d M Y H:i') }}
+    AS Dairy Dashboard &mdash; Confidential Document &mdash; Do not distribute &mdash; Exported {{ now()->format('d M Y H:i') }}
 </div>
 
 </body>

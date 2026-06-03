@@ -471,7 +471,7 @@
         {{-- Brand --}}
         <div class="sidebar-brand">
             <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
-            <span class="brand-name">TxMonitor</span>
+            <span class="brand-name">AS Dairy Dashboard</span>
             <span class="brand-badge">Pro</span>
         </div>
 
