@@ -111,11 +111,11 @@
                         @if($isOverdue)<span style="background:#fee2e2;color:#dc2626;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-top:3px;display:inline-block;">OVERDUE</span>@endif
                     </td>
                     <td>
-                        @if($task->assignedEmployee)
+                        @if($task->assignedTo)
                         <div class="d-flex align-items-center gap-2">
-                            <img src="{{ $task->assignedEmployee->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($task->assignedEmployee->full_name).'&size=24&background=4f46e5&color=fff' }}"
+                            <img src="{{ $task->assignedTo->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($task->assignedTo->full_name).'&size=24&background=4f46e5&color=fff' }}"
                                 class="rounded-circle" width="24" height="24">
-                            <span style="font-size:.83rem;color:#374151;">{{ $task->assignedEmployee->full_name }}</span>
+                            <span style="font-size:.83rem;color:#374151;">{{ $task->assignedTo->full_name }}</span>
                         </div>
                         @else <span style="color:#9ca3af;font-size:.82rem;">Unassigned</span> @endif
                     </td>

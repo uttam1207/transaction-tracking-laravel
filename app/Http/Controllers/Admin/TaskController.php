@@ -87,7 +87,7 @@ class TaskController extends Controller
 
         $task->update($request->only([
             'title', 'description', 'priority', 'status', 'due_date',
-            'estimated_hours', 'progress', 'rejection_reason'
+            'estimated_hours', 'progress', 'rejection_reason', 'assigned_to'
         ]));
 
         if ($request->status === 'completed' && !$task->completed_at) {
