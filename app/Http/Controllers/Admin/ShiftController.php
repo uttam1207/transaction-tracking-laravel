@@ -129,12 +129,14 @@ class ShiftController extends Controller
         // employee_ids arrives as a comma-separated string from the form
         $ids = array_filter(explode(',', $request->employee_ids ?? ''));
 
+        $shiftJson = json_encode($shiftData);
+
         if (empty($ids)) {
-            Employee::where('status', 'active')->update(['shift_timing' => $shiftData]);
+            Employee::where('status', 'active')->update(['shift_timing' => $shiftJson]);
             return back()->with('success', 'Shift assigned to all active employees.');
         }
 
-        Employee::whereIn('id', $ids)->update(['shift_timing' => $shiftData]);
+        Employee::whereIn('id', $ids)->update(['shift_timing' => $shiftJson]);
 
         return back()->with('success', 'Shift assigned to ' . count($ids) . ' employee(s).');
     }
