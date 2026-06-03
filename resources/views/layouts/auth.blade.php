@@ -25,12 +25,12 @@
             background:
                 linear-gradient(
                     160deg,
-                    rgba(15, 10, 60, .91)  0%,
-                    rgba(49, 46, 129, .85) 40%,
-                    rgba(79, 70, 229, .78) 70%,
-                    rgba(109, 40, 217, .72) 100%
+                    rgba(6,  50, 20, .95)  0%,
+                    rgba(10, 90, 40, .88) 35%,
+                    rgba(5, 130, 60, .80) 70%,
+                    rgba(16,185, 80, .70) 100%
                 ),
-                url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1400&q=80')
+                url('https://images.unsplash.com/photo-1628352081506-83c43123a6b9?auto=format&fit=crop&w=1400&q=80')
                 center / cover no-repeat;
             display: flex;
             flex-direction: column;
@@ -40,12 +40,24 @@
             overflow: hidden;
         }
 
-        /* subtle noise texture overlay */
+        /* decorative circles */
         .auth-panel-left::before {
             content: '';
             position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+            top: -80px; right: -80px;
+            width: 320px; height: 320px;
+            background: rgba(255,255,255,.05);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .auth-panel-left::after {
+            content: '';
+            position: absolute;
+            bottom: -100px; left: -60px;
+            width: 280px; height: 280px;
+            background: rgba(255,255,255,.04);
+            border-radius: 50%;
             pointer-events: none;
             z-index: 0;
         }
@@ -57,21 +69,63 @@
             position: relative; z-index: 1;
         }
         .auth-brand-icon {
-            width: 44px; height: 44px;
+            width: 46px; height: 46px;
             background: rgba(255,255,255,.18);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,.25);
+            border: 1px solid rgba(255,255,255,.28);
             border-radius: 14px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             color: #fff;
         }
         .auth-brand-name {
             color: #fff;
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            font-weight: 800;
             letter-spacing: -.3px;
-            text-shadow: 0 1px 4px rgba(0,0,0,.3);
+            text-shadow: 0 1px 6px rgba(0,0,0,.4);
+        }
+        .auth-brand-tag {
+            font-size: .65rem;
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.3);
+            border-radius: 20px;
+            padding: 2px 8px;
+            color: rgba(255,255,255,.9);
+            font-weight: 600;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-left: 2px;
+        }
+
+        /* Floating stat cards */
+        .hero-stats {
+            display: flex; gap: 10px; margin-bottom: 20px;
+        }
+        .hero-stat-card {
+            flex: 1;
+            background: rgba(255,255,255,.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 12px;
+            padding: 12px 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, rgba(255,255,255,.6), rgba(255,255,255,.1));
+            border-radius: 12px 12px 0 0;
+        }
+        .hero-stat-val {
+            font-size: 1.3rem; font-weight: 800; color: #fff;
+            letter-spacing: -.5px; line-height: 1;
+        }
+        .hero-stat-lbl {
+            font-size: .68rem; color: rgba(255,255,255,.7);
+            margin-top: 3px; text-transform: uppercase; letter-spacing: .5px;
         }
 
         .auth-panel-left .hero {
@@ -79,36 +133,36 @@
         }
         .auth-panel-left .hero h2 {
             color: #fff;
-            font-size: 1.7rem;
+            font-size: 1.65rem;
             font-weight: 800;
-            line-height: 1.25;
+            line-height: 1.28;
             margin-bottom: 10px;
-            letter-spacing: -.5px;
-            text-shadow: 0 2px 12px rgba(0,0,0,.3);
+            letter-spacing: -.4px;
+            text-shadow: 0 2px 16px rgba(0,0,0,.35);
         }
         .auth-panel-left .hero p {
-            color: rgba(255,255,255,.78);
-            font-size: .88rem;
-            line-height: 1.6;
+            color: rgba(255,255,255,.75);
+            font-size: .86rem;
+            line-height: 1.65;
             max-width: 380px;
         }
 
         /* Glass-card feature items */
-        .feature-list { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .feature-list { margin-top: 18px; display: flex; flex-direction: column; gap: 7px; }
         .feature-item {
             display: flex;
             align-items: center;
             gap: 12px;
             color: rgba(255,255,255,.92);
-            font-size: .83rem;
+            font-size: .82rem;
             background: rgba(255,255,255,.08);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.11);
             border-radius: 10px;
-            padding: 9px 12px;
+            padding: 9px 13px;
             transition: background .2s;
         }
-        .feature-item:hover { background: rgba(255,255,255,.13); }
+        .feature-item:hover { background: rgba(255,255,255,.14); }
         .feature-item-icon {
             width: 30px; height: 30px;
             background: rgba(255,255,255,.15);
@@ -123,7 +177,7 @@
             background: rgba(255,255,255,.07);
             backdrop-filter: blur(8px);
             border: 1px solid rgba(255,255,255,.12);
-            border-left: 3px solid rgba(255,255,255,.4);
+            border-left: 3px solid rgba(255,255,255,.45);
             border-radius: 0 10px 10px 0;
             padding: 12px 16px;
             color: rgba(255,255,255,.65);
@@ -190,8 +244,8 @@
             background: #f9fafb;
         }
         .auth-input-wrap .form-control:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5,150,105,.12);
             background: #fff;
         }
         .auth-input-wrap .form-control.is-invalid {
@@ -217,7 +271,7 @@
             border-radius: 10px;
             font-size: .92rem;
             font-weight: 600;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            background: linear-gradient(135deg, #065f46, #059669);
             border: none;
             color: #fff;
             transition: opacity .2s, transform .1s;
@@ -283,37 +337,62 @@
 
     {{-- ── Left Branding Panel ── --}}
     <div class="auth-panel-left">
+
+        {{-- Brand --}}
         <div class="auth-brand">
-            <div class="auth-brand-icon"><i class="bi bi-shield-check"></i></div>
-            <span class="auth-brand-name">AS Dairy Dashboard</span>
+            <div class="auth-brand-icon">
+                <i class="bi bi-droplet-fill"></i>
+            </div>
+            <div>
+                <span class="auth-brand-name">AS Dairy</span>
+                <span class="auth-brand-tag">Dashboard</span>
+            </div>
         </div>
 
+        {{-- Hero Content --}}
         <div class="hero">
-            <h2>Enterprise-grade transaction monitoring at your fingertips</h2>
-            <p>Real-time fraud detection, employee management, and comprehensive audit trails — all in one secure platform.</p>
+
+            {{-- Floating stat cards --}}
+            <div class="hero-stats">
+                <div class="hero-stat-card">
+                    <div class="hero-stat-val"><i class="bi bi-wallet2 me-1" style="font-size:1rem;"></i>Wallet</div>
+                    <div class="hero-stat-lbl">Live Balance Tracking</div>
+                </div>
+                <div class="hero-stat-card">
+                    <div class="hero-stat-val"><i class="bi bi-people-fill me-1" style="font-size:1rem;"></i>Staff</div>
+                    <div class="hero-stat-lbl">Attendance & Payroll</div>
+                </div>
+                <div class="hero-stat-card">
+                    <div class="hero-stat-val"><i class="bi bi-bar-chart-fill me-1" style="font-size:1rem;"></i>Reports</div>
+                    <div class="hero-stat-lbl">Financial Insights</div>
+                </div>
+            </div>
+
+            <h2>Manage your dairy business smarter, not harder.</h2>
+            <p>Track every payment, monitor your team, manage your wallet, and get real-time financial reports — all from one simple dashboard.</p>
 
             <div class="feature-list">
                 <div class="feature-item">
-                    <div class="feature-item-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-                    <span>Real-time fraud alert detection with AI scoring</span>
+                    <div class="feature-item-icon"><i class="bi bi-cash-coin"></i></div>
+                    <span>Payment & collection tracking with wallet management</span>
                 </div>
                 <div class="feature-item">
                     <div class="feature-item-icon"><i class="bi bi-people-fill"></i></div>
-                    <span>Complete employee & attendance management</span>
+                    <span>Staff attendance, shifts & performance management</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-item-icon"><i class="bi bi-bar-chart-fill"></i></div>
-                    <span>Detailed reports with export capabilities</span>
+                    <div class="feature-item-icon"><i class="bi bi-graph-up-arrow"></i></div>
+                    <span>Financial summary reports — income, expenses & balance</span>
                 </div>
                 <div class="feature-item">
-                    <div class="feature-item-icon"><i class="bi bi-journal-check"></i></div>
-                    <span>Full audit logs for compliance & governance</span>
+                    <div class="feature-item-icon"><i class="bi bi-shield-check"></i></div>
+                    <span>Secure transactions with full audit trail</span>
                 </div>
             </div>
         </div>
 
         <div class="auth-footer-quote">
-            "Security is not a product, but a process." — Bruce Schneier
+            "Good management is the foundation of a great dairy business."
         </div>
     </div>
 
@@ -322,10 +401,10 @@
         <div class="auth-form-wrap">
             {{-- Mobile-only brand --}}
             <div class="d-flex align-items-center gap-2 mb-4 d-md-none">
-                <div class="auth-brand-icon" style="background:#4f46e5; border-radius:10px; width:36px; height:36px; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:#fff;">
-                    <i class="bi bi-shield-check"></i>
+                <div style="background:linear-gradient(135deg,#065f46,#059669); border-radius:10px; width:36px; height:36px; font-size:1.1rem; display:flex; align-items:center; justify-content:center; color:#fff;">
+                    <i class="bi bi-droplet-fill"></i>
                 </div>
-                <span style="font-weight:700; font-size:1rem; color:#111827;">AS Dairy Dashboard</span>
+                <span style="font-weight:800; font-size:1rem; color:#111827;">AS Dairy Dashboard</span>
             </div>
 
             <div class="auth-form-title">@yield('title', 'Welcome back')</div>
