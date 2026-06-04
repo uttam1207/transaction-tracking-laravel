@@ -134,6 +134,8 @@ Route::prefix('admin')
     Route::get('/transactions-export/csv', [TransactionController::class, 'exportCsv'])->name('transactions.export.csv');
     Route::get('/transactions-export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export.pdf');
     Route::get('/transactions-export/excel', [TransactionController::class, 'exportExcel'])->name('transactions.export.excel');
+    Route::get('/transactions/{transaction}/voucher', [TransactionController::class, 'voucherPdf'])->name('transactions.voucher');
+    Route::get('/voucher/blank', [TransactionController::class, 'blankVoucher'])->name('transactions.voucher.blank');
 
     // Fraud Alerts
     Route::get('/fraud-alerts', [FraudAlertController::class, 'index'])->name('fraud-alerts.index');

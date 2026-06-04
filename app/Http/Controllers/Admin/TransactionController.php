@@ -536,4 +536,55 @@ class TransactionController extends Controller
             'transactions_' . now()->format('Y-m-d') . '.xlsx'
         );
     }
+
+    public function voucherPdf(Transaction $transaction)
+    {
+        $transaction->load('user');
+        $amountWords = $this->numberToWords((float) $transaction->net_amount);
+        $pdf = Pdf::loadView('admin.transactions.voucher', compact('transaction', 'amountWords'))
+                  ->setPaper('a5', 'portrait');
+        return $pdf->download('voucher_' . $transaction->transaction_id . '.pdf');
+    }
+
+    public function blankVoucher()
+    {
+        $pdf = Pdf::loadView('admin.transactions.voucher-blank')
+                  ->setPaper('a4', 'portrait');
+        return $pdf->download('cash_voucher_blank.pdf');
+    }
+
+    private function numberToWords(float $amount): string
+    {
+        $ones = [
+            '', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
+            'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
+            'Seventeen', 'Eighteen', 'Nineteen',
+        ];
+        $tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+        $num   = (int) floor(abs($amount));
+        $paise = (int) round((abs($amount) - $num) * 100);
+
+        if ($num === 0 && $paise === 0) return 'Zero Rupees Only';
+
+        $below100 = function (int $n) use ($ones, $tens): string {
+            if ($n < 20) return $ones[$n];
+            return $tens[(int) ($n / 10)] . ($n % 10 ? ' ' . $ones[$n % 10] : '');
+        };
+
+        $below1000 = function (int $n) use ($ones, $below100): string {
+            if ($n < 100) return $below100($n);
+            return $ones[(int) ($n / 100)] . ' Hundred' . ($n % 100 ? ' ' . $below100($n % 100) : '');
+        };
+
+        $parts = [];
+        if ($num >= 10000000) { $parts[] = $below100((int) ($num / 10000000)) . ' Crore';   $num %= 10000000; }
+        if ($num >= 100000)   { $parts[] = $below100((int) ($num / 100000))   . ' Lakh';    $num %= 100000; }
+        if ($num >= 1000)     { $parts[] = $below100((int) ($num / 1000))     . ' Thousand'; $num %= 1000; }
+        if ($num > 0)         { $parts[] = $below1000($num); }
+
+        $result = implode(' ', $parts) . ' Rupees';
+        if ($paise > 0) $result .= ' and ' . $below100($paise) . ' Paise';
+        return $result . ' Only';
+    }
 }

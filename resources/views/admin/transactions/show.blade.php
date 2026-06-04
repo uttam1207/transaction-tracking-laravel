@@ -174,6 +174,22 @@
        onmouseout="this.style.background='#ede9fe'">
         <i class="bi bi-file-earmark-pdf"></i>Download Receipt
     </a>
+    <a href="{{ route('admin.transactions.voucher', $transaction) }}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+              padding:6px 14px;border-radius:8px;border:1px solid #6ee7b7;
+              background:#d1fae5;color:#065f46;text-decoration:none;transition:background .15s;"
+       onmouseover="this.style.background='#a7f3d0'"
+       onmouseout="this.style.background='#d1fae5'">
+        <i class="bi bi-receipt"></i>Cash Voucher
+    </a>
+    <a href="{{ route('admin.transactions.voucher.blank') }}"
+       style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+              padding:6px 14px;border-radius:8px;border:1px solid #fcd34d;
+              background:#fef9c3;color:#92400e;text-decoration:none;transition:background .15s;"
+       onmouseover="this.style.background='#fde68a'"
+       onmouseout="this.style.background='#fef9c3'">
+        <i class="bi bi-file-earmark-ruled"></i>Blank Voucher
+    </a>
     @if($transaction->status === 'success' && !$transaction->is_refunded)
     <button onclick="triggerRefund()"
        style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
