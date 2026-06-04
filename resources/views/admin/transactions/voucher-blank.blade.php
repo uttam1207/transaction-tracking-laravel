@@ -7,7 +7,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; background:#fff; }
 
-.page { border:1.5px solid #aaa; margin-bottom:18px; }
+.page { border:1.5px solid #aaa; }
 
 /* ── Company Header ──────────────────────────── */
 .co-hdr        { display:table; width:100%; }
@@ -48,19 +48,16 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
 .blank-line    { border-bottom:1px dotted #999; min-width:60px; display:inline-block; }
 
 /* ── Footer ──────────────────────────────────── */
-.footer        { display:table; width:100%; border-top:1px solid #ccc; min-height:90px; }
-.terms-cell    { display:table-cell; width:55%; padding:10px 12px; vertical-align:top; border-right:1px solid #ccc; }
-.sign-cell     { display:table-cell; width:45%; padding:10px 12px; vertical-align:bottom; text-align:center; }
+.footer        { display:table; width:100%; border-top:1px solid #ccc; min-height:80px; }
+.terms-cell    { display:table-cell; width:28%; padding:10px 12px; vertical-align:top; border-right:1px solid #ccc; }
+.sign3-cell    { display:table-cell; width:24%; padding:10px 8px; vertical-align:bottom; text-align:center; }
 .sign-line     { border-top:1.5px solid #111; padding-top:4px; font-size:7.5px; font-weight:700;
-                 text-transform:uppercase; letter-spacing:.5px; margin-top:44px; }
+                 text-transform:uppercase; letter-spacing:.5px; margin-top:50px; }
 
 /* ── Bottom bar ──────────────────────────────── */
 .btm-bar       { background:#6b8060; padding:3px 10px; }
 .btm-bar-txt   { font-size:7px; color:rgba(255,255,255,.7); text-align:right; }
 
-/* ── Cut line ────────────────────────────────── */
-.cut-line { border-top:1.5px dashed #bbb; text-align:center; padding:4px 0; margin:16px 0; }
-.cut-txt  { font-size:7px; color:#bbb; background:#fff; padding:0 8px; position:relative; top:-6px; }
 </style>
 </head>
 <body>
@@ -81,8 +78,7 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
         <div class="co-right">
             <div class="logo-area">AS Dairy</div>
             <div class="logo-sub">Management System</div>
-            <div style="font-size:7px;color:#aaa;text-align:right;margin-bottom:6px;">Original Copy</div>
-            <div class="meta-row"><span class="meta-lbl">Date :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
+<div class="meta-row"><span class="meta-lbl">Date :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
             <div class="meta-row"><span class="meta-lbl">Voucher No. :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
             <div class="meta-row"><span class="meta-lbl">Payable to :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
         </div>
@@ -129,83 +125,14 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
         <div class="terms-cell">
             <div style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;margin-bottom:5px;">Terms &amp; Conditions</div>
         </div>
-        <div class="sign-cell">
-            <div class="sign-line">Authorized Signatory</div>
+        <div class="sign3-cell" style="border-right:1px solid #ccc;">
+            <div class="sign-line">Prepared By</div>
         </div>
-    </div>
-
-    <div class="btm-bar"><div class="btm-bar-txt">AS Dairy Dashboard &nbsp;|&nbsp; Cash Voucher</div></div>
-</div>
-
-{{-- ════════════════ CUT LINE ════════════════ --}}
-<div class="cut-line"><span class="cut-txt">— CUT HERE — DUPLICATE COPY —</span></div>
-
-{{-- ════════════════ DUPLICATE COPY ════════════════ --}}
-<div class="page">
-
-    <div class="co-hdr">
-        <div class="co-left">
-            <div class="co-name">AS Dairy Dashboard</div>
-            <div class="co-row"><span class="co-lbl">Phone no. :</span><span class="co-val">&nbsp;</span></div>
-            <div class="co-row"><span class="co-lbl">Email :</span><span class="co-val">&nbsp;</span></div>
-            <div class="co-row"><span class="co-lbl">GSTIN :</span><span class="co-val">&nbsp;</span></div>
-            <div class="co-row"><span class="co-lbl">State :</span><span class="co-val">&nbsp;</span></div>
-            <div class="co-row"><span class="co-lbl">Address 1 :</span><span class="co-val">&nbsp;</span></div>
-            <div class="co-row"><span class="co-lbl">Address 2 :</span><span class="co-val">&nbsp;</span></div>
+        <div class="sign3-cell" style="border-right:1px solid #ccc;">
+            <div class="sign-line">Payment By</div>
         </div>
-        <div class="co-right">
-            <div class="logo-area">AS Dairy</div>
-            <div class="logo-sub">Management System</div>
-            <div style="font-size:7px;color:#aaa;text-align:right;margin-bottom:6px;">Duplicate Copy</div>
-            <div class="meta-row"><span class="meta-lbl">Date :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-            <div class="meta-row"><span class="meta-lbl">Voucher No. :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-            <div class="meta-row"><span class="meta-lbl">Payable to :</span><span class="meta-val">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></div>
-        </div>
-    </div>
-
-    <div class="v-bar"><span class="v-bar-text">Cash Voucher</span></div>
-
-    <table class="items-tbl">
-        <thead>
-            <tr>
-                <th style="width:8%;">Serial no.</th>
-                <th style="width:46%;">Particulars</th>
-                <th style="width:28%;">Payment Mode</th>
-                <th class="r" style="width:18%;">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for($i = 1; $i <= 7; $i++)
-            <tr><td class="c">{{ $i }}</td><td></td><td></td><td></td></tr>
-            @endfor
-            <tr class="total-row">
-                <td colspan="3" style="text-align:right;font-size:8.5px;padding-right:12px;">Total</td>
-                <td class="r"></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="bottom">
-        <div class="words-cell">
-            <div style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;margin-bottom:6px;">Amount in Words</div>
-            <div style="border-bottom:1px dotted #aaa;min-height:14px;margin-bottom:5px;">&nbsp;</div>
-            <div style="border-bottom:1px dotted #aaa;min-height:14px;">&nbsp;</div>
-        </div>
-        <div class="totals-cell">
-            <table class="totals-tbl">
-                <tr class="th-row"><td colspan="2"><b>Total Amount</b></td><td class="r"></td></tr>
-                <tr><td colspan="2">Paid</td><td class="r"></td></tr>
-                <tr><td colspan="2">Balance</td><td class="r"></td></tr>
-            </table>
-        </div>
-    </div>
-
-    <div class="footer">
-        <div class="terms-cell">
-            <div style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;margin-bottom:5px;">Terms &amp; Conditions</div>
-        </div>
-        <div class="sign-cell">
-            <div class="sign-line">Authorized Signatory</div>
+        <div class="sign3-cell">
+            <div class="sign-line">Approved By</div>
         </div>
     </div>
 

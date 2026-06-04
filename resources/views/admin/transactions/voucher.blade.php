@@ -47,12 +47,12 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
 .totals-tbl .th-row td { background:#6b8060; color:#fff; font-weight:700; font-size:8.5px; border-bottom:none; }
 .totals-tbl .r { text-align:right; font-weight:700; }
 
-/* ── Footer (terms + sign) ───────────────────── */
-.footer        { display:table; width:100%; border-top:1px solid #ccc; min-height:90px; }
-.terms-cell    { display:table-cell; width:55%; padding:10px 12px; vertical-align:top; border-right:1px solid #ccc; }
-.sign-cell     { display:table-cell; width:45%; padding:10px 12px; vertical-align:bottom; text-align:center; }
+/* ── Footer (terms + 3 signatures) ──────────── */
+.footer        { display:table; width:100%; border-top:1px solid #ccc; min-height:80px; }
+.terms-cell    { display:table-cell; width:28%; padding:10px 12px; vertical-align:top; border-right:1px solid #ccc; }
+.sign3-cell    { display:table-cell; width:24%; padding:10px 8px; vertical-align:bottom; text-align:center; }
 .sign-line     { border-top:1.5px solid #111; padding-top:4px; font-size:7.5px; font-weight:700;
-                 text-transform:uppercase; letter-spacing:.5px; margin-top:44px; }
+                 text-transform:uppercase; letter-spacing:.5px; margin-top:50px; }
 
 /* ── Bottom bar ──────────────────────────────── */
 .btm-bar       { background:#6b8060; padding:3px 10px; }
@@ -157,13 +157,19 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
         </div>
     </div>
 
-    {{-- ── Footer: Terms + Signature ── --}}
+    {{-- ── Footer: Terms + 3 Signatures ── --}}
     <div class="footer">
         <div class="terms-cell">
             <div style="font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#666;margin-bottom:5px;">Terms &amp; Conditions</div>
         </div>
-        <div class="sign-cell">
-            <div class="sign-line">Authorized Signatory</div>
+        <div class="sign3-cell" style="border-right:1px solid #ccc;">
+            <div class="sign-line">Prepared By</div>
+        </div>
+        <div class="sign3-cell" style="border-right:1px solid #ccc;">
+            <div class="sign-line">Payment By</div>
+        </div>
+        <div class="sign3-cell">
+            <div class="sign-line">Approved By</div>
         </div>
     </div>
 
