@@ -711,7 +711,7 @@ class TransactionController extends Controller
         $transaction->load('user');
         $amountWords = $this->numberToWords((float) $transaction->net_amount);
         $pdf = Pdf::loadView('admin.transactions.voucher', compact('transaction', 'amountWords'))
-                  ->setPaper('a5', 'portrait');
+                  ->setPaper('a4', 'portrait');
         return $pdf->download('voucher_' . $transaction->transaction_id . '.pdf');
     }
 
