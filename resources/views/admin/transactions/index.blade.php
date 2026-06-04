@@ -154,10 +154,12 @@
     font-size: .8rem; cursor: pointer; text-decoration: none;
     transition: background .15s;
 }
-.action-btn.view   { background: #ede9fe; color: #7c3aed; }
-.action-btn.view:hover { background: #ddd6fe; }
-.action-btn.edit   { background: #fef3c7; color: #d97706; }
-.action-btn.edit:hover { background: #fde68a; }
+.action-btn.view        { background: #ede9fe; color: #7c3aed; }
+.action-btn.view:hover  { background: #ddd6fe; }
+.action-btn.edit        { background: #fef3c7; color: #d97706; }
+.action-btn.edit:hover  { background: #fde68a; }
+.action-btn.voucher     { background: #d1fae5; color: #065f46; }
+.action-btn.voucher:hover { background: #a7f3d0; }
 
 .btn-export { height: 32px; padding: 0 12px; font-size: .78rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
 .btn-new-tx { height: 32px; padding: 0 14px; font-size: .8rem; border-radius: 8px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
@@ -401,6 +403,7 @@
                         <div class="d-flex gap-1">
                             <a href="{{ route('admin.transactions.show', $tx) }}" class="action-btn view" title="View"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('admin.transactions.edit', $tx) }}" class="action-btn edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            <a href="{{ route('admin.transactions.voucher', $tx) }}" class="action-btn voucher" title="Download Cash Voucher"><i class="bi bi-receipt"></i></a>
                             <button class="action-btn" onclick="changeStatus({{ $tx->id }}, '{{ $tx->status }}')" title="Update Status"
                                     style="background:#dbeafe;color:#2563eb;"><i class="bi bi-arrow-repeat"></i></button>
                         </div>
