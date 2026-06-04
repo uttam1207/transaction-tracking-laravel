@@ -333,6 +333,14 @@
             <a href="{{ $pdfUrl }}" class="btn-export btn btn-outline-danger">
                 <i class="bi bi-filetype-pdf"></i>PDF
             </a>
+            <a href="{{ route('admin.transactions.import') }}"
+               style="display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:700;
+                      padding:7px 14px;border-radius:9px;border:1.5px solid #6ee7b7;
+                      background:#d1fae5;color:#065f46;text-decoration:none;transition:background .15s;"
+               onmouseover="this.style.background='#a7f3d0'"
+               onmouseout="this.style.background='#d1fae5'">
+                <i class="bi bi-filetype-csv"></i>Import CSV
+            </a>
             <a href="{{ route('admin.transactions.create') }}" class="btn-new-tx">
                 <i class="bi bi-plus-lg"></i>New Transaction
             </a>

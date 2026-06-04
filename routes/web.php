@@ -125,7 +125,10 @@ Route::prefix('admin')
     Route::get('/employees/import/template', [EmployeeController::class, 'importTemplate'])->name('employees.import.template');
     Route::post('/employees/import', [EmployeeController::class, 'import'])->name('employees.import');
 
-    // Transaction Management
+    // Transaction Management — import routes MUST come before resource to avoid {transaction} catch-all
+    Route::get('/transactions/import',     [TransactionController::class, 'importForm'])->name('transactions.import');
+    Route::post('/transactions/import',    [TransactionController::class, 'processImport'])->name('transactions.import.process');
+    Route::get('/transactions/sample-csv', [TransactionController::class, 'sampleCsv'])->name('transactions.sample-csv');
     Route::resource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status');
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'downloadPdf'])->name('transactions.receipt');

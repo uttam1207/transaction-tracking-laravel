@@ -537,6 +537,175 @@ class TransactionController extends Controller
         );
     }
 
+    // ── CSV Bulk Import ──────────────────────────────────────────────────
+
+    public function importForm()
+    {
+        return view('admin.transactions.import');
+    }
+
+    public function processImport(Request $request)
+    {
+        $request->validate([
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+        ]);
+
+        $handle  = fopen($request->file('csv_file')->getRealPath(), 'r');
+        $headers = fgetcsv($handle);
+        // Normalise: trim whitespace + UTF-8 BOM
+        $headers = array_map(fn($h) => trim(str_replace("\xEF\xBB\xBF", '', $h)), $headers);
+
+        $validTypes    = ['debit', 'credit'];
+        $validCats     = ['transfer','payment','withdrawal','deposit','refund','purchase','salary','investment','loan','other'];
+        $validMethods  = ['bank_transfer','credit_card','debit_card','cash','mobile_money','wire_transfer','crypto'];
+        $validStatuses = ['pending','processing','success','failed'];
+
+        $imported = 0;
+        $errors   = [];
+        $rowNum   = 1;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            $rowNum++;
+
+            // Skip hint/comment rows that start with "["
+            if (empty($data[0]) || str_starts_with(ltrim($data[0]), '[')) {
+                continue;
+            }
+
+            $cols = array_combine($headers, array_pad($data, count($headers), ''));
+
+            $rowErrors = [];
+            if (!in_array($cols['type'] ?? '', $validTypes)) {
+                $rowErrors[] = 'type must be debit or credit';
+            }
+            if (!is_numeric($cols['amount'] ?? '') || (float)$cols['amount'] <= 0) {
+                $rowErrors[] = 'amount must be a positive number';
+            }
+            if (empty(trim($cols['sender_name'] ?? ''))) {
+                $rowErrors[] = 'sender_name is required';
+            }
+            if (empty(trim($cols['receiver_name'] ?? ''))) {
+                $rowErrors[] = 'receiver_name is required';
+            }
+
+            if (!empty($rowErrors)) {
+                $errors[] = ['row' => $rowNum, 'errors' => $rowErrors];
+                continue;
+            }
+
+            $amount = (float) $cols['amount'];
+            $fee    = (float) ($cols['fee'] ?? 0);
+
+            Transaction::create([
+                'type'             => $cols['type'],
+                'category'         => in_array($cols['category'] ?? '', $validCats) ? $cols['category'] : 'other',
+                'amount'           => $amount,
+                'currency'         => !empty($cols['currency']) ? $cols['currency'] : 'INR',
+                'fee'              => $fee,
+                'net_amount'       => $amount - $fee,
+                'payment_method'   => in_array($cols['payment_method'] ?? '', $validMethods) ? $cols['payment_method'] : 'bank_transfer',
+                'status'           => in_array($cols['status'] ?? '', $validStatuses) ? $cols['status'] : 'pending',
+                'reference'        => $cols['reference']        ?: null,
+                'country'          => $cols['country']          ?: null,
+                'processed_at'     => !empty($cols['processed_at']) ? $cols['processed_at'] : now(),
+                'description'      => $cols['description']      ?: null,
+                'sender_name'      => $cols['sender_name'],
+                'sender_mobile'    => $cols['sender_mobile']    ?: null,
+                'sender_company'   => $cols['sender_company']   ?: null,
+                'sender_account'   => $cols['sender_account']   ?: null,
+                'sender_bank'      => $cols['sender_bank']      ?: null,
+                'receiver_name'    => $cols['receiver_name'],
+                'receiver_mobile'  => $cols['receiver_mobile']  ?: null,
+                'receiver_company' => $cols['receiver_company'] ?: null,
+                'receiver_address' => $cols['receiver_address'] ?: null,
+                'receiver_account' => $cols['receiver_account'] ?: null,
+                'receiver_bank'    => $cols['receiver_bank']    ?: null,
+                'device_id'        => $cols['device_id']        ?: null,
+            ]);
+
+            $imported++;
+        }
+
+        fclose($handle);
+
+        return back()->with('import_result', [
+            'imported' => $imported,
+            'errors'   => $errors,
+        ]);
+    }
+
+    public function sampleCsv()
+    {
+        $headers = [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="transactions_sample.csv"',
+            'Pragma'              => 'no-cache',
+        ];
+
+        $callback = function () {
+            $out = fopen('php://output', 'w');
+
+            fputcsv($out, [
+                'type','category','amount','currency','fee',
+                'payment_method','status','reference','country','processed_at','description',
+                'sender_name','sender_mobile','sender_company','sender_account','sender_bank',
+                'receiver_name','receiver_mobile','receiver_company','receiver_address','receiver_account','receiver_bank',
+                'device_id',
+            ]);
+
+            // Hint row — skipped automatically on import (starts with "[")
+            fputcsv($out, [
+                '[OPTIONS: debit | credit]',
+                '[OPTIONS: transfer | payment | withdrawal | deposit | refund | purchase | salary | investment | loan | other]',
+                '[REQUIRED: e.g. 5000.00]',
+                '[OPTIONS: INR]',
+                '[default: 0.00]',
+                '[OPTIONS: bank_transfer | credit_card | debit_card | cash | mobile_money | wire_transfer | crypto]',
+                '[OPTIONS: pending | processing | success | failed]',
+                '[optional: e.g. REF-001]',
+                '[optional: e.g. IN]',
+                '[YYYY-MM-DD HH:MM:SS]',
+                '[optional notes]',
+                '[REQUIRED: full name]',
+                '[optional mobile]',
+                '[optional company]',
+                '[optional account no.]',
+                '[optional bank name]',
+                '[REQUIRED: full name]',
+                '[optional mobile]',
+                '[optional company]',
+                '[optional address]',
+                '[optional account no.]',
+                '[optional bank name]',
+                '[optional device id]',
+            ]);
+
+            // Sample row 1
+            fputcsv($out, [
+                'debit','payment','5000.00','INR','0.00',
+                'bank_transfer','success','REF-001','IN','2026-06-04 10:00:00','Payment for Invoice #001',
+                'John Doe','9876543210','ABC Corp','1234567890','HDFC Bank',
+                'Jane Smith','9876543211','XYZ Ltd','123 Main St Mumbai','0987654321','SBI Bank',
+                'DEV-001',
+            ]);
+
+            // Sample row 2
+            fputcsv($out, [
+                'credit','salary','25000.00','INR','0.00',
+                'bank_transfer','success','SAL-JUN-2026','IN','2026-06-04 09:00:00','June 2026 salary',
+                'AS Dairy Ltd','','AS Dairy Dashboard','','HDFC Bank',
+                'Ramesh Kumar','9512345678','','Nagpur Maharashtra','','SBI Bank',
+                '',
+            ]);
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    // ── Voucher PDFs ─────────────────────────────────────────────────────
+
     public function voucherPdf(Transaction $transaction)
     {
         $transaction->load('user');
