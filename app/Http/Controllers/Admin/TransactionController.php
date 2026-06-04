@@ -727,10 +727,13 @@ class TransactionController extends Controller
             $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
             $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
             $validation->setAllowBlank(!$required);
-            $validation->setShowDropDown(false);   // false = show the dropdown arrow
+            $validation->setShowDropDown(false);      // false = show dropdown arrow in Excel
             $validation->setShowErrorMessage(true);
             $validation->setErrorTitle('Invalid value');
-            $validation->setError('Please select a value from the dropdown list.');
+            $validation->setError('You must select a value from the dropdown list. Typing custom values is not allowed.');
+            $validation->setShowInputMessage(true);
+            $validation->setPromptTitle('Select from list');
+            $validation->setPrompt('Click the dropdown arrow ▼ and select a value. Do not type manually.');
             $validation->setFormula1('"' . $options . '"');
         }
 
