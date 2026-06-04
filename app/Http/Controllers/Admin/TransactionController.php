@@ -547,13 +547,32 @@ class TransactionController extends Controller
     public function processImport(Request $request)
     {
         $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+            'csv_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:5120',
         ]);
 
-        $handle  = fopen($request->file('csv_file')->getRealPath(), 'r');
-        $headers = fgetcsv($handle);
-        // Normalise: trim whitespace + UTF-8 BOM
-        $headers = array_map(fn($h) => trim(str_replace("\xEF\xBB\xBF", '', $h)), $headers);
+        $file = $request->file('csv_file');
+        $ext  = strtolower($file->getClientOriginalExtension());
+
+        // Parse rows from file
+        if (in_array($ext, ['xlsx', 'xls'])) {
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+            $rawRows     = $spreadsheet->getActiveSheet()->toArray(null, true, false, false);
+            // Convert to associative using first row as headers
+            $headerRow = array_map(fn($h) => trim((string)($h ?? '')), array_shift($rawRows));
+            $rows      = array_map(fn($row) => array_combine(
+                $headerRow,
+                array_pad(array_map('strval', $row), count($headerRow), '')
+            ), $rawRows);
+        } else {
+            $handle     = fopen($file->getRealPath(), 'r');
+            $headerRow  = fgetcsv($handle);
+            $headerRow  = array_map(fn($h) => trim(str_replace("\xEF\xBB\xBF", '', $h)), $headerRow);
+            $rows = [];
+            while (($data = fgetcsv($handle)) !== false) {
+                $rows[] = array_combine($headerRow, array_pad($data, count($headerRow), ''));
+            }
+            fclose($handle);
+        }
 
         $validTypes    = ['debit', 'credit'];
         $validCats     = ['transfer','payment','withdrawal','deposit','refund','purchase','salary','investment','loan','other'];
@@ -564,15 +583,11 @@ class TransactionController extends Controller
         $errors   = [];
         $rowNum   = 1;
 
-        while (($data = fgetcsv($handle)) !== false) {
+        foreach ($rows as $cols) {
             $rowNum++;
 
-            // Skip hint/comment rows that start with "["
-            if (empty($data[0]) || str_starts_with(ltrim($data[0]), '[')) {
-                continue;
-            }
-
-            $cols = array_combine($headers, array_pad($data, count($headers), ''));
+            // Skip empty rows
+            if (empty(array_filter($cols))) continue;
 
             $rowErrors = [];
             if (!in_array($cols['type'] ?? '', $validTypes)) {
@@ -626,8 +641,6 @@ class TransactionController extends Controller
             $imported++;
         }
 
-        fclose($handle);
-
         return back()->with('import_result', [
             'imported' => $imported,
             'errors'   => $errors,
@@ -636,72 +649,111 @@ class TransactionController extends Controller
 
     public function sampleCsv()
     {
-        $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="transactions_sample.csv"',
-            'Pragma'              => 'no-cache',
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Import Template');
+
+        // [column => [header, required, dropdown_options_string]]
+        $cols = [
+            'A' => ['type',             true,  'debit,credit'],
+            'B' => ['category',         true,  'transfer,payment,withdrawal,deposit,refund,purchase,salary,investment,loan,other'],
+            'C' => ['amount',           true,  null],
+            'D' => ['currency',         false, 'INR'],
+            'E' => ['fee',              false, null],
+            'F' => ['payment_method',   true,  'bank_transfer,credit_card,debit_card,cash,mobile_money,wire_transfer,crypto'],
+            'G' => ['status',           false, 'pending,processing,success,failed'],
+            'H' => ['reference',        false, null],
+            'I' => ['country',          false, null],
+            'J' => ['processed_at',     false, null],
+            'K' => ['description',      false, null],
+            'L' => ['sender_name',      true,  null],
+            'M' => ['sender_mobile',    false, null],
+            'N' => ['sender_company',   false, null],
+            'O' => ['sender_account',   false, null],
+            'P' => ['sender_bank',      false, null],
+            'Q' => ['receiver_name',    true,  null],
+            'R' => ['receiver_mobile',  false, null],
+            'S' => ['receiver_company', false, null],
+            'T' => ['receiver_address', false, null],
+            'U' => ['receiver_account', false, null],
+            'V' => ['receiver_bank',    false, null],
+            'W' => ['device_id',        false, null],
         ];
 
-        $callback = function () {
-            $out = fopen('php://output', 'w');
-
-            fputcsv($out, [
-                'type','category','amount','currency','fee',
-                'payment_method','status','reference','country','processed_at','description',
-                'sender_name','sender_mobile','sender_company','sender_account','sender_bank',
-                'receiver_name','receiver_mobile','receiver_company','receiver_address','receiver_account','receiver_bank',
-                'device_id',
+        // ── Header row styling ───────────────────────────────────────────
+        foreach ($cols as $col => [$name, $required, $options]) {
+            $cell = $col . '1';
+            $sheet->setCellValue($cell, $name);
+            $sheet->getStyle($cell)->applyFromArray([
+                'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 9],
+                'fill'      => [
+                    'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => $required ? 'B91C1C' : '4B5563'],
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
             ]);
+            $sheet->getColumnDimension($col)->setWidth($required ? 18 : 15);
+        }
+        $sheet->getRowDimension(1)->setRowHeight(22);
 
-            // Hint row — skipped automatically on import (starts with "[")
-            fputcsv($out, [
-                '[OPTIONS: debit | credit]',
-                '[OPTIONS: transfer | payment | withdrawal | deposit | refund | purchase | salary | investment | loan | other]',
-                '[REQUIRED: e.g. 5000.00]',
-                '[OPTIONS: INR]',
-                '[default: 0.00]',
-                '[OPTIONS: bank_transfer | credit_card | debit_card | cash | mobile_money | wire_transfer | crypto]',
-                '[OPTIONS: pending | processing | success | failed]',
-                '[optional: e.g. REF-001]',
-                '[optional: e.g. IN]',
-                '[YYYY-MM-DD HH:MM:SS]',
-                '[optional notes]',
-                '[REQUIRED: full name]',
-                '[optional mobile]',
-                '[optional company]',
-                '[optional account no.]',
-                '[optional bank name]',
-                '[REQUIRED: full name]',
-                '[optional mobile]',
-                '[optional company]',
-                '[optional address]',
-                '[optional account no.]',
-                '[optional bank name]',
-                '[optional device id]',
-            ]);
+        // ── Example rows ─────────────────────────────────────────────────
+        $sheet->fromArray([
+            'debit','payment', 5000, 'INR', 0,
+            'bank_transfer','success','REF-001','IN','2026-06-04 10:00:00','Payment for Invoice #001',
+            'John Doe','9876543210','ABC Corp','1234567890','HDFC Bank',
+            'Jane Smith','9876543211','XYZ Ltd','123 Main St Mumbai','0987654321','SBI Bank','DEV-001',
+        ], null, 'A2');
 
-            // Sample row 1
-            fputcsv($out, [
-                'debit','payment','5000.00','INR','0.00',
-                'bank_transfer','success','REF-001','IN','2026-06-04 10:00:00','Payment for Invoice #001',
-                'John Doe','9876543210','ABC Corp','1234567890','HDFC Bank',
-                'Jane Smith','9876543211','XYZ Ltd','123 Main St Mumbai','0987654321','SBI Bank',
-                'DEV-001',
-            ]);
+        $sheet->fromArray([
+            'credit','salary', 25000, 'INR', 0,
+            'bank_transfer','success','SAL-JUN-2026','IN','2026-06-04 09:00:00','June 2026 salary',
+            'AS Dairy Ltd','','AS Dairy Dashboard','','HDFC Bank',
+            'Ramesh Kumar','9512345678','','Nagpur Maharashtra','','SBI Bank','',
+        ], null, 'A3');
 
-            // Sample row 2
-            fputcsv($out, [
-                'credit','salary','25000.00','INR','0.00',
-                'bank_transfer','success','SAL-JUN-2026','IN','2026-06-04 09:00:00','June 2026 salary',
-                'AS Dairy Ltd','','AS Dairy Dashboard','','HDFC Bank',
-                'Ramesh Kumar','9512345678','','Nagpur Maharashtra','','SBI Bank',
-                '',
-            ]);
+        // Light background on example rows
+        $sheet->getStyle('A2:W3')->applyFromArray([
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDF4']],
+        ]);
 
-            fclose($out);
-        };
+        // ── Dropdown validation for rows 2–500 ───────────────────────────
+        foreach ($cols as $col => [$name, $required, $options]) {
+            if (!$options) continue;
+            $validation = $sheet->getCell($col . '2')->getDataValidation();
+            $validation->setSqref($col . '2:' . $col . '500');
+            $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+            $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
+            $validation->setAllowBlank(!$required);
+            $validation->setShowDropDown(false);   // false = show the dropdown arrow
+            $validation->setShowErrorMessage(true);
+            $validation->setErrorTitle('Invalid value');
+            $validation->setError('Please select a value from the dropdown list.');
+            $validation->setFormula1('"' . $options . '"');
+        }
 
-        return response()->stream($callback, 200, $headers);
+        // ── Legend row ───────────────────────────────────────────────────
+        $sheet->setCellValue('A5', '* Red header = Required field   |   Grey header = Optional field   |   Fill your data from row 2 onwards');
+        $sheet->getStyle('A5:W5')->applyFromArray([
+            'font' => ['italic' => true, 'size' => 8, 'color' => ['rgb' => '9CA3AF']],
+        ]);
+        $sheet->mergeCells('A5:W5');
+
+        // Freeze header
+        $sheet->freezePane('A2');
+
+        // ── Stream XLSX ──────────────────────────────────────────────────
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, 'transactions_import_template.xlsx', [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="transactions_import_template.xlsx"',
+            'Cache-Control'       => 'max-age=0',
+        ]);
     }
 
     // ── Voucher PDFs ─────────────────────────────────────────────────────

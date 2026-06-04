@@ -2,7 +2,7 @@
 @section('title', 'Import Transactions')
 @section('breadcrumb')
     <li class="breadcrumb-item"><a href="{{ route('admin.transactions.index') }}">Transactions</a></li>
-    <li class="breadcrumb-item active">Import CSV</li>
+    <li class="breadcrumb-item active">Import Transactions</li>
 @endsection
 
 @push('styles')
@@ -114,8 +114,8 @@
 <div class="import-hero">
     <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
         <div>
-            <h5 class="mb-1 fw-bold" style="font-weight:800;letter-spacing:-.3px;">Import Transactions via CSV</h5>
-            <p class="mb-0" style="opacity:.7;font-size:.82rem;">Upload a CSV file to bulk-create transactions. Download the sample to get started.</p>
+            <h5 class="mb-1 fw-bold" style="font-weight:800;letter-spacing:-.3px;">Import Transactions</h5>
+            <p class="mb-0" style="opacity:.7;font-size:.82rem;">Upload a CSV or Excel file to bulk-create transactions. Download the template to get started.</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('admin.transactions.sample-csv') }}"
@@ -124,7 +124,7 @@
                       background:rgba(255,255,255,.15);color:#fff;text-decoration:none;backdrop-filter:blur(4px);"
                onmouseover="this.style.background='rgba(255,255,255,.25)'"
                onmouseout="this.style.background='rgba(255,255,255,.15)'">
-                <i class="bi bi-download"></i>Download Sample CSV
+                <i class="bi bi-download"></i>Download Template (.xlsx)
             </a>
             <a href="{{ route('admin.transactions.index') }}"
                style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
@@ -202,17 +202,17 @@
 
         {{-- Upload Form --}}
         <div class="section-card">
-            <div class="section-hdr"><i class="bi bi-upload"></i>Upload CSV File</div>
+            <div class="section-hdr"><i class="bi bi-upload"></i>Upload File</div>
             <div class="section-body">
                 <form method="POST" action="{{ route('admin.transactions.import.process') }}"
                       enctype="multipart/form-data" id="importForm">
                     @csrf
 
                     <div class="upload-zone" id="uploadZone">
-                        <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt" required>
-                        <i class="bi bi-filetype-csv" style="font-size:2.4rem;color:#059669;display:block;margin-bottom:8px;"></i>
-                        <div style="font-size:.9rem;font-weight:700;color:#065f46;margin-bottom:4px;">Click or drag your CSV file here</div>
-                        <div style="font-size:.78rem;color:#6b7280;">Supports .csv and .txt &nbsp;·&nbsp; Max 5 MB</div>
+                        <input type="file" name="csv_file" id="csvFile" accept=".csv,.txt,.xlsx,.xls" required>
+                        <i class="bi bi-file-earmark-spreadsheet" style="font-size:2.4rem;color:#059669;display:block;margin-bottom:8px;"></i>
+                        <div style="font-size:.9rem;font-weight:700;color:#065f46;margin-bottom:4px;">Click or drag your file here</div>
+                        <div style="font-size:.78rem;color:#6b7280;">Supports .xlsx, .xls, .csv &nbsp;·&nbsp; Max 5 MB</div>
                     </div>
 
                     <div class="file-chosen" id="fileChosen">
@@ -242,7 +242,7 @@
                         <a href="{{ route('admin.transactions.sample-csv') }}"
                            class="btn btn-sm px-4"
                            style="border:1.5px solid #6ee7b7;background:#f0fdf4;color:#065f46;border-radius:9px;height:40px;font-size:.88rem;display:inline-flex;align-items:center;gap:5px;font-weight:600;text-decoration:none;">
-                            <i class="bi bi-download"></i>Sample CSV
+                            <i class="bi bi-download"></i>Template (.xlsx)
                         </a>
                     </div>
                 </form>
@@ -255,7 +255,7 @@
             <div class="section-body">
                 <ul style="font-size:.83rem;color:#374151;line-height:2;padding-left:18px;margin:0;">
                     <li>Row 1 must be the <strong>header row</strong> with exact column names</li>
-                    <li>Row 2 in the sample is a <strong>hint row</strong> (starts with <code>[</code>) — it is automatically skipped</li>
+                    <li>Use the <strong>.xlsx template</strong> for built-in dropdown validation on required fields</li>
                     <li><span style="color:#dc2626;font-weight:700;">type</span>, <span style="color:#dc2626;font-weight:700;">amount</span>, <span style="color:#dc2626;font-weight:700;">sender_name</span>, <span style="color:#dc2626;font-weight:700;">receiver_name</span> are required</li>
                     <li>Columns with invalid dropdown values fall back to the default</li>
                     <li>Missing optional columns are saved as empty</li>
