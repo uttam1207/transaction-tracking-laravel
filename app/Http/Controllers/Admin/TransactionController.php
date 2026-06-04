@@ -773,7 +773,7 @@ class TransactionController extends Controller
     public function blankVoucher()
     {
         $pdf = Pdf::loadView('admin.transactions.voucher-blank')
-                  ->setPaper('a4', 'portrait');
+                  ->setPaper('a5', 'portrait');
         return $pdf->download('cash_voucher_blank.pdf');
     }
 

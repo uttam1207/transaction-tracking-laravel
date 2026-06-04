@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <title>Cash Voucher — Blank Template</title>
 <style>
+@page { margin: 6mm; }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; background:#fff; }
 
