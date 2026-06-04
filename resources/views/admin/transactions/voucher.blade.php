@@ -74,7 +74,7 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
     {{-- ── Company Header ── --}}
     <div class="co-hdr">
         <div class="co-left">
-            <div class="co-name">AS Dairy Dashboard</div>
+            <div class="co-name">AS Dairy</div>
             <div class="co-row"><span class="co-lbl">Phone no. :</span><span class="co-val">&nbsp;</span></div>
             <div class="co-row"><span class="co-lbl">Email :</span><span class="co-val">&nbsp;</span></div>
             <div class="co-row"><span class="co-lbl">GSTIN :</span><span class="co-val">&nbsp;</span></div>
@@ -175,7 +175,7 @@ body { font-family:'DejaVu Sans',Arial,sans-serif; font-size:9px; color:#111; ba
 
     {{-- ── Bottom Bar ── --}}
     <div class="btm-bar">
-        <div class="btm-bar-txt">AS Dairy Dashboard &nbsp;|&nbsp; {{ now()->format('d M Y H:i') }}</div>
+        <div class="btm-bar-txt">AS Dairy &nbsp;|&nbsp; {{ now()->format('d M Y H:i') }}</div>
     </div>
 
 </div>
