@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Answer;
+use App\Models\User;
 
 class Question extends Model
 {
@@ -15,11 +17,20 @@ class Question extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'slug',
         'body',
         'status',
         'is_pinned',
         'views',
     ];
+
+    /**
+     * Use slug as the route key so URLs are /qa/what-is-dairy instead of /qa/1
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
 
     protected $casts = [
         'is_pinned' => 'boolean',
@@ -33,6 +44,8 @@ class Question extends Model
         return $this->belongsTo(User::class);
     }
 
+    
+    
     public function answers(): HasMany
     {
         return $this->hasMany(Answer::class)->orderBy('is_accepted', 'desc')->orderBy('created_at');

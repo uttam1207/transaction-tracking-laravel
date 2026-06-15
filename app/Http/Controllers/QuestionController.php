@@ -6,6 +6,7 @@ use App\Models\Answer;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class QuestionController extends Controller
 {
@@ -66,6 +67,7 @@ class QuestionController extends Controller
         $question = Question::create([
             'user_id' => Auth::id(),
             'title'   => $data['title'],
+            'slug'    => $this->generateSlug($data['title']),
             'body'    => $data['body'],
             'status'  => 'open',
         ]);
@@ -195,6 +197,23 @@ class QuestionController extends Controller
     /* ────────────────────────────────────────
        PRIVATE HELPERS
     ──────────────────────────────────────── */
+
+    private function generateSlug(string $title, ?int $exceptId = null): string
+    {
+        $base = Str::slug($title);
+        $slug = $base;
+        $count = 1;
+
+        while (
+            Question::where('slug', $slug)
+                ->when($exceptId, fn ($q) => $q->where('id', '!=', $exceptId))
+                ->exists()
+        ) {
+            $slug = $base . '-' . $count++;
+        }
+
+        return $slug;
+    }
 
     private function authorizeEdit(Question $question): void
     {
