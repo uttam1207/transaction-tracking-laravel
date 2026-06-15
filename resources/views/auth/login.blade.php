@@ -1,6 +1,6 @@
 @extends('layouts.auth')
-@section('title', 'Welcome back')
-@section('subtitle', 'Sign in to your account to continue')
+@section('title', 'Welcome Back')
+@section('subtitle', 'Sign in to your AS Dairy Dashboard account')
 
 @section('content')
 <form method="POST" action="{{ route('login') }}">
@@ -8,13 +8,13 @@
 
     {{-- Email --}}
     <div class="auth-field">
-        <label for="email">Email Address</label>
+        <label>Email Address</label>
         <div class="auth-input-wrap">
-            <i class="bi bi-envelope input-icon"></i>
             <input type="email" name="email" id="email"
                    value="{{ old('email') }}"
                    class="form-control @error('email') is-invalid @enderror"
                    placeholder="you@company.com" required autofocus>
+            <i class="bi bi-envelope input-icon"></i>
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -23,17 +23,14 @@
 
     {{-- Password --}}
     <div class="auth-field">
-        <label for="password">
-            Password
-            <a href="{{ route('password.request') }}"
-               class="float-end text-decoration-none"
-               style="color:#4f46e5; font-weight:500;">Forgot password?</a>
-        </label>
+        <div class="auth-label-row">
+            <label>Password</label>
+            <a href="{{ route('password.request') }}">Forgot password?</a>
+        </div>
         <div class="auth-input-wrap">
-            <i class="bi bi-lock input-icon"></i>
             <input type="password" name="password" id="password"
-                   class="form-control pe-5 @error('password') is-invalid @enderror"
-                   placeholder="••••••••" required>
+                   class="form-control @error('password') is-invalid @enderror"
+                   placeholder="••••••••••••" required>
             <button type="button" class="password-toggle" data-target="password">
                 <i class="bi bi-eye"></i>
             </button>
@@ -44,20 +41,17 @@
     </div>
 
     {{-- Remember me --}}
-    <div class="d-flex align-items-center mb-4">
-        <input class="form-check-input me-2" type="checkbox" name="remember" id="remember"
-               style="border-radius:5px; cursor:pointer;">
-        <label class="form-check-label small" for="remember" style="color:#6b7280; cursor:pointer;">
-            Keep me signed in for 30 days
-        </label>
+    <div class="auth-remember">
+        <input type="checkbox" name="remember" id="remember">
+        <label for="remember">Keep me signed in for 30 days</label>
     </div>
 
     {{-- reCAPTCHA --}}
     @if(config('services.recaptcha.site_key'))
-    <div class="mb-4">
+    <div style="margin-bottom:14px;">
         <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
         @error('g-recaptcha-response')
-            <div class="text-danger small mt-1">{{ $message }}</div>
+            <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
     </div>
     @endif
@@ -67,23 +61,10 @@
     </button>
 </form>
 
-<div class="text-center mt-4" style="font-size:.875rem; color:#6b7280;">
-    Don't have an account?
-    <a href="{{ route('register') }}" class="fw-semibold text-decoration-none ms-1" style="color:#4f46e5;">
-        Create one free
-    </a>
-</div>
+<div class="auth-divider">or</div>
 
-{{-- Demo credentials --}}
-<div class="demo-box">
-    <div class="demo-title">Demo Credentials</div>
-    <div class="demo-row">
-        <span>Admin</span>
-        <span><code>admin@demo.com</code> / <code>Admin@123</code></span>
-    </div>
-    <div class="demo-row">
-        <span>Employee</span>
-        <span><code>emp@demo.com</code> / <code>Admin@123</code></span>
-    </div>
+<div class="auth-footer-link">
+    Don't have an account?
+    <a href="{{ route('register') }}">Create one free</a>
 </div>
 @endsection

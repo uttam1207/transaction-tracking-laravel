@@ -30,6 +30,7 @@ use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceCont
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\QuestionController;
 use Illuminate\Support\Facades\Route;
 
 // Auth Routes (Guest only)
@@ -59,6 +60,21 @@ Route::middleware(['auth'])->group(function () {
         $request->user()->sendEmailVerificationNotification();
         return back()->with('success', 'Verification link sent!');
     })->middleware(['throttle:6,1'])->name('verification.send');
+});
+
+// Q&A — accessible by all authenticated users
+Route::middleware(['auth', 'check.status'])->prefix('qa')->name('questions.')->group(function () {
+    Route::get('/',                                              [QuestionController::class, 'index'])->name('index');
+    Route::get('/create',                                        [QuestionController::class, 'create'])->name('create');
+    Route::post('/',                                             [QuestionController::class, 'store'])->name('store');
+    Route::get('/{question}',                                    [QuestionController::class, 'show'])->name('show');
+    Route::get('/{question}/edit',                               [QuestionController::class, 'edit'])->name('edit');
+    Route::put('/{question}',                                    [QuestionController::class, 'update'])->name('update');
+    Route::delete('/{question}',                                 [QuestionController::class, 'destroy'])->name('destroy');
+    Route::post('/{question}/answers',                           [QuestionController::class, 'storeAnswer'])->name('answers.store');
+    Route::put('/{question}/answers/{answer}',                   [QuestionController::class, 'updateAnswer'])->name('answers.update');
+    Route::delete('/{question}/answers/{answer}',                [QuestionController::class, 'destroyAnswer'])->name('answers.destroy');
+    Route::post('/{question}/answers/{answer}/accept',           [QuestionController::class, 'acceptAnswer'])->name('answers.accept');
 });
 
 // Documents — accessible by all authenticated users

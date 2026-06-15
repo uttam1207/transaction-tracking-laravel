@@ -1,23 +1,23 @@
 @extends('layouts.auth')
-@section('title', 'Forgot Password')
-@section('subtitle', 'Enter your email to receive a reset link')
+@section('title', 'Reset Password')
+@section('subtitle', 'We\'ll send a recovery link to your email')
 
 @section('content')
-<p style="font-size:.85rem; color:#6b7280; margin-bottom:28px; line-height:1.6;">
-    No worries — enter your registered email address and we'll send you a link to reset your password.
+<p class="auth-intro-text">
+    No worries — enter your registered email address below and we'll send you a secure link to reset your password right away.
 </p>
 
 <form method="POST" action="{{ route('password.email') }}">
     @csrf
 
     <div class="auth-field">
-        <label for="email">Email Address</label>
+        <label>Email Address</label>
         <div class="auth-input-wrap">
-            <i class="bi bi-envelope input-icon"></i>
             <input type="email" name="email" id="email"
                    value="{{ old('email') }}"
                    class="form-control @error('email') is-invalid @enderror"
                    placeholder="you@company.com" required autofocus>
+            <i class="bi bi-envelope input-icon"></i>
             @error('email')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -29,9 +29,11 @@
     </button>
 </form>
 
-<div class="text-center mt-4" style="font-size:.875rem; color:#6b7280;">
-    <a href="{{ route('login') }}" class="fw-semibold text-decoration-none" style="color:#4f46e5;">
-        <i class="bi bi-arrow-left me-1"></i>Back to Sign In
+<div class="auth-divider">or</div>
+
+<div class="auth-footer-link">
+    <a href="{{ route('login') }}" style="margin-left:0; display:inline-flex; align-items:center; gap:5px;">
+        <i class="bi bi-arrow-left"></i> Back to Sign In
     </a>
 </div>
 @endsection

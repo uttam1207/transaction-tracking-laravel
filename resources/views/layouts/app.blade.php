@@ -7,6 +7,7 @@
     <meta name="user-id" content="{{ auth()->id() }}">
 
     <title>@yield('title', 'Dashboard') - {{ config('app.name') }}</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logo.jpeg') }}">
 
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -58,13 +59,14 @@
         }
         .sidebar-brand .brand-icon {
             width: 36px; height: 36px;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem;
-            color: #fff;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(79,70,229,.4);
+            overflow: hidden;
+        }
+        .sidebar-brand .brand-icon img {
+            width: 100%; height: 100%;
+            object-fit: contain;
         }
         .sidebar-brand .brand-name {
             color: #fff;
@@ -568,7 +570,7 @@
 
         {{-- Brand --}}
         <div class="sidebar-brand">
-            <div class="brand-icon"><i class="bi bi-shield-check"></i></div>
+            <div class="brand-icon"><img src="{{ asset('images/logo.jpeg') }}" alt="Logo"></div>
             <span class="brand-name">AS Dairy Dashboard</span>
             <span class="brand-badge">Pro</span>
         </div>
@@ -587,6 +589,10 @@
                 <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
                     <span class="nav-label">Document</span>
+                </a>
+                <a href="{{ route('questions.index') }}" class="sidebar-link {{ request()->routeIs('questions.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-patch-question"></i></span>
+                    <span class="nav-label">Q&amp;A</span>
                 </a>
                 @if(\App\Models\ServicePermission::canAccess('transactions', $svcUser))
                 <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
@@ -733,6 +739,10 @@
                 <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
                     <span class="nav-label">Document</span>
+                </a>
+                <a href="{{ route('questions.index') }}" class="sidebar-link {{ request()->routeIs('questions.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-patch-question"></i></span>
+                    <span class="nav-label">Q&amp;A</span>
                 </a>
                 <a href="{{ route('employee.attendance.index') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
