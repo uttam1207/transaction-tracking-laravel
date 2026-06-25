@@ -54,47 +54,50 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|min:8',
-            'department_id' => 'required|exists:departments,id',
-            'designation' => 'required|string|max:255',
-            'joining_date' => 'required|date',
-            'employment_type' => 'required|in:full_time,part_time,contract',
-            'work_location' => 'required|in:office,remote,hybrid',
-            'salary' => 'nullable|numeric|min:0',
-            'manager_id' => 'nullable|exists:employees,id',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'nullable|string|max:255',
+            'email'           => 'required|email|unique:users',
+            'phone'           => 'nullable|string|max:20',
+            'password'        => 'required|min:8',
+            'department_id'   => 'required|exists:departments,id',
+            'designation'     => 'required|string|max:255',
+            'joining_date'    => 'nullable|date',
+            'employment_type' => 'required|in:full_time,part_time,contract,intern',
+            'work_location'   => 'required|in:office,remote,hybrid',
+            'salary'          => 'nullable|numeric|min:0',
+            'manager_id'      => 'nullable|exists:employees,id',
         ]);
+
+        $name = trim($request->first_name . ' ' . $request->last_name);
 
         // Create user account
         $user = User::create([
-            'name' => $request->name,
-            'username' => Str::slug($request->name) . rand(100, 999),
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'password' => Hash::make($request->password),
-            'role' => 'employee',
+            'name'          => $name,
+            'username'      => Str::slug($name) . rand(100, 999),
+            'email'         => $request->email,
+            'phone'         => $request->phone,
+            'password'      => Hash::make($request->password),
+            'role'          => 'employee',
             'department_id' => $request->department_id,
-            'status' => 'active',
+            'status'        => 'active',
         ]);
         $user->assignRole('employee');
 
         // Generate employee ID
         $employeeId = 'EMP-' . str_pad(Employee::count() + 1, 5, '0', \STR_PAD_LEFT);
 
-        $employee = Employee::create([
-            'user_id' => $user->id,
-            'employee_id' => $employeeId,
-            'department_id' => $request->department_id,
-            'manager_id' => $request->manager_id,
-            'designation' => $request->designation,
-            'team' => $request->team,
-            'joining_date' => $request->joining_date,
+        Employee::create([
+            'user_id'         => $user->id,
+            'employee_id'     => $employeeId,
+            'department_id'   => $request->department_id,
+            'manager_id'      => $request->manager_id,
+            'designation'     => $request->designation,
+            'team'            => $request->team,
+            'joining_date'    => $request->joining_date ?? now()->toDateString(),
             'employment_type' => $request->employment_type,
-            'work_location' => $request->work_location,
-            'salary' => $request->salary,
-            'status' => 'active',
+            'work_location'   => $request->work_location,
+            'salary'          => $request->salary,
+            'status'          => 'active',
         ]);
 
         return redirect()->route('admin.employees.index')->with('success', 'Employee created successfully. Employee ID: ' . $employeeId);
