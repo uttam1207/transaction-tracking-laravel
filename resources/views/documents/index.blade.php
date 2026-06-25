@@ -318,10 +318,10 @@
             {{-- Footer: uploader + actions --}}
             <div class="doc-card-footer">
                 <div class="d-flex align-items-center gap-2">
-                    <img src="{{ $doc->uploader->avatar_url }}" class="rounded-circle border"
+                    <img src="{{ $doc->uploader?->avatar_url ?? 'https://ui-avatars.com/api/?name=Unknown&background=6b7280&color=fff' }}" class="rounded-circle border"
                          width="26" height="26" alt="">
                     <div>
-                        <div class="fw-semibold lh-1" style="font-size:.78rem;">{{ $doc->uploader->name }}</div>
+                        <div class="fw-semibold lh-1" style="font-size:.78rem;">{{ $doc->uploader?->name ?? 'Deleted User' }}</div>
                         <div class="text-muted" style="font-size:.65rem;">
                             <i class="bi bi-clock me-1"></i>{{ $doc->created_at->format('d M Y') }}
                             · {{ $doc->created_at->format('h:i A') }}
