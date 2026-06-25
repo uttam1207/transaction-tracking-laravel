@@ -221,7 +221,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Password <span class="req">*</span></label>
-                            <input type="password" name="password" class="form-control" required minlength="8" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                     </div>
                 </div>
