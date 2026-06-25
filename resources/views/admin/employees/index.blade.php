@@ -171,23 +171,23 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="flabel">First Name <span class="req">*</span></label>
-                            <input type="text" name="first_name" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="text" name="first_name" class="form-control" required autocomplete="given-name" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Last Name <span class="req">*</span></label>
-                            <input type="text" name="last_name" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="text" name="last_name" class="form-control" required autocomplete="family-name" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Email <span class="req">*</span></label>
-                            <input type="email" name="email" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="email" name="email" class="form-control" required autocomplete="email" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Phone</label>
-                            <input type="text" name="phone" class="form-control" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="text" name="phone" class="form-control" autocomplete="tel" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Department <span class="req">*</span></label>
-                            <select name="department_id" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <select name="department_id" class="form-select" required autocomplete="off" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 <option value="">Select Department</option>
                                 @foreach($departments as $dept)
                                     <option value="{{ $dept->id }}">{{ $dept->name }}</option>
@@ -196,11 +196,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Designation <span class="req">*</span></label>
-                            <input type="text" name="designation" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="text" name="designation" class="form-control" required autocomplete="organization-title" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-4">
                             <label class="flabel">Employment Type</label>
-                            <select name="employment_type" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <select name="employment_type" class="form-select" autocomplete="off" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 <option value="full_time">Full-Time</option>
                                 <option value="part_time">Part-Time</option>
                                 <option value="contract">Contract</option>
@@ -209,7 +209,7 @@
                         </div>
                         <div class="col-md-4">
                             <label class="flabel">Salary</label>
-                            <input type="number" name="salary" class="form-control" step="0.01" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <input type="number" name="salary" class="form-control" step="0.01" autocomplete="off" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-4">
                             <label class="flabel">Work Location</label>
