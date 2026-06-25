@@ -31,7 +31,20 @@ use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+
+// ─── TEMPORARY: run pending migrations via browser ───────────────────────────
+// Visit: /run-migrations?token=asdairy-migrate-2026
+// REMOVE THIS ROUTE after the migration has been applied on the server.
+Route::get('/run-migrations', function (\Illuminate\Http\Request $request) {
+    if ($request->query('token') !== 'asdairy-migrate-2026') {
+        abort(403);
+    }
+    Artisan::call('migrate', ['--force' => true]);
+    return '<pre>' . Artisan::output() . '</pre>';
+});
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
