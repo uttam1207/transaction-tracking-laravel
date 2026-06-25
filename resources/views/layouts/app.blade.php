@@ -1147,52 +1147,49 @@
     <!-- Laravel Echo / Real-time WebSocket (Laravel Reverb) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/laravel-echo/1.15.3/echo.iife.js"></script>
     <script>
-    // Initialise Laravel Echo with Laravel Reverb
-    window.Echo = new LaravelEcho.default({
-        broadcaster: 'reverb',
-        key:         '{{ env('REVERB_APP_KEY') }}',
-        wsHost:      '{{ env('REVERB_HOST', '127.0.0.1') }}',
-        wsPort:      {{ env('REVERB_PORT', 8080) }},
-        wssPort:     {{ env('REVERB_PORT', 8080) }},
-        forceTLS:    false,
-        enabledTransports: ['ws', 'wss'],
-        auth: {
-            headers: {
-                'X-CSRF-TOKEN': APP.csrfToken,
+    // Only initialise Echo if the CDN script loaded successfully
+    if (typeof LaravelEcho !== 'undefined') {
+        window.Echo = new LaravelEcho.default({
+            broadcaster: 'reverb',
+            key:         '{{ env('REVERB_APP_KEY') }}',
+            wsHost:      '{{ env('REVERB_HOST', '127.0.0.1') }}',
+            wsPort:      {{ env('REVERB_PORT', 8080) }},
+            wssPort:     {{ env('REVERB_PORT', 8080) }},
+            forceTLS:    false,
+            enabledTransports: ['ws', 'wss'],
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': APP.csrfToken,
+                },
             },
-        },
-    });
-
-    // Private channel for the authenticated user — real-time notifications
-    @auth
-    Echo.private('App.Models.User.{{ auth()->id() }}')
-        .notification(function (notification) {
-            // Refresh notification bell
-            loadNotifications();
-            // Show toast for fraud alerts
-            if (notification.type && notification.type.includes('Fraud')) {
-                APP.toast('New fraud alert detected!', 'warning');
-            }
         });
 
-    @if(auth()->user()->isAdmin() || auth()->user()->isManager())
-    // Listen for new fraud alerts on the admin channel
-    Echo.private('fraud-alerts')
-        .listen('FraudAlertCreated', function (e) {
-            loadNotifications();
-            APP.toast('Fraud alert: ' + (e.message ?? 'New high-risk transaction detected'), 'warning');
-            // Update badge count if element exists
-            const badge = document.querySelector('.fraud-alert-badge');
-            if (badge) badge.textContent = parseInt(badge.textContent || 0) + 1;
-        });
+        // Private channel for the authenticated user — real-time notifications
+        @auth
+        Echo.private('App.Models.User.{{ auth()->id() }}')
+            .notification(function (notification) {
+                loadNotifications();
+                if (notification.type && notification.type.includes('Fraud')) {
+                    APP.toast('New fraud alert detected!', 'warning');
+                }
+            });
 
-    // Listen for transaction status updates
-    Echo.channel('transactions')
-        .listen('TransactionStatusUpdated', function (e) {
-            APP.toast('Transaction ' + e.transaction_id + ' → ' + e.status, 'info');
-        });
-    @endif
-    @endauth
+        @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+        Echo.private('fraud-alerts')
+            .listen('FraudAlertCreated', function (e) {
+                loadNotifications();
+                APP.toast('Fraud alert: ' + (e.message ?? 'New high-risk transaction detected'), 'warning');
+                const badge = document.querySelector('.fraud-alert-badge');
+                if (badge) badge.textContent = parseInt(badge.textContent || 0) + 1;
+            });
+
+        Echo.channel('transactions')
+            .listen('TransactionStatusUpdated', function (e) {
+                APP.toast('Transaction ' + e.transaction_id + ' → ' + e.status, 'info');
+            });
+        @endif
+        @endauth
+    }
     </script>
 
     @stack('scripts')
