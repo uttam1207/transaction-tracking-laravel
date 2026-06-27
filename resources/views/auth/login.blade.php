@@ -60,11 +60,10 @@
         <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
     </button>
 </form>
-
+{{-- 
 <div class="auth-divider">or</div>
-
 <div class="auth-footer-link">
     Don't have an account?
     <a href="{{ route('register') }}">Create one free</a>
-</div>
+</div> --}}
 @endsection
