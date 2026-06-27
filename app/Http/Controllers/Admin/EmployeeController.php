@@ -83,8 +83,9 @@ class EmployeeController extends Controller
         ]);
         $user->assignRole('employee');
 
-        // Generate employee ID
-        $employeeId = 'EMP-' . str_pad(Employee::count() + 1, 5, '0', \STR_PAD_LEFT);
+        // Generate employee ID using max id to avoid duplicates from count()
+        $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
+        $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
 
         Employee::create([
             'user_id'         => $user->id,
