@@ -20,10 +20,12 @@ class EmployeeController extends Controller
         $query = Employee::with('user', 'department', 'manager.user');
 
         if ($request->search) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('email', 'like', '%' . $request->search . '%');
-            })->orWhere('employee_id', 'like', '%' . $request->search . '%');
+            $query->where(function ($q) use ($request) {
+                $q->whereHas('user', function ($uq) use ($request) {
+                    $uq->where('name', 'like', '%' . $request->search . '%')
+                       ->orWhere('email', 'like', '%' . $request->search . '%');
+                })->orWhere('employee_id', 'like', '%' . $request->search . '%');
+            });
         }
 
         if ($request->department_id) {
@@ -34,8 +36,8 @@ class EmployeeController extends Controller
             $query->where('status', $request->status);
         }
 
-        if ($request->work_location) {
-            $query->where('work_location', $request->work_location);
+        if ($request->employment_type) {
+            $query->where('employment_type', $request->employment_type);
         }
 
         $employees = $query->latest()->paginate(15)->withQueryString();
@@ -66,9 +68,11 @@ class EmployeeController extends Controller
             'work_location'   => 'required|in:office,remote,hybrid',
             'salary'          => 'nullable|numeric|min:0',
             'manager_id'      => 'nullable|exists:employees,id',
+            'role'            => 'nullable|string|in:employee,manager,admin,auditor,viewer',
         ]);
 
-        $name = trim($request->first_name . ' ' . $request->last_name);
+        $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
+        $role = $request->role ?? 'employee';
 
         // Create user account
         $user = User::create([
@@ -77,11 +81,11 @@ class EmployeeController extends Controller
             'email'         => $request->email,
             'phone'         => $request->phone,
             'password'      => Hash::make($request->password),
-            'role'          => 'employee',
+            'role'          => $role,
             'department_id' => $request->department_id,
             'status'        => 'active',
         ]);
-        $user->assignRole('employee');
+        $user->assignRole($role);
 
         // Generate employee ID using max id to avoid duplicates from count()
         $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
@@ -101,7 +105,14 @@ class EmployeeController extends Controller
             'status'          => 'active',
         ]);
 
-        return redirect()->route('admin.employees.index')->with('success', 'Employee created successfully. Employee ID: ' . $employeeId);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Employee created successfully. ID: ' . $employeeId,
+            ]);
+        }
+
+        return redirect()->route('admin.employees.index')->with('success', 'Employee created. ID: ' . $employeeId);
     }
 
     public function show(Employee $employee)
@@ -121,26 +132,44 @@ class EmployeeController extends Controller
     public function update(Request $request, Employee $employee)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $employee->user_id,
-            'department_id' => 'required|exists:departments,id',
-            'designation' => 'required|string|max:255',
-            'employment_type' => 'required|in:full_time,part_time,contract',
-            'work_location' => 'required|in:office,remote,hybrid',
-            'status' => 'required|in:active,inactive,on_leave,terminated',
+            'first_name'      => 'required|string|max:255',
+            'last_name'       => 'nullable|string|max:255',
+            'email'           => 'required|email|unique:users,email,' . $employee->user_id,
+            'phone'           => 'nullable|string|max:20',
+            'department_id'   => 'required|exists:departments,id',
+            'designation'     => 'nullable|string|max:255',
+            'employment_type' => 'required|in:full_time,part_time,contract,intern',
+            'work_location'   => 'required|in:office,remote,hybrid',
+            'status'          => 'required|in:active,inactive,on_leave,terminated',
+            'salary'          => 'nullable|numeric|min:0',
+            'performance_score'      => 'nullable|numeric|min:0|max:100',
+            'annual_leave_balance'   => 'nullable|integer|min:0',
+            'sick_leave_balance'     => 'nullable|integer|min:0',
+            'password'        => 'nullable|min:8',
         ]);
 
-        $employee->user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
+        $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
+
+        // Sync user status: inactive/terminated/on_leave employees can't log in
+        $userStatus = $request->status === 'active' ? 'active' : 'inactive';
+
+        $userUpdate = [
+            'name'          => $name,
+            'email'         => $request->email,
+            'phone'         => $request->phone,
             'department_id' => $request->department_id,
-        ]);
+            'status'        => $userStatus,
+        ];
+        if ($request->filled('password')) {
+            $userUpdate['password'] = Hash::make($request->password);
+        }
+        $employee->user->update($userUpdate);
 
         $employee->update($request->only([
             'department_id', 'designation', 'team', 'employment_type',
             'work_location', 'salary', 'status', 'manager_id', 'address',
             'city', 'state', 'country', 'joining_date',
+            'performance_score', 'annual_leave_balance', 'sick_leave_balance',
         ]));
 
         return redirect()->route('admin.employees.show', $employee)->with('success', 'Employee updated successfully.');

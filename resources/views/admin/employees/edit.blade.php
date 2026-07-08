@@ -96,7 +96,7 @@
                     <div class="col-md-4">
                         <label class="flabel">Status</label>
                         <select name="status" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                            @foreach(['active'=>'Active','inactive'=>'Inactive','on_leave'=>'On Leave'] as $v=>$l)
+                            @foreach(['active'=>'Active','inactive'=>'Inactive','on_leave'=>'On Leave','terminated'=>'Terminated'] as $v=>$l)
                                 <option value="{{ $v }}" @selected(old('status',$employee->status)===$v)>{{ $l }}</option>
                             @endforeach
                         </select>
