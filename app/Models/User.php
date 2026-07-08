@@ -131,9 +131,9 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return match($this->role) {
             'super_admin', 'admin' => route('admin.dashboard'),
-            'manager' => route('admin.dashboard'),
-            'employee' => route('employee.dashboard'),
-            default => route('admin.dashboard'),
+            'manager'              => route('admin.manager.dashboard'),
+            'employee'             => route('employee.dashboard'),
+            default                => route('employee.dashboard'),
         };
     }
 }

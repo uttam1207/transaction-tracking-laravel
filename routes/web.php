@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Manager\DashboardController as ManagerDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
@@ -140,6 +141,9 @@ Route::prefix('admin')
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
     Route::get('/dashboard/chart', [DashboardController::class, 'getChartData'])->name('dashboard.chart');
+
+    // Manager Dashboard
+    Route::get('/manager-dashboard', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
 
     // User Management
     Route::resource('users', UserController::class);

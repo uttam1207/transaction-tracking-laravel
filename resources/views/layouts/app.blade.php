@@ -580,12 +580,46 @@
             @php $svcUser = auth()->user(); @endphp
             @if($svcUser->isAdmin() || $svcUser->isManager())
 
+                {{-- Personal workspace for managers and admins who are also employees --}}
+                @if($svcUser->isManager() || $svcUser->employee)
+                <div class="nav-section-title">My Workspace</div>
+                @if($svcUser->isManager())
+                <a href="{{ route('admin.manager.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.manager.dashboard') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-person-circle"></i></span>
+                    <span class="nav-label">My Dashboard</span>
+                </a>
+                @else
+                <a href="{{ route('employee.dashboard') }}" class="sidebar-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-person-circle"></i></span>
+                    <span class="nav-label">My Dashboard</span>
+                </a>
+                @endif
+                <a href="{{ route('employee.attendance.index') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.index') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-fingerprint"></i></span>
+                    <span class="nav-label">My Attendance</span>
+                </a>
+                <a href="{{ route('employee.tasks.index') }}" class="sidebar-link {{ request()->routeIs('employee.tasks.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-list-task"></i></span>
+                    <span class="nav-label">My Tasks</span>
+                </a>
+                <a href="{{ route('employee.attendance.leaves') }}" class="sidebar-link {{ request()->routeIs('employee.attendance.leaves') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-calendar-x"></i></span>
+                    <span class="nav-label">My Leaves</span>
+                </a>
+                <a href="{{ route('employee.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('employee.work-reports.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-file-earmark-text"></i></span>
+                    <span class="nav-label">My Work Reports</span>
+                </a>
+                @endif
+
                 <div class="nav-section-title">Main</div>
 
+                @if(!$svcUser->isManager())
                 <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                     <span class="nav-label">Dashboard</span>
                 </a>
+                @endif
                 <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
                     <span class="nav-label">Document</span>
@@ -797,7 +831,7 @@
             </button>
 
             <div class="d-none d-md-flex align-items-center topbar-breadcrumb-wrap">
-                <a href="{{ auth()->user()->isEmployee() ? route('employee.dashboard') : route('admin.dashboard') }}"
+                <a href="{{ auth()->user()->getDashboardRoute() }}"
                    class="bc-home-btn" title="Dashboard">
                     <i class="bi bi-house-fill"></i>
                 </a>
