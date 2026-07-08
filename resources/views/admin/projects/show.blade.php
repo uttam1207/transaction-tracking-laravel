@@ -148,8 +148,11 @@
 
         {{-- Tasks Table --}}
         <div class="table-card">
-            <div class="card-header">
+            <div class="card-header d-flex align-items-center justify-content-between">
                 <span class="card-title">Tasks ({{ $total }})</span>
+                <button class="btn btn-sm btn-primary-grad px-3" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                    <i class="bi bi-plus-circle me-1"></i>Add Task
+                </button>
             </div>
             <div class="table-responsive">
                 <table class="table modern-table mb-0">
@@ -160,6 +163,7 @@
                             <th>Priority</th>
                             <th>Due Date</th>
                             <th>Status</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -171,7 +175,7 @@
                         @endphp
                         <tr style="{{ $taskOverdue ? 'background:#fff5f5;' : '' }}">
                             <td style="font-weight:600;font-size:.87rem;color:#111827;">{{ Str::limit($task->title, 40) }}</td>
-                            <td style="font-size:.83rem;color:#374151;">{{ $task->assignedEmployee->full_name ?? '—' }}</td>
+                            <td style="font-size:.83rem;color:#374151;">{{ $task->assignedTo->full_name ?? '—' }}</td>
                             <td>
                                 <span class="spill spill-{{ $pc[$task->priority] ?? 'secondary' }}" style="font-size:.7rem;">
                                     {{ ucfirst($task->priority) }}
@@ -185,9 +189,15 @@
                                     {{ ucwords(str_replace('_', ' ', $task->status)) }}
                                 </span>
                             </td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <a href="{{ route('employee.tasks.show', $task) }}" class="act-btn act-view" title="View"><i class="bi bi-eye"></i></a>
+                                    <button class="act-btn act-delete" onclick="deleteProjectTask({{ $task->id }})" title="Delete"><i class="bi bi-trash"></i></button>
+                                </div>
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5">
+                        <tr><td colspan="6">
                             <div class="empty-state"><i class="bi bi-list-task"></i><p>No tasks for this project</p></div>
                         </td></tr>
                         @endforelse
@@ -198,4 +208,117 @@
     </div>
 </div>
 
+{{-- Add Task Modal --}}
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title fw-bold"><i class="bi bi-list-task me-2"></i>Add Task to {{ $project->name }}</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="addTaskForm">
+                @csrf
+                <input type="hidden" name="project_id" value="{{ $project->id }}">
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="flabel">Task Title <span class="req">*</span></label>
+                            <input type="text" name="title" class="form-control" required
+                                style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="flabel">Assign To <span class="req">*</span></label>
+                            <select name="assigned_to" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                <option value="">Select Employee</option>
+                                @foreach($employees as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->full_name }} ({{ $emp->designation }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="flabel">Priority <span class="req">*</span></label>
+                            <select name="priority" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="flabel">Due Date</label>
+                            <input type="date" name="due_date" class="form-control"
+                                style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="flabel">Estimated Hours</label>
+                            <input type="number" name="estimated_hours" class="form-control" min="0" placeholder="e.g. 8"
+                                style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        <div class="col-12">
+                            <label class="flabel">Description</label>
+                            <textarea name="description" class="form-control" rows="3"
+                                style="border-radius:9px;border:1.5px solid #e5e7eb;resize:none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-sm btn-primary-grad px-4">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+function deleteProjectTask(id) {
+    APP.confirm('Delete this task?', 'This action cannot be undone.', function() {
+        fetch(`/admin/tasks/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                'Accept': 'application/json'
+            }
+        }).then(r => r.json()).then(data => {
+            APP.toast(data.message, data.success ? 'success' : 'error');
+            if (data.success) setTimeout(() => location.reload(), 800);
+        });
+    });
+}
+
+document.getElementById('addTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled = true;
+
+    fetch('{{ route('admin.tasks.store') }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new FormData(form)
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('addTaskModal')).hide();
+            APP.toast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else if (data.errors) {
+            const first = Object.values(data.errors)[0];
+            APP.toast(Array.isArray(first) ? first[0] : first, 'error');
+        } else {
+            APP.toast(data.message || 'Failed to create task.', 'error');
+        }
+    })
+    .catch(() => APP.toast('Something went wrong.', 'error'))
+    .finally(() => btn.disabled = false);
+});
+</script>
+@endpush

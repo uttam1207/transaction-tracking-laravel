@@ -68,10 +68,7 @@
                     <td>
                         @if($leave->status === 'pending')
                         <div class="d-flex gap-1">
-                            <form action="{{ route('admin.attendance.leaves.approve', $leave) }}" method="POST">
-                                @csrf <input type="hidden" name="action" value="approve">
-                                <button type="submit" class="act-btn act-green" title="Approve"><i class="bi bi-check2"></i></button>
-                            </form>
+                            <button class="act-btn act-green" title="Approve" onclick="approveLeave({{ $leave->id }})"><i class="bi bi-check2"></i></button>
                             <button class="act-btn act-delete" title="Reject" onclick="rejectLeave({{ $leave->id }})"><i class="bi bi-x-lg"></i></button>
                         </div>
                         @else
@@ -100,8 +97,8 @@
                 <h6 class="modal-title fw-bold">Reject Leave</h6>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="rejectForm" method="POST">
-                @csrf <input type="hidden" name="action" value="reject">
+            <form id="rejectForm">
+                <input type="hidden" name="action" value="reject">
                 <div class="modal-body">
                     <label class="flabel">Reason <span class="req">*</span></label>
                     <textarea name="rejection_reason" class="form-control" rows="3" required placeholder="Provide rejection reason…" style="border-radius:9px;border:1.5px solid #e5e7eb;resize:none;"></textarea>
@@ -118,9 +115,50 @@
 
 @push('scripts')
 <script>
+function leaveAction(id, payload, onSuccess) {
+    const data = new FormData();
+    Object.entries(payload).forEach(([k, v]) => data.append(k, v));
+    data.append('_token', document.querySelector('meta[name=csrf-token]').content);
+
+    fetch(`/admin/attendance/leaves/${id}/approve`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: data
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.success) { APP.toast(res.message, 'success'); onSuccess(); }
+        else APP.toast(res.message || 'Action failed.', 'error');
+    })
+    .catch(() => APP.toast('Something went wrong.', 'error'));
+}
+
+function approveLeave(id) {
+    APP.confirm('Approve this leave request?', '', function() {
+        leaveAction(id, { action: 'approve' }, () => setTimeout(() => location.reload(), 1000));
+    });
+}
+
 function rejectLeave(id) {
-    document.getElementById('rejectForm').action = `/admin/attendance/leaves/${id}/approve`;
+    document.getElementById('rejectForm').dataset.leaveId = id;
     new bootstrap.Modal(document.getElementById('rejectModal')).show();
 }
+
+document.getElementById('rejectForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const id = this.dataset.leaveId;
+    const btn = this.querySelector('[type=submit]');
+    const reason = this.querySelector('[name=rejection_reason]').value;
+    btn.disabled = true;
+
+    leaveAction(id, { action: 'reject', rejection_reason: reason }, () => {
+        bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+        setTimeout(() => location.reload(), 800);
+    });
+    btn.disabled = false;
+});
 </script>
 @endpush

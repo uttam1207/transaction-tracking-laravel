@@ -134,6 +134,7 @@
                     <td><span class="spill {{ $sMap[$ts] ?? 'spill-secondary' }}">{{ ucwords(str_replace('_',' ',$ts)) }}</span></td>
                     <td>
                         <div class="d-flex gap-1">
+                            <a href="{{ route('employee.tasks.show', $task) }}" class="act-btn act-view" title="View"><i class="bi bi-eye"></i></a>
                             @if(in_array($ts,['review','in_progress']))
                             <button class="act-btn act-green" title="Approve" onclick="approveTask('{{ route('admin.tasks.approve', $task) }}')"><i class="bi bi-check2"></i></button>
                             @endif

@@ -56,8 +56,9 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load(['manager', 'department', 'tasks.assignedEmployee']);
-        return view('admin.projects.show', compact('project'));
+        $project->load(['manager', 'department', 'tasks.assignedTo.user']);
+        $employees = Employee::with('user')->active()->get();
+        return view('admin.projects.show', compact('project', 'employees'));
     }
 
     public function update(Request $request, Project $project)

@@ -76,6 +76,23 @@ class UserController extends Controller
         // Assign spatie role
         $user->assignRole($request->role);
 
+        // Create an Employee record for all non-super_admin roles
+        if ($request->role !== 'super_admin') {
+            $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
+            $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
+
+            Employee::create([
+                'user_id'         => $user->id,
+                'employee_id'     => $employeeId,
+                'department_id'   => $request->department_id,
+                'designation'     => ucfirst(str_replace('_', ' ', $request->role)),
+                'employment_type' => 'full_time',
+                'work_location'   => 'office',
+                'joining_date'    => now()->toDateString(),
+                'status'          => 'active',
+            ]);
+        }
+
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'User created successfully.', 'user' => $user]);
         }
@@ -122,6 +139,23 @@ class UserController extends Controller
 
         $user->update($data);
         $user->syncRoles([$request->role]);
+
+        // If this user has no employee record and is not a super_admin, create one now
+        if ($request->role !== 'super_admin' && !$user->employee) {
+            $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
+            $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
+
+            Employee::create([
+                'user_id'         => $user->id,
+                'employee_id'     => $employeeId,
+                'department_id'   => $request->department_id,
+                'designation'     => ucfirst(str_replace('_', ' ', $request->role)),
+                'employment_type' => 'full_time',
+                'work_location'   => 'office',
+                'joining_date'    => now()->toDateString(),
+                'status'          => 'active',
+            ]);
+        }
 
         if ($request->ajax()) {
             return response()->json(['success' => true, 'message' => 'User updated successfully.']);

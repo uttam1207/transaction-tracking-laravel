@@ -16,6 +16,13 @@ class TaskController extends Controller
 
         $query = Task::with('project', 'assignedBy')->where('assigned_to', $employee->id);
 
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('task_id', 'like', '%' . $request->search . '%');
+            });
+        }
+
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -27,10 +34,15 @@ class TaskController extends Controller
         $tasks = $query->latest()->paginate(12)->withQueryString();
 
         $stats = [
-            'pending' => Task::where('assigned_to', $employee->id)->where('status', 'pending')->count(),
+            'pending'     => Task::where('assigned_to', $employee->id)->whereIn('status', ['pending', 'assigned'])->count(),
             'in_progress' => Task::where('assigned_to', $employee->id)->where('status', 'in_progress')->count(),
-            'review' => Task::where('assigned_to', $employee->id)->where('status', 'review')->count(),
-            'completed' => Task::where('assigned_to', $employee->id)->where('status', 'completed')->count(),
+            'review'      => Task::where('assigned_to', $employee->id)->where('status', 'review')->count(),
+            'completed'   => Task::where('assigned_to', $employee->id)->where('status', 'completed')->count(),
+            'overdue'     => Task::where('assigned_to', $employee->id)
+                                ->whereNotIn('status', ['completed', 'cancelled'])
+                                ->whereNotNull('due_date')
+                                ->where('due_date', '<', now())
+                                ->count(),
         ];
 
         return view('employee.tasks.index', compact('tasks', 'stats'));
@@ -40,7 +52,16 @@ class TaskController extends Controller
     {
         $this->authorizeTask($task);
         $task->load('project', 'assignedBy', 'comments.user', 'timesheets');
-        return view('employee.tasks.show', compact('task'));
+
+        $employee = auth()->user()->employee;
+        $activeTimer = $employee
+            ? Timesheet::where('employee_id', $employee->id)
+                ->where('task_id', $task->id)
+                ->where('status', 'running')
+                ->first()
+            : null;
+
+        return view('employee.tasks.show', compact('task', 'activeTimer'));
     }
 
     public function updateStatus(Request $request, Task $task)

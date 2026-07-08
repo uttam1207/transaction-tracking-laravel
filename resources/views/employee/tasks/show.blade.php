@@ -33,14 +33,14 @@
         @if(!in_array($ts, ['completed', 'cancelled']))
         <div class="d-flex gap-2 align-items-center">
             @if(!$activeTimer)
-            <form action="{{ route('employee.tasks.timer.start', $task) }}" method="POST">
+            <form id="startTimerForm" action="{{ route('employee.tasks.timer.start', $task) }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);">
                     <i class="bi bi-play-fill me-1"></i>Start Timer
                 </button>
             </form>
             @else
-            <form action="{{ route('employee.tasks.timer.stop', $task) }}" method="POST">
+            <form id="stopTimerForm" action="{{ route('employee.tasks.timer.stop', $task) }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-sm" id="stopTimerBtn" style="background:#fbbf24;color:#111;border:none;border-radius:9px;font-weight:700;">
                     <i class="bi bi-stop-fill me-1"></i>Stop&nbsp;<span id="timerDisplay" style="font-family:monospace;"></span>
@@ -100,13 +100,10 @@
                 <div class="d-flex gap-2 flex-wrap">
                     @foreach(['in_progress' => ['label'=>'Start Working','color'=>'#f59e0b'], 'review' => ['label'=>'Submit for Review','color'=>'#6366f1'], 'completed' => ['label'=>'Mark Complete','color'=>'#16a34a']] as $status => $cfg)
                     @if($ts !== $status)
-                    <form action="{{ route('employee.tasks.status', $task) }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="status" value="{{ $status }}">
-                        <button type="submit" class="btn btn-sm" style="border-radius:8px;font-weight:600;font-size:.8rem;border:1.5px solid {{ $cfg['color'] }};color:{{ $cfg['color'] }};background:transparent;">
-                            {{ $cfg['label'] }}
-                        </button>
-                    </form>
+                    <button class="btn btn-sm" onclick="updateStatus('{{ $status }}')"
+                        style="border-radius:8px;font-weight:600;font-size:.8rem;border:1.5px solid {{ $cfg['color'] }};color:{{ $cfg['color'] }};background:transparent;">
+                        {{ $cfg['label'] }}
+                    </button>
                     @endif
                     @endforeach
                 </div>
@@ -202,5 +199,61 @@ function updateTimer() {
 setInterval(updateTimer, 1000);
 updateTimer();
 @endif
+
+function updateStatus(status) {
+    fetch('{{ route('employee.tasks.status', $task) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            APP.toast(data.message, 'success');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            APP.toast(data.message || 'Failed to update status.', 'error');
+        }
+    })
+    .catch(() => APP.toast('Something went wrong.', 'error'));
+}
+
+function timerFetch(form, onSuccess) {
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled = true;
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new FormData(form)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) onSuccess(data);
+        else APP.toast(data.message || 'Action failed.', 'error');
+    })
+    .catch(() => APP.toast('Something went wrong.', 'error'))
+    .finally(() => btn.disabled = false);
+}
+
+document.getElementById('startTimerForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    timerFetch(this, () => location.reload());
+});
+
+document.getElementById('stopTimerForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    timerFetch(this, (data) => {
+        APP.toast(data.message, 'success');
+        setTimeout(() => location.reload(), 800);
+    });
+});
 </script>
 @endpush

@@ -4,11 +4,10 @@
 @section('content')
 
 @php
-    $allTasks = $tasks->getCollection() ?? collect();
-    $pendingCount = $allTasks->whereIn('status', ['pending', 'assigned'])->count();
-    $inProgressCount = $allTasks->where('status', 'in_progress')->count();
-    $completedCount = $allTasks->where('status', 'completed')->count();
-    $overdueCount = $allTasks->filter(fn($t) => $t->due_date && \Carbon\Carbon::parse($t->due_date)->isPast() && !in_array($t->status, ['completed', 'cancelled']))->count();
+    $pendingCount    = $stats['pending'];
+    $inProgressCount = $stats['in_progress'];
+    $completedCount  = $stats['completed'];
+    $overdueCount    = $stats['overdue'];
 @endphp
 
 <div class="page-hero">

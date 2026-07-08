@@ -139,7 +139,7 @@
                 <h6 class="modal-title fw-bold"><i class="bi bi-kanban me-2"></i>Create New Project</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.projects.store') }}" method="POST">
+            <form id="createProjectForm" action="{{ route('admin.projects.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="row g-3">
@@ -225,5 +225,37 @@ function deleteProject(id) {
         });
     });
 }
+
+document.getElementById('createProjectForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled = true;
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: new FormData(form)
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+        if (ok && data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('createProjectModal')).hide();
+            APP.toast(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else if (data.errors) {
+            const first = Object.values(data.errors)[0];
+            APP.toast(Array.isArray(first) ? first[0] : first, 'error');
+        } else {
+            APP.toast(data.message || 'Failed to create project.', 'error');
+        }
+    })
+    .catch(() => APP.toast('Something went wrong.', 'error'))
+    .finally(() => btn.disabled = false);
+});
 </script>
 @endpush
