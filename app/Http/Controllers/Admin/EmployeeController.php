@@ -160,9 +160,35 @@ class EmployeeController extends Controller
             'department_id' => $request->department_id,
             'status'        => $userStatus,
         ];
+
         if ($request->filled('password')) {
             $userUpdate['password'] = Hash::make($request->password);
         }
+
+        if ($request->hasFile('avatar')) {
+            $request->validate(['avatar' => 'image|mimes:jpg,jpeg,png,gif,webp|max:2048']);
+
+            $file       = $request->file('avatar');
+            $filename   = time() . '_' . $employee->id . '.' . $file->getClientOriginalExtension();
+            $uploadPath = public_path('uploads/profile');
+
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0755, true);
+            }
+
+            // Remove old avatar if it lives in uploads/profile/
+            $oldAvatar = $employee->user->avatar;
+            if ($oldAvatar && str_starts_with($oldAvatar, 'uploads/')) {
+                $oldFile = public_path($oldAvatar);
+                if (file_exists($oldFile)) {
+                    unlink($oldFile);
+                }
+            }
+
+            $file->move($uploadPath, $filename);
+            $userUpdate['avatar'] = 'uploads/profile/' . $filename;
+        }
+
         $employee->user->update($userUpdate);
 
         $employee->update($request->only([

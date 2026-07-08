@@ -132,7 +132,27 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="form-section">
+
+        {{-- Profile Photo --}}
+        <div class="form-section mb-3">
+            <div class="form-section-hdr"><i class="bi bi-camera"></i>Profile Photo</div>
+            <div class="form-section-body" style="text-align:center;">
+                <div style="position:relative;display:inline-block;margin-bottom:16px;">
+                    <img id="avatarPreview"
+                        src="{{ $employee->user->avatar_url }}"
+                        style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,.10);">
+                    <label for="avatarInput" style="position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,.4);" title="Change photo">
+                        <i class="bi bi-camera-fill" style="font-size:.75rem;"></i>
+                    </label>
+                </div>
+                <input type="file" id="avatarInput" name="avatar" accept="image/jpg,image/jpeg,image/png,image/gif,image/webp" style="display:none;">
+                <div style="font-size:.73rem;color:#9ca3af;">JPG, PNG, GIF or WebP · Max 2MB</div>
+                <div id="avatarFileName" style="font-size:.75rem;color:#4f46e5;margin-top:4px;display:none;"></div>
+            </div>
+        </div>
+
+        {{-- Security --}}
+        <div class="form-section mb-3">
             <div class="form-section-hdr"><i class="bi bi-lock"></i>Security</div>
             <div class="form-section-body">
                 <label class="flabel">New Password</label>
@@ -154,3 +174,28 @@
 </div>
 </form>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('avatarInput').addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+        APP.toast('Image must be smaller than 2MB.', 'error');
+        this.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('avatarPreview').src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    const nameEl = document.getElementById('avatarFileName');
+    nameEl.textContent = file.name;
+    nameEl.style.display = 'block';
+});
+</script>
+@endpush

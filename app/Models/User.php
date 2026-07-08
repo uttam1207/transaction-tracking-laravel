@@ -86,9 +86,15 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->avatar
-            ? asset('storage/' . $this->avatar)
-            : 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=4f46e5&color=fff';
+        if (!$this->avatar) {
+            return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&background=4f46e5&color=fff';
+        }
+        // Files saved directly to public/uploads/ are served without the storage prefix
+        if (str_starts_with($this->avatar, 'uploads/')) {
+            return asset($this->avatar);
+        }
+        // Legacy files saved via storage disk (storage/app/public/...)
+        return asset('storage/' . $this->avatar);
     }
 
     public function scopeActive($query)
