@@ -68,17 +68,11 @@ class EmployeeController extends Controller
             'work_location'   => 'required|in:office,remote,hybrid',
             'salary'          => 'nullable|numeric|min:0',
             'manager_id'      => 'nullable|exists:employees,id',
-<<<<<<< Updated upstream
             'role'            => 'nullable|string|in:employee,manager,admin,auditor,viewer',
         ]);
 
         $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
         $role = $request->role ?? 'employee';
-=======
-        ]);
-
-        $name = trim($request->first_name . ' ' . $request->last_name);
->>>>>>> Stashed changes
 
         // Create user account
         $user = User::create([
@@ -87,11 +81,7 @@ class EmployeeController extends Controller
             'email'         => $request->email,
             'phone'         => $request->phone,
             'password'      => Hash::make($request->password),
-<<<<<<< Updated upstream
             'role'          => $role,
-=======
-            'role'          => 'employee',
->>>>>>> Stashed changes
             'department_id' => $request->department_id,
             'status'        => 'active',
         ]);
