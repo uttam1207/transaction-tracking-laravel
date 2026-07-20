@@ -173,7 +173,6 @@
                 @csrf
                 <div class="modal-body" style="padding:20px 24px;">
                     <div class="row g-3">
-<<<<<<< Updated upstream
                         {{-- Personal --}}
                         <div class="col-12">
                             <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:4px;">Personal Info</div>
@@ -185,15 +184,6 @@
                         <div class="col-md-6">
                             <label class="flabel">Last Name</label>
                             <input type="text" name="last_name" class="form-control" autocomplete="family-name" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-=======
-                        <div class="col-md-6">
-                            <label class="flabel">First Name <span class="req">*</span></label>
-                            <input type="text" name="first_name" class="form-control" required autocomplete="given-name" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="flabel">Last Name <span class="req">*</span></label>
-                            <input type="text" name="last_name" class="form-control" required autocomplete="family-name" style="border-radius:9px;border:1.5px solid #e5e7eb;">
->>>>>>> Stashed changes
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Email <span class="req">*</span></label>
@@ -202,14 +192,11 @@
                         <div class="col-md-6">
                             <label class="flabel">Phone</label>
                             <input type="text" name="phone" class="form-control" autocomplete="tel" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-<<<<<<< Updated upstream
                         </div>
 
                         {{-- Employment --}}
                         <div class="col-12 mt-2">
                             <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-bottom:4px;">Employment</div>
-=======
->>>>>>> Stashed changes
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Department <span class="req">*</span></label>
@@ -222,7 +209,6 @@
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Designation <span class="req">*</span></label>
-<<<<<<< Updated upstream
                             <input type="text" name="designation" class="form-control" required autocomplete="organization-title" placeholder="e.g. Software Engineer" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-4">
@@ -239,33 +225,15 @@
                             <label class="flabel">Employment Type <span class="req">*</span></label>
                             <select name="employment_type" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 <option value="full_time" selected>Full-Time</option>
-=======
-                            <input type="text" name="designation" class="form-control" required autocomplete="organization-title" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="flabel">Employment Type</label>
-                            <select name="employment_type" class="form-select" autocomplete="off" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                <option value="full_time">Full-Time</option>
->>>>>>> Stashed changes
                                 <option value="part_time">Part-Time</option>
                                 <option value="contract">Contract</option>
                                 <option value="intern">Intern</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-<<<<<<< Updated upstream
                             <label class="flabel">Work Location <span class="req">*</span></label>
                             <select name="work_location" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 <option value="office" selected>Office</option>
-=======
-                            <label class="flabel">Salary</label>
-                            <input type="number" name="salary" class="form-control" step="0.01" autocomplete="off" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="flabel">Work Location</label>
-                            <select name="work_location" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                <option value="office">Office</option>
->>>>>>> Stashed changes
                                 <option value="remote">Remote</option>
                                 <option value="hybrid">Hybrid</option>
                             </select>
@@ -288,10 +256,7 @@
                         <div class="col-md-6">
                             <label class="flabel">Password <span class="req">*</span></label>
                             <input type="password" name="password" class="form-control" required minlength="8" autocomplete="new-password" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-<<<<<<< Updated upstream
                             <div style="font-size:.73rem;color:#9ca3af;margin-top:4px;">Minimum 8 characters</div>
-=======
->>>>>>> Stashed changes
                         </div>
                     </div>
                 </div>
