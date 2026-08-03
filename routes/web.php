@@ -23,6 +23,8 @@ use App\Http\Controllers\Admin\TimesheetController;
 use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController;
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
+use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;

@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AS Dairy ERP — Project Roadmap</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-dark: #3730a3;
+    --purple: #7c3aed;
+    --done-bg: #dcfce7; --done-text: #15803d; --done-border: #86efac;
+    --inprog-bg: #fef9c3; --inprog-text: #92400e; --inprog-border: #fde68a;
+    --next-bg: #dbeafe; --next-text: #1d4ed8; --next-border: #93c5fd;
+    --planned-bg: #f3f4f6; --planned-text: #6b7280; --planned-border: #d1d5db;
+  }
+  * { box-sizing: border-box; }
+  body { background: #f1f5f9; font-family: 'Inter', system-ui, sans-serif; color: #1e293b; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #0f1117 0%, #1e1b4b 50%, #312e81 100%);
+    color: #fff; padding: 48px 0 36px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 50%, rgba(124,58,237,.25) 0%, transparent 60%);
+  }
+  .hero h1 { font-size: 2rem; font-weight: 800; letter-spacing: -.5px; }
+  .hero p  { opacity: .7; font-size: .95rem; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 20px; padding: 4px 14px; font-size: .78rem; font-weight: 600;
+    letter-spacing: .03em; color: #c7d2fe;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { background: #1e1b4b; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  .progress-stat { text-align: center; color: #fff; }
+  .progress-stat .val { font-size: 1.6rem; font-weight: 800; }
+  .progress-stat .lbl { font-size: .72rem; opacity: .6; text-transform: uppercase; letter-spacing: .06em; }
+  .erp-progress { height: 10px; border-radius: 10px; background: rgba(255,255,255,.1); overflow: hidden; }
+  .erp-progress-fill { height: 100%; border-radius: 10px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed, #06b6d4); transition: width .6s; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 14px 0; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── SECTION HEADER ── */
+  .section-hdr {
+    display: flex; align-items: center; gap: 10px;
+    font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    color: #94a3b8; padding: 28px 0 12px;
+  }
+  .section-hdr::after {
+    content: ''; flex: 1; height: 1px; background: #e2e8f0;
+  }
+  .section-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem;
+  }
+
+  /* ── MODULE CARD ── */
+  .mod-card {
+    background: #fff; border-radius: 14px; border: 1.5px solid #e2e8f0;
+    padding: 16px; height: 100%; transition: box-shadow .2s, transform .2s;
+    position: relative; overflow: hidden;
+  }
+  .mod-card:hover { box-shadow: 0 8px 24px rgba(79,70,229,.12); transform: translateY(-2px); }
+  .mod-card.done   { border-color: var(--done-border); }
+  .mod-card.inprog { border-color: var(--inprog-border); }
+  .mod-card.next   { border-color: var(--next-border); }
+  .mod-card.planned{ border-color: var(--planned-border); }
+
+  .mod-card.done::before   { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#22c55e,#16a34a); }
+  .mod-card.inprog::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#f59e0b,#d97706); }
+  .mod-card.next::before   { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#3b82f6,#1d4ed8); }
+
+  .mod-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; margin-bottom: 10px;
+  }
+  .done   .mod-icon { background: var(--done-bg);    color: var(--done-text); }
+  .inprog .mod-icon { background: var(--inprog-bg);  color: var(--inprog-text); }
+  .next   .mod-icon { background: var(--next-bg);    color: var(--next-text); }
+  .planned.mod-icon { background: var(--planned-bg); color: var(--planned-text); }
+  .planned .mod-icon{ background: var(--planned-bg); color: var(--planned-text); }
+
+  .mod-name { font-size: .87rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+  .mod-num  { font-size: .7rem; color: #94a3b8; font-weight: 600; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: .68rem; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  .status-pill.done    { background: var(--done-bg);    color: var(--done-text); }
+  .status-pill.inprog  { background: var(--inprog-bg);  color: var(--inprog-text); }
+  .status-pill.next    { background: var(--next-bg);    color: var(--next-text); }
+  .status-pill.planned { background: var(--planned-bg); color: var(--planned-text); }
+
+  .mod-features { list-style: none; padding: 0; margin: 0; }
+  .mod-features li {
+    font-size: .72rem; color: #64748b; padding: 2px 0;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .mod-features li i { font-size: .6rem; }
+  .done .mod-features li i    { color: #22c55e; }
+  .inprog .mod-features li i  { color: #f59e0b; }
+  .next .mod-features li i    { color: #3b82f6; }
+  .planned .mod-features li i { color: #d1d5db; }
+
+  .mod-url {
+    margin-top: 10px; font-size: .67rem; color: #94a3b8;
+    font-family: monospace; background: #f8fafc; padding: 2px 8px;
+    border-radius: 5px; display: inline-block;
+  }
+
+  /* ── SYSTEM TAGS ── */
+  .sys-tag {
+    font-size: .65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .tag-erp  { background: #ede9fe; color: #6d28d9; }
+  .tag-hr   { background: #dbeafe; color: #1d4ed8; }
+  .tag-crm  { background: #fce7f3; color: #be185d; }
+  .tag-fin  { background: #dcfce7; color: #15803d; }
+  .tag-ops  { background: #ffedd5; color: #c2410c; }
+  .tag-farm { background: #d1fae5; color: #065f46; }
+
+  footer { padding: 32px 0; text-align: center; color: #94a3b8; font-size: .8rem; }
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="container position-relative">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+      <div>
+        <div class="hero-badge mb-3"><i class="bi bi-diagram-3-fill"></i> AS Dairy ERP System</div>
+        <h1 class="mb-2">Project Roadmap</h1>
+        <p class="mb-0">Complete module tracker for ASDairy Enterprise Resource Planning System<br>
+        <span style="font-size:.8rem;opacity:.5;">Anoo Village, Damoh District, Madhya Pradesh &nbsp;|&nbsp; asdairy.com &nbsp;|&nbsp; Founder: Shyam Sunder Tamrakar</span></p>
+      </div>
+      <div class="text-end" style="color:#c7d2fe;">
+        <div style="font-size:.75rem;opacity:.6;">Document Version</div>
+        <div style="font-size:1.4rem;font-weight:800;">v 2.0</div>
+        <div style="font-size:.75rem;opacity:.6;">August 2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROGRESS SUMMARY ── -->
+<div class="progress-wrap">
+  <div class="container">
+    <div class="row g-3 align-items-center">
+      <div class="col-auto">
+        <div class="progress-stat"><div class="val">28</div><div class="lbl">Total Modules</div></div>
+      </div>
+      <div class="col-auto"><div style="width:1px;height:40px;background:rgba(255,255,255,.15);"></div></div>
+      <div class="col-auto">
+        <div class="progress-stat"><div class="val" style="color:#4ade80;">16</div><div class="lbl">Done</div></div>
+      </div>
+      <div class="col-auto">
+        <div class="progress-stat"><div class="val" style="color:#fbbf24;">2</div><div class="lbl">In Progress</div></div>
+      </div>
+      <div class="col-auto">
+        <div class="progress-stat"><div class="val" style="color:#60a5fa;">0</div><div class="lbl">Next</div></div>
+      </div>
+      <div class="col-auto">
+        <div class="progress-stat"><div class="val" style="color:#9ca3af;">10</div><div class="lbl">Planned</div></div>
+      </div>
+      <div class="col">
+        <div style="color:#94a3b8;font-size:.7rem;margin-bottom:4px;">Overall Progress — 16 / 28 modules complete</div>
+        <div class="erp-progress">
+          <div class="erp-progress-fill" style="width:57%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN CONTENT ── -->
+<div class="container pb-5">
+
+  <!-- Legend -->
+  <div class="legend">
+    <span style="font-size:.75rem;color:#64748b;font-weight:600;">Status:</span>
+    <span class="legend-item"><span class="dot" style="background:#22c55e;"></span> Done</span>
+    <span class="legend-item"><span class="dot" style="background:#f59e0b;"></span> In Progress</span>
+    <span class="legend-item"><span class="dot" style="background:#3b82f6;"></span> Next</span>
+    <span class="legend-item"><span class="dot" style="background:#d1d5db;"></span> Planned</span>
+    <span style="margin-left:auto;font-size:.75rem;color:#64748b;">Systems:
+      <span class="sys-tag tag-erp ms-1">ERP</span>
+      <span class="sys-tag tag-hr ms-1">HR</span>
+      <span class="sys-tag tag-crm ms-1">CRM</span>
+      <span class="sys-tag tag-fin ms-1">Finance</span>
+      <span class="sys-tag tag-ops ms-1">Ops</span>
+      <span class="sys-tag tag-farm ms-1">Farm</span>
+    </span>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  GROUP 1 — PLATFORM & DASHBOARD    -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#e0e7ff;color:#4f46e5;"><i class="bi bi-grid-1x2-fill"></i></span>
+    Platform &amp; Core
+  </div>
+  <div class="row g-3">
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-speedometer2"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Executive Dashboard</div><div class="mod-num">M-01</div></div>
+          <span class="sys-tag tag-erp">ERP</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> KPI Cards (12 metrics)</li>
+          <li><i class="bi bi-circle-fill"></i> Transaction Volume Chart</li>
+          <li><i class="bi bi-circle-fill"></i> Fraud Alert Chart</li>
+          <li><i class="bi bi-circle-fill"></i> Attendance Chart</li>
+          <li><i class="bi bi-circle-fill"></i> Monthly Revenue Chart</li>
+          <li><i class="bi bi-circle-fill"></i> Top Performers</li>
+        </ul>
+        <div class="mod-url">/admin/dashboard</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-bell-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Notifications</div><div class="mod-num">M-18</div></div>
+          <span class="sys-tag tag-erp">ERP</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Real-time via Reverb/WebSocket</li>
+          <li><i class="bi bi-circle-fill"></i> Slack Webhook</li>
+          <li><i class="bi bi-circle-fill"></i> Telegram Bot</li>
+          <li><i class="bi bi-circle-fill"></i> Email (Log / SMTP)</li>
+          <li><i class="bi bi-circle-fill"></i> In-app notification bell</li>
+        </ul>
+        <div class="mod-url">/notifications</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Document Center</div><div class="mod-num">M-19</div></div>
+          <span class="sys-tag tag-erp">ERP</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Document Upload</li>
+          <li><i class="bi bi-circle-fill"></i> Invoices</li>
+          <li><i class="bi bi-circle-fill"></i> Photos</li>
+          <li><i class="bi bi-circle-fill"></i> Bank Documents</li>
+        </ul>
+        <div class="mod-url">/documents</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-gear-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Settings</div><div class="mod-num">M-20</div></div>
+          <span class="sys-tag tag-erp">ERP</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Roles &amp; Permissions (Spatie)</li>
+          <li><i class="bi bi-circle-fill"></i> General / Security / Fraud</li>
+          <li><i class="bi bi-circle-fill"></i> Email SMTP Config</li>
+          <li><i class="bi bi-circle-fill"></i> Audit Logs</li>
+          <li><i class="bi bi-circle-fill"></i> Service Permissions</li>
+        </ul>
+        <div class="mod-url">/admin/settings</div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  GROUP 2 — HR & OPERATIONS         -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#dbeafe;color:#1d4ed8;"><i class="bi bi-people-fill"></i></span>
+    HR &amp; Operations
+  </div>
+  <div class="row g-3">
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-person-badge-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">HR &amp; Employee</div><div class="mod-num">M-10</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Employee Master (CRUD)</li>
+          <li><i class="bi bi-circle-fill"></i> Departments</li>
+          <li><i class="bi bi-circle-fill"></i> Import / Export (Excel)</li>
+          <li><i class="bi bi-circle-fill"></i> Performance Score</li>
+          <li><i class="bi bi-circle-fill"></i> Role Assignment</li>
+          <li><i class="bi bi-circle-fill"></i> Avatar Upload</li>
+        </ul>
+        <div class="mod-url">/admin/employees</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-calendar-check-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Attendance</div><div class="mod-num">M-10b</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Daily Check-In / Out</li>
+          <li><i class="bi bi-circle-fill"></i> Leave Management</li>
+          <li><i class="bi bi-circle-fill"></i> Leave Approvals</li>
+          <li><i class="bi bi-circle-fill"></i> Monthly Report</li>
+          <li><i class="bi bi-circle-fill"></i> Holiday Calendar</li>
+        </ul>
+        <div class="mod-url">/admin/attendance</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-kanban-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Task Management</div><div class="mod-num">M-10c</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Kanban Board</li>
+          <li><i class="bi bi-circle-fill"></i> Task Assignment</li>
+          <li><i class="bi bi-circle-fill"></i> Due Date Tracking</li>
+          <li><i class="bi bi-circle-fill"></i> Priority Levels</li>
+          <li><i class="bi bi-circle-fill"></i> Task Comments</li>
+          <li><i class="bi bi-circle-fill"></i> Project Linking</li>
+        </ul>
+        <div class="mod-url">/admin/tasks</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-journal-text"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Work Reports</div><div class="mod-num">M-10d</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Daily Work Log</li>
+          <li><i class="bi bi-circle-fill"></i> Manager Approval</li>
+          <li><i class="bi bi-circle-fill"></i> Reject with Feedback</li>
+          <li><i class="bi bi-circle-fill"></i> Timesheets</li>
+          <li><i class="bi bi-circle-fill"></i> Shifts &amp; Teams</li>
+        </ul>
+        <div class="mod-url">/admin/work-reports</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-person-circle"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">User Management</div><div class="mod-num">M-00</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> CRUD + Toggle Status</li>
+          <li><i class="bi bi-circle-fill"></i> Login History</li>
+          <li><i class="bi bi-circle-fill"></i> 2FA Support</li>
+          <li><i class="bi bi-circle-fill"></i> Role-Based Access</li>
+        </ul>
+        <div class="mod-url">/admin/users</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-bar-chart-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Reports</div><div class="mod-num">M-17</div></div>
+          <span class="sys-tag tag-hr">HR</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Transaction Reports</li>
+          <li><i class="bi bi-circle-fill"></i> Employee Reports</li>
+          <li><i class="bi bi-circle-fill"></i> Attendance Reports</li>
+          <li><i class="bi bi-circle-fill"></i> Financial Summary</li>
+          <li><i class="bi bi-circle-fill"></i> Audit Logs</li>
+          <li><i class="bi bi-circle-fill"></i> PDF Export</li>
+        </ul>
+        <div class="mod-url">/admin/reports</div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  GROUP 3 — FINANCE & INVENTORY     -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#dcfce7;color:#15803d;"><i class="bi bi-currency-rupee"></i></span>
+    Finance &amp; Inventory
+  </div>
+  <div class="row g-3">
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-arrow-left-right"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Transactions</div><div class="mod-num">M-08a</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Full CRUD + Status Flow</li>
+          <li><i class="bi bi-circle-fill"></i> Fraud Detection (Auto)</li>
+          <li><i class="bi bi-circle-fill"></i> Import / Export (Excel, CSV, PDF)</li>
+          <li><i class="bi bi-circle-fill"></i> Voucher + Receipt PDF</li>
+          <li><i class="bi bi-circle-fill"></i> Refund Workflow</li>
+          <li><i class="bi bi-circle-fill"></i> Batch Update</li>
+        </ul>
+        <div class="mod-url">/admin/transactions</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-wallet2"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Wallet</div><div class="mod-num">M-08b</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Company Wallet</li>
+          <li><i class="bi bi-circle-fill"></i> Employee Wallet</li>
+          <li><i class="bi bi-circle-fill"></i> Balance Tracking</li>
+          <li><i class="bi bi-circle-fill"></i> Wallet Transactions</li>
+        </ul>
+        <div class="mod-url">/admin/wallets</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card done">
+        <div class="mod-icon"><i class="bi bi-shield-exclamation"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Fraud Alerts</div><div class="mod-num">M-08c</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill done"><i class="bi bi-check-circle-fill"></i> Done</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Auto Fraud Detection</li>
+          <li><i class="bi bi-circle-fill"></i> Configurable Rules</li>
+          <li><i class="bi bi-circle-fill"></i> Blacklist Management</li>
+          <li><i class="bi bi-circle-fill"></i> Slack / Telegram Alerts</li>
+          <li><i class="bi bi-circle-fill"></i> Risk Scoring</li>
+        </ul>
+        <div class="mod-url">/admin/fraud-alerts</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card inprog">
+        <div class="mod-icon"><i class="bi bi-receipt-cutoff"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Expense Management</div><div class="mod-num">M-08 ★</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill inprog"><i class="bi bi-hourglass-split"></i> In Progress</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Add / Edit / Delete Expenses</li>
+          <li><i class="bi bi-circle-fill"></i> 13 Predefined Categories</li>
+          <li><i class="bi bi-circle-fill"></i> Bill / Receipt Upload</li>
+          <li><i class="bi bi-circle-fill"></i> Payment Status (Paid / Pending)</li>
+          <li><i class="bi bi-circle-fill"></i> Search &amp; Filter</li>
+          <li><i class="bi bi-circle-fill"></i> Excel + PDF Export</li>
+          <li><i class="bi bi-circle-fill"></i> Soft Delete (Audit Trail)</li>
+        </ul>
+        <div class="mod-url">/expenses</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card inprog">
+        <div class="mod-icon"><i class="bi bi-boxes"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Stock Management</div><div class="mod-num">M-09 ★</div></div>
+          <span class="sys-tag tag-ops">Ops</span>
+        </div>
+        <span class="status-pill inprog"><i class="bi bi-hourglass-split"></i> In Progress</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Current Stock View</li>
+          <li><i class="bi bi-circle-fill"></i> Stock In (Receive)</li>
+          <li><i class="bi bi-circle-fill"></i> Stock Out (Issue)</li>
+          <li><i class="bi bi-circle-fill"></i> Stock Adjustment</li>
+          <li><i class="bi bi-circle-fill"></i> Low Stock Alerts</li>
+          <li><i class="bi bi-circle-fill"></i> Stock Movement Reports</li>
+          <li><i class="bi bi-circle-fill"></i> Stock cannot go negative</li>
+        </ul>
+        <div class="mod-url">/stock</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fff7ed;color:#c2410c;"><i class="bi bi-bag-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Procurement</div><div class="mod-num">M-13</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Purchase Orders</li>
+          <li><i class="bi bi-circle-fill"></i> Vendor Management</li>
+          <li><i class="bi bi-circle-fill"></i> Quotation</li>
+          <li><i class="bi bi-circle-fill"></i> GRN</li>
+          <li><i class="bi bi-circle-fill"></i> Bills &amp; Payments</li>
+        </ul>
+        <div class="mod-url">/procurement</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fce7f3;color:#be185d;"><i class="bi bi-cart-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Sales</div><div class="mod-num">M-14</div></div>
+          <span class="sys-tag tag-fin">Finance</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Milk Sales</li>
+          <li><i class="bi bi-circle-fill"></i> Animal Sales</li>
+          <li><i class="bi bi-circle-fill"></i> Invoice + GST</li>
+          <li><i class="bi bi-circle-fill"></i> Online Orders</li>
+          <li><i class="bi bi-circle-fill"></i> Outstanding</li>
+        </ul>
+        <div class="mod-url">/sales</div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  GROUP 4 — FARM CORE               -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#d1fae5;color:#065f46;"><i class="bi bi-house-door-fill"></i></span>
+    Farm Core
+  </div>
+  <div class="row g-3">
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#d1fae5;color:#065f46;"><i class="bi bi-tag-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Animal Management</div><div class="mod-num">M-02</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Buffalo Register (Unique ID, Ear Tag, RFID)</li>
+          <li><i class="bi bi-circle-fill"></i> Breed, DOB, Weight, Lactation</li>
+          <li><i class="bi bi-circle-fill"></i> Health &amp; Pregnancy Status</li>
+          <li><i class="bi bi-circle-fill"></i> Actions: Vaccination, AI, Calving, Dry Off, Sale, Death</li>
+        </ul>
+        <div class="mod-url">/animals</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#ecfdf5;color:#059669;"><i class="bi bi-droplet-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Milk Management</div><div class="mod-num">M-03</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Daily Entry (Morning / Evening)</li>
+          <li><i class="bi bi-circle-fill"></i> Fat, SNF, Quality</li>
+          <li><i class="bi bi-circle-fill"></i> Rejected Milk</li>
+          <li><i class="bi bi-circle-fill"></i> Animal-wise / Monthly Reports</li>
+        </ul>
+        <div class="mod-url">/milk</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fef3c7;color:#92400e;"><i class="bi bi-heart-pulse-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Breeding Management</div><div class="mod-num">M-04</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Heat Detection</li>
+          <li><i class="bi bi-circle-fill"></i> AI Records + Bull Semen Inventory</li>
+          <li><i class="bi bi-circle-fill"></i> Pregnancy Check</li>
+          <li><i class="bi bi-circle-fill"></i> Expected Calving Date</li>
+          <li><i class="bi bi-circle-fill"></i> Calf Records</li>
+        </ul>
+        <div class="mod-url">/breeding</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-clipboard2-pulse-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Health Management</div><div class="mod-num">M-05</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Vaccination Schedule</li>
+          <li><i class="bi bi-circle-fill"></i> Medicine Inventory</li>
+          <li><i class="bi bi-circle-fill"></i> Disease History / Treatment</li>
+          <li><i class="bi bi-circle-fill"></i> Doctor Visits</li>
+          <li><i class="bi bi-circle-fill"></i> Insurance Details</li>
+        </ul>
+        <div class="mod-url">/health</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-flower1"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Feed &amp; Nutrition</div><div class="mod-num">M-06</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Feed Inventory (Napier, Silage, etc.)</li>
+          <li><i class="bi bi-circle-fill"></i> Daily Diet Plan per Group</li>
+          <li><i class="bi bi-circle-fill"></i> Auto Feed Calculation</li>
+          <li><i class="bi bi-circle-fill"></i> Stock Depletion Alerts</li>
+          <li><i class="bi bi-circle-fill"></i> Feed Cost Tracking</li>
+        </ul>
+        <div class="mod-url">/feed</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#eff6ff;color:#1d4ed8;"><i class="bi bi-tree-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Farm Management</div><div class="mod-num">M-07</div></div>
+          <span class="sys-tag tag-farm">Farm</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Land Records &amp; Crop Planning</li>
+          <li><i class="bi bi-circle-fill"></i> Napier Plantation</li>
+          <li><i class="bi bi-circle-fill"></i> Fertilizer / Pesticides</li>
+          <li><i class="bi bi-circle-fill"></i> Harvest &amp; Yield</li>
+          <li><i class="bi bi-circle-fill"></i> Machinery / Diesel / Electricity</li>
+        </ul>
+        <div class="mod-url">/farm</div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  GROUP 5 — CRM & FRANCHISE         -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#fce7f3;color:#be185d;"><i class="bi bi-person-lines-fill"></i></span>
+    CRM &amp; Franchise
+  </div>
+  <div class="row g-3">
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fce7f3;color:#be185d;"><i class="bi bi-people-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">CRM</div><div class="mod-num">M-11</div></div>
+          <span class="sys-tag tag-crm">CRM</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Milk Buyers, Animal Buyers</li>
+          <li><i class="bi bi-circle-fill"></i> Franchise Leads, Investors</li>
+          <li><i class="bi bi-circle-fill"></i> Government Officials, Vets</li>
+          <li><i class="bi bi-circle-fill"></i> Meetings, Calls, Payments</li>
+          <li><i class="bi bi-circle-fill"></i> Follow-up Management</li>
+        </ul>
+        <div class="mod-url">/crm</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#ede9fe;color:#6d28d9;"><i class="bi bi-shop-window"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Franchise Management</div><div class="mod-num">M-12</div></div>
+          <span class="sys-tag tag-crm">CRM</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Application &amp; Approval</li>
+          <li><i class="bi bi-circle-fill"></i> Agreement &amp; Investment</li>
+          <li><i class="bi bi-circle-fill"></i> Training &amp; Performance</li>
+          <li><i class="bi bi-circle-fill"></i> Milk Collection</li>
+          <li><i class="bi bi-circle-fill"></i> Royalty &amp; Support Tickets</li>
+        </ul>
+        <div class="mod-url">/franchise</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#f1f5f9;color:#475569;"><i class="bi bi-wrench-adjustable-circle-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Maintenance</div><div class="mod-num">M-15</div></div>
+          <span class="sys-tag tag-ops">Ops</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> Milking Machine, Generator, Pump</li>
+          <li><i class="bi bi-circle-fill"></i> Tractor &amp; Vehicle</li>
+          <li><i class="bi bi-circle-fill"></i> Maintenance Schedule</li>
+          <li><i class="bi bi-circle-fill"></i> Service History</li>
+          <li><i class="bi bi-circle-fill"></i> Breakdown Log</li>
+        </ul>
+        <div class="mod-url">/maintenance</div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+      <div class="mod-card planned">
+        <div class="mod-icon planned" style="background:#fef9c3;color:#92400e;"><i class="bi bi-patch-check-fill"></i></div>
+        <div class="d-flex align-items-start justify-content-between">
+          <div><div class="mod-name">Compliance</div><div class="mod-num">M-16</div></div>
+          <span class="sys-tag tag-ops">Ops</span>
+        </div>
+        <span class="status-pill planned"><i class="bi bi-clock"></i> Planned</span>
+        <ul class="mod-features">
+          <li><i class="bi bi-circle-fill"></i> FSSAI</li>
+          <li><i class="bi bi-circle-fill"></i> Animal Insurance</li>
+          <li><i class="bi bi-circle-fill"></i> Government Licenses</li>
+          <li><i class="bi bi-circle-fill"></i> Bank Loan Documents</li>
+          <li><i class="bi bi-circle-fill"></i> Audit Files</li>
+        </ul>
+        <div class="mod-url">/compliance</div>
+      </div>
+    </div>
+
+  </div><!-- /row -->
+
+  <!-- ═══════════════════════════════════ -->
+  <!--  PHASE 2 — AI FEATURES             -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#f0abfc20;color:#a21caf;"><i class="bi bi-cpu-fill"></i></span>
+    Phase 2 — AI &amp; Automation (Future)
+  </div>
+  <div class="row g-3">
+    <div class="col-12">
+      <div style="background:#fff;border:1.5px dashed #d1d5db;border-radius:14px;padding:20px;">
+        <div class="row g-3">
+          <div class="col-md-6 col-lg-4" style="font-size:.8rem;color:#64748b;">
+            <div class="fw-700 mb-2" style="color:#1e293b;font-size:.85rem;"><i class="bi bi-robot me-1" style="color:#a21caf;"></i> AI Features Planned</div>
+            <ul style="list-style:none;padding:0;margin:0;line-height:2;">
+              <li>🤖 AI-based disease prediction from symptoms</li>
+              <li>📈 Milk production forecasting</li>
+              <li>🌿 Feed optimization recommendations</li>
+              <li>🎥 Heat detection via sensors/CCTV</li>
+              <li>🐄 Automated breeding recommendations</li>
+            </ul>
+          </div>
+          <div class="col-md-6 col-lg-4" style="font-size:.8rem;color:#64748b;">
+            <div class="fw-700 mb-2" style="color:#1e293b;font-size:.85rem;"><i class="bi bi-phone-fill me-1" style="color:#a21caf;"></i> Integration Features</div>
+            <ul style="list-style:none;padding:0;margin:0;line-height:2;">
+              <li>💬 WhatsApp chatbot for farm operations</li>
+              <li>📄 OCR-based invoice &amp; bill scanning</li>
+              <li>🎤 Voice-based data entry in Hindi</li>
+              <li>🔧 Predictive maintenance for equipment</li>
+              <li>💰 Financial forecasting &amp; cash flow prediction</li>
+            </ul>
+          </div>
+          <div class="col-md-12 col-lg-4" style="font-size:.8rem;color:#64748b;">
+            <div class="fw-700 mb-2" style="color:#1e293b;font-size:.85rem;"><i class="bi bi-arrow-up-circle-fill me-1" style="color:#a21caf;"></i> Scalability Target</div>
+            <p style="line-height:1.7;">From current <strong>10 buffaloes</strong> to hundreds of animals, multiple farms, franchise locations, milk collection centers, and future dairy processing — without redesigning the system.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- USER ROLES -->
+  <div class="section-hdr">
+    <span class="section-icon" style="background:#e0e7ff;color:#4f46e5;"><i class="bi bi-shield-fill-check"></i></span>
+    User Roles &amp; Access Matrix
+  </div>
+  <div class="row g-3">
+    <div class="col-12">
+      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;">
+        <table class="table mb-0" style="font-size:.82rem;">
+          <thead style="background:#f8fafc;">
+            <tr>
+              <th style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">Role</th>
+              <th style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">Access Level</th>
+              <th style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">Reports To</th>
+              <th style="padding:12px 16px;border-bottom:1px solid #e2e8f0;">Primary Modules</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:10px 16px;"><strong>Amit Kumar (Founder &amp; CEO)</strong></td><td><span class="sys-tag tag-erp">Full Access</span></td><td>—</td><td>All 28 modules</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px 16px;"><strong>Shyam</strong></td><td><span class="sys-tag tag-fin">Finance + Ops</span></td><td>Amit Kumar</td><td>Finance, Transactions, Reports, Attendance</td></tr>
+            <tr><td style="padding:10px 16px;"><strong>Akhilesh</strong></td><td><span class="sys-tag tag-fin">Finance &amp; Accounts</span></td><td>Amit Kumar</td><td>Expenses, Transactions, Wallet, Reports</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px 16px;"><strong>Shivam Tamrakar</strong></td><td><span class="sys-tag tag-crm">Marketing + CRM</span></td><td>Amit Kumar</td><td>CRM, Franchise, Documents</td></tr>
+            <tr><td style="padding:10px 16px;"><strong>Neha Raikwar</strong></td><td><span class="sys-tag tag-crm">CRM + Branding</span></td><td>Amit Kumar</td><td>CRM, Franchise, Investors</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px 16px;"><strong>Veterinarian</strong></td><td><span class="sys-tag tag-farm">Health Only</span></td><td>—</td><td>Health Management</td></tr>
+            <tr><td style="padding:10px 16px;"><strong>Farm Supervisor</strong></td><td><span class="sys-tag tag-farm">Farm Ops</span></td><td>—</td><td>Animal, Milk, Feed, Attendance</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px 16px;"><strong>Worker</strong></td><td><span class="sys-tag tag-hr">Task Only</span></td><td>Supervisor</td><td>Assigned Tasks only</td></tr>
+            <tr><td style="padding:10px 16px;"><strong>Investor</strong></td><td><span style="background:#f0f9ff;color:#0369a1;" class="sys-tag">Read-Only</span></td><td>—</td><td>Dashboard (read-only)</td></tr>
+            <tr style="background:#fafafa;"><td style="padding:10px 16px;"><strong>Franchise Owner</strong></td><td><span class="sys-tag tag-crm">Franchise Only</span></td><td>—</td><td>Franchise Dashboard</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer>
+  <div class="container">
+    <div>AS Dairy ERP — Functional Specification Document v2.0 &nbsp;|&nbsp; August 2026</div>
+    <div style="margin-top:4px;">ASDairy, Anoo Village, Damoh District, Madhya Pradesh &nbsp;|&nbsp; asdairy.com &nbsp;|&nbsp; +91 63753 45115</div>
+  </div>
+</footer>
+
+</body>
+</html>
