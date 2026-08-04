@@ -58,7 +58,12 @@ Route::get('/run-migrations', function (\Illuminate\Http\Request $request) {
         abort(403);
     }
     Artisan::call('migrate', ['--force' => true]);
-    return '<pre>' . Artisan::output() . '</pre>';
+    $migrateOutput = Artisan::output();
+
+    Artisan::call('db:seed', ['--class' => 'ASDairyMasterSeeder', '--force' => true]);
+    $seedOutput = Artisan::output();
+
+    return '<pre>--- MIGRATIONS ---\n' . $migrateOutput . "\n--- SEEDER ---\n" . $seedOutput . '</pre>';
 });
 // ─────────────────────────────────────────────────────────────────────────────
 
