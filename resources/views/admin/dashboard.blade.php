@@ -201,25 +201,40 @@
 
 @section('content')
 
-{{-- ── Welcome Banner ── --}}
+{{-- ── ASDairy Welcome Banner ── --}}
 <div class="dash-welcome">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3" style="position:relative;z-index:1;">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="live-dot"></span>
-                <span style="font-size:.75rem; opacity:.75;">Live Dashboard</span>
-                <span style="font-size:.75rem; opacity:.55;" id="dashClock"></span>
+                <span style="font-size:.75rem; opacity:.85; text-transform:uppercase; letter-spacing:1px; font-weight:700;">ASDairy ERP — Anoo Village, Damoh District, MP</span>
+                <span style="font-size:.75rem; opacity:.65;" id="dashClock"></span>
             </div>
-            <h4 class="fw-bold mb-1">Good {{ date('H') < 12 ? 'morning' : (date('H') < 18 ? 'afternoon' : 'evening') }}, {{ auth()->user()->name }} 👋</h4>
-            <p class="mb-0 opacity-75 small">Here's what's happening with your system today, {{ now()->format('l, d F Y') }}.</p>
+            <h4 class="fw-bold mb-1">Welcome back, {{ auth()->user()->name }} 👋</h4>
+            <p class="mb-0 opacity-75 small">Executive Resource Planning Overview — {{ now()->format('l, d F Y') }}</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
-            <a href="{{ route('admin.transactions.index') }}"  class="quick-action-btn"><i class="bi bi-arrow-left-right me-1"></i>Transactions</a>
-            <a href="{{ route('admin.fraud-alerts.index') }}"  class="quick-action-btn"><i class="bi bi-shield-exclamation me-1"></i>Fraud Alerts</a>
-            <a href="{{ route('admin.reports.transactions') }}" class="quick-action-btn"><i class="bi bi-bar-chart me-1"></i>Reports</a>
+            <a href="{{ route('admin.feed.calculator') }}" class="quick-action-btn"><i class="bi bi-cpu me-1"></i>Feed Calculator</a>
+            <a href="{{ route('admin.stock.index') }}" class="quick-action-btn"><i class="bi bi-boxes me-1"></i>Stock Management</a>
+            <a href="{{ route('admin.expenses.index') }}" class="quick-action-btn"><i class="bi bi-receipt me-1"></i>Expenses</a>
+            <a href="{{ route('admin.transactions.index') }}" class="quick-action-btn"><i class="bi bi-arrow-left-right me-1"></i>Transactions</a>
         </div>
     </div>
 </div>
+
+{{-- ── Feed Shortage Alerts Section ── --}}
+@if(isset($feedData['alerts']) && count($feedData['alerts']) > 0)
+    <div class="mb-4">
+        @foreach($feedData['alerts'] as $alert)
+            <div class="alert alert-{{ $alert['type'] }} alert-dismissible fade show border-0 shadow-sm d-flex align-items-center mb-2" role="alert">
+                <i class="{{ $alert['icon'] }} fs-4 me-3"></i>
+                <div class="fw-bold fs-6">{{ $alert['message'] }}</div>
+                <a href="{{ route('admin.feed.calculator') }}" class="btn btn-sm btn-outline-dark ms-auto me-3">View Details</a>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endforeach
+    </div>
+@endif
 
 {{-- ── KPI Cards ── --}}
 <div class="row g-3 mb-4">

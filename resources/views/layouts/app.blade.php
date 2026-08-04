@@ -635,6 +635,69 @@
                 </a>
                 @endif
 
+                <div class="nav-section-title">ASDairy ERP Modules</div>
+
+                <a href="{{ route('admin.animals.index') }}" class="sidebar-link {{ request()->routeIs('admin.animals.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-card-checklist"></i></span>
+                    <span class="nav-label">Mod 2 — Animals</span>
+                </a>
+                <a href="{{ route('admin.milk.index') }}" class="sidebar-link {{ request()->routeIs('admin.milk.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-droplet-fill"></i></span>
+                    <span class="nav-label">Mod 3 — Milk</span>
+                </a>
+                <a href="{{ route('admin.breeding.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeding.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-heart-pulse"></i></span>
+                    <span class="nav-label">Mod 4 — Breeding</span>
+                </a>
+                <a href="{{ route('admin.health.index') }}" class="sidebar-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-hospital"></i></span>
+                    <span class="nav-label">Mod 5 — Health</span>
+                </a>
+                <a href="{{ route('admin.feed.calculator') }}" class="sidebar-link {{ request()->routeIs('admin.feed.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-cpu"></i></span>
+                    <span class="nav-label">Mod 6 — Feed Auto</span>
+                </a>
+                <a href="{{ route('admin.farm.index') }}" class="sidebar-link {{ request()->routeIs('admin.farm.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-tree"></i></span>
+                    <span class="nav-label">Mod 7 — Farm</span>
+                </a>
+                <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-receipt"></i></span>
+                    <span class="nav-label">Mod 8 — Expense</span>
+                </a>
+                <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-boxes"></i></span>
+                    <span class="nav-label">Mod 9 — Stock</span>
+                </a>
+                <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="nav-label">Mod 11 — CRM</span>
+                </a>
+                <a href="{{ route('admin.franchise.index') }}" class="sidebar-link {{ request()->routeIs('admin.franchise.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-shop"></i></span>
+                    <span class="nav-label">Mod 12 — Franchise</span>
+                </a>
+                <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
+                    <span class="nav-label">Mod 13 — Procurement</span>
+                </a>
+                <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
+                    <span class="nav-label">Mod 14 — Sales</span>
+                </a>
+                <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-tools"></i></span>
+                    <span class="nav-label">Mod 15 — Maintenance</span>
+                </a>
+                <a href="{{ route('admin.compliance.index') }}" class="sidebar-link {{ request()->routeIs('admin.compliance.*') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-shield-check"></i></span>
+                    <span class="nav-label">Mod 16 — Compliance</span>
+                </a>
+                <a href="{{ route('reports.center') }}" class="sidebar-link {{ request()->routeIs('reports.center') ? 'active' : '' }}">
+                    <span class="nav-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
+                    <span class="nav-label">Mod 17 — Reports Center</span>
+                </a>
+
                 <div class="nav-section-title">People</div>
 
                 @if(\App\Models\ServicePermission::canAccess('users', $svcUser))

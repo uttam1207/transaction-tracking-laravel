@@ -25,6 +25,19 @@ use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\FeedController;
+use App\Http\Controllers\Admin\AnimalController;
+use App\Http\Controllers\Admin\MilkController;
+use App\Http\Controllers\Admin\BreedingController;
+use App\Http\Controllers\Admin\HealthController;
+use App\Http\Controllers\Admin\FarmController;
+use App\Http\Controllers\Admin\CrmController;
+use App\Http\Controllers\Admin\FranchiseController;
+use App\Http\Controllers\Admin\ProcurementController;
+use App\Http\Controllers\Admin\SalesModuleController;
+use App\Http\Controllers\Admin\MaintenanceController;
+use App\Http\Controllers\Admin\ComplianceController;
+use App\Http\Controllers\Admin\ReportCenterController;
 use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
@@ -250,6 +263,75 @@ Route::prefix('admin')
 
     // Global Search
     Route::get('/search', [SearchController::class, 'search'])->name('search');
+
+    // Expense Management (Module 8)
+    Route::resource('expenses', ExpenseController::class);
+    Route::get('/expenses-export/excel', [ExpenseController::class, 'exportExcel'])->name('expenses.export.excel');
+    Route::get('/expenses-export/csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export.csv');
+    Route::get('/expenses-export/pdf', [ExpenseController::class, 'exportPdf'])->name('expenses.export.pdf');
+
+    // Stock Management (Module 9)
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::get('/stock/in', [StockController::class, 'stockInForm'])->name('stock.in');
+    Route::post('/stock/in', [StockController::class, 'storeStockIn'])->name('stock.in.store');
+    Route::get('/stock/out', [StockController::class, 'stockOutForm'])->name('stock.out');
+    Route::post('/stock/out', [StockController::class, 'storeStockOut'])->name('stock.out.store');
+    Route::get('/stock/adjustment', [StockController::class, 'adjustmentForm'])->name('stock.adjustment');
+    Route::post('/stock/adjustment', [StockController::class, 'storeAdjustment'])->name('stock.adjustment.store');
+    Route::get('/stock/movements', [StockController::class, 'movements'])->name('stock.movements');
+    Route::get('/stock/export/pdf', [StockController::class, 'exportPdf'])->name('stock.export.pdf');
+
+    // Feed Auto Calculation & Alerts
+    Route::get('/feed/calculator', [FeedController::class, 'calculator'])->name('feed.calculator');
+    Route::post('/feed/groups/{group}', [FeedController::class, 'updateGroupCount'])->name('feed.groups.update');
+    Route::post('/feed/plans', [FeedController::class, 'updateFeedPlan'])->name('feed.plans.update');
+
+    // Module 2 — Animal Management
+    Route::resource('animals', AnimalController::class);
+    Route::post('/animals/{animal}/actions', [AnimalController::class, 'storeAction'])->name('animals.actions.store');
+
+    // Module 3 — Milk Management
+    Route::get('/milk', [MilkController::class, 'index'])->name('milk.index');
+    Route::post('/milk', [MilkController::class, 'store'])->name('milk.store');
+
+    // Module 4 — Breeding Management
+    Route::get('/breeding', [BreedingController::class, 'index'])->name('breeding.index');
+    Route::post('/breeding', [BreedingController::class, 'store'])->name('breeding.store');
+
+    // Module 5 — Health Management
+    Route::get('/health', [HealthController::class, 'index'])->name('health.index');
+    Route::post('/health', [HealthController::class, 'store'])->name('health.store');
+
+    // Module 7 — Farm Management
+    Route::get('/farm', [FarmController::class, 'index'])->name('farm.index');
+    Route::post('/farm', [FarmController::class, 'store'])->name('farm.store');
+
+    // Module 11 — CRM
+    Route::get('/crm', [CrmController::class, 'index'])->name('crm.index');
+    Route::post('/crm', [CrmController::class, 'store'])->name('crm.store');
+
+    // Module 12 — Franchise Management
+    Route::get('/franchise', [FranchiseController::class, 'index'])->name('franchise.index');
+    Route::post('/franchise', [FranchiseController::class, 'store'])->name('franchise.store');
+
+    // Module 13 — Procurement
+    Route::get('/procurement', [ProcurementController::class, 'index'])->name('procurement.index');
+    Route::post('/procurement', [ProcurementController::class, 'store'])->name('procurement.store');
+
+    // Module 14 — Sales
+    Route::get('/sales', [SalesModuleController::class, 'index'])->name('sales.index');
+    Route::post('/sales', [SalesModuleController::class, 'store'])->name('sales.store');
+
+    // Module 15 — Maintenance
+    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
+    Route::post('/maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
+
+    // Module 16 — Compliance
+    Route::get('/compliance', [ComplianceController::class, 'index'])->name('compliance.index');
+    Route::post('/compliance', [ComplianceController::class, 'store'])->name('compliance.store');
+
+    // Module 17 — Reports Center
+    Route::get('/report-center', [ReportCenterController::class, 'center'])->name('reports.center');
 
     // Settings
     Route::get('/settings/{group?}', [SettingController::class, 'index'])->name('settings.index');

@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Expense;
 use App\Services\DashboardService;
+use App\Services\FeedCalculationService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __construct(private DashboardService $dashboardService)
-    {
+    public function __construct(
+        private DashboardService $dashboardService,
+        private FeedCalculationService $feedService
+    ) {
     }
 
     public function index()
@@ -22,9 +26,18 @@ class DashboardController extends Controller
         $topEmployees = $this->dashboardService->getEmployeeProductivityData(5);
         $monthlyRevenue = $this->dashboardService->getMonthlyRevenue();
 
+        // ASDairy Specific Calculations
+        $feedData = $this->feedService->getFeedCalculationSummary();
+        $asdairyExpenses = [
+            'today' => Expense::whereDate('expense_date', today())->sum('amount'),
+            'this_month' => Expense::whereMonth('expense_date', now()->month)->whereYear('expense_date', now()->year)->sum('amount'),
+            'recent' => Expense::with('category')->latest('expense_date')->take(5)->get(),
+        ];
+
         return view('admin.dashboard', compact(
             'stats', 'transactionChart', 'attendanceChart',
-            'recentTransactions', 'fraudByType', 'topEmployees', 'monthlyRevenue'
+            'recentTransactions', 'fraudByType', 'topEmployees', 'monthlyRevenue',
+            'feedData', 'asdairyExpenses'
         ));
     }
 
