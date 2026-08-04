@@ -82,20 +82,25 @@
                                 <th>Service Date</th>
                                 <th class="text-end">Cost</th>
                                 <th>Next Service Due</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($logs as $l)
+                            @forelse($logs as $m)
                                 <tr>
-                                    <td class="fw-bold">{{ $l->machine_name }}</td>
-                                    <td><span class="badge bg-warning text-dark">{{ $l->maintenance_type }}</span></td>
-                                    <td>{{ $l->service_date?->format('d-M-Y') }}</td>
-                                    <td class="text-end fw-bold text-danger">₹{{ number_format($l->cost, 2) }}</td>
-                                    <td>{{ $l->next_service_due ? $l->next_service_due->format('d-M-Y') : '—' }}</td>
+                                    <td class="fw-bold">{{ $m->machine_name }}</td>
+                                    <td><span class="badge bg-warning text-dark">{{ $m->maintenance_type }}</span></td>
+                                    <td>{{ $m->service_date?->format('d-M-Y') }}</td>
+                                    <td class="text-end fw-bold text-danger">₹{{ number_format($m->cost, 2) }}</td>
+                                    <td>{{ $m->next_service_due ? $m->next_service_due->format('d-M-Y') : '—' }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.maintenance.show', $m) }}" class="btn btn-sm btn-outline-dark">View</a>
+                                        <a href="{{ route('admin.maintenance.edit', $m) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No maintenance logs recorded.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No maintenance logs recorded.</td>
                                 </tr>
                             @endforelse
                         </tbody>

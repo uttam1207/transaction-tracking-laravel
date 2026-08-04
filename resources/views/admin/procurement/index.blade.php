@@ -90,6 +90,7 @@
                                 <th>Order Date</th>
                                 <th class="text-end">Amount</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,10 +101,14 @@
                                     <td>{{ $o->order_date?->format('d-M-Y') }}</td>
                                     <td class="text-end fw-bold text-success">₹{{ number_format($o->total_amount, 2) }}</td>
                                     <td><span class="badge bg-success">{{ $o->status }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.procurement.show', $o) }}" class="btn btn-sm btn-outline-secondary">View</a>
+                                        <a href="{{ route('admin.procurement.edit', $o) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No purchase orders logged.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No purchase orders logged.</td>
                                 </tr>
                             @endforelse
                         </tbody>

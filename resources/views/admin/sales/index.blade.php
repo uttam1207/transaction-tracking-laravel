@@ -112,6 +112,7 @@
                                 <th class="text-end">Qty</th>
                                 <th class="text-end">Total Amount</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,10 +124,14 @@
                                     <td class="text-end">{{ number_format($s->quantity, 1) }}</td>
                                     <td class="text-end fw-bold text-success">₹{{ number_format($s->total_amount, 2) }}</td>
                                     <td><span class="badge bg-success">{{ $s->payment_status }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.sales.show', $s) }}" class="btn btn-sm btn-outline-success">View</a>
+                                        <a href="{{ route('admin.sales.edit', $s) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No sales invoices recorded.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No sales invoices recorded.</td>
                                 </tr>
                             @endforelse
                         </tbody>

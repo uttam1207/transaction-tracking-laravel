@@ -86,20 +86,25 @@
                                 <th>Number</th>
                                 <th>Expiry Date</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($documents as $doc)
+                            @forelse($documents as $d)
                                 <tr>
-                                    <td class="fw-bold">{{ $doc->document_title }}</td>
-                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $doc->category }}</span></td>
-                                    <td><code>{{ $doc->document_number ?? '—' }}</code></td>
-                                    <td>{{ $doc->expiry_date ? $doc->expiry_date->format('d-M-Y') : '—' }}</td>
-                                    <td><span class="badge bg-success">{{ $doc->status }}</span></td>
+                                    <td class="fw-bold">{{ $d->document_title }}</td>
+                                    <td><span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $d->category }}</span></td>
+                                    <td><code>{{ $d->document_number ?? '—' }}</code></td>
+                                    <td>{{ $d->expiry_date ? $d->expiry_date->format('d-M-Y') : '—' }}</td>
+                                    <td><span class="badge bg-success">{{ $d->status }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.compliance.show', $d) }}" class="btn btn-sm btn-outline-success">View</a>
+                                        <a href="{{ route('admin.compliance.edit', $d) }}" class="btn btn-sm btn-outline-warning">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No compliance documents recorded.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No compliance documents recorded.</td>
                                 </tr>
                             @endforelse
                         </tbody>

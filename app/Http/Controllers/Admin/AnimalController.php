@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers\Admin;
 
@@ -94,5 +94,40 @@ class AnimalController extends Controller
         }
 
         return back()->with('success', 'Animal action recorded.');
+    }
+    public function edit(Animal $animal)
+    {
+        return view('admin.animals.edit', compact('animal'));
+    }
+
+    public function update(Request $request, Animal $animal)
+    {
+        $validated = $request->validate([
+            'tag_number'       => 'required|string|unique:animals,tag_number,' . $animal->id,
+            'name'             => 'nullable|string|max:100',
+            'breed'            => 'required|string|max:100',
+            'dob'              => 'nullable|date',
+            'purchase_date'    => 'nullable|date',
+            'purchase_cost'    => 'nullable|numeric|min:0',
+            'current_weight'   => 'nullable|numeric|min:0',
+            'lactation_number' => 'required|integer|min:0',
+            'health_status'    => 'required|in:Healthy,Sick,Under Treatment',
+            'pregnancy_status' => 'required|in:Open,Inseminated,Pregnant,Dry',
+            'shed_number'      => 'required|string|max:50',
+            'status'           => 'required|in:Active,Sold,Deceased',
+        ]);
+
+        $animal->update($validated);
+
+        return redirect()->route('admin.animals.show', $animal)
+            ->with('success', 'Animal record updated.');
+    }
+
+    public function destroy(Animal $animal)
+    {
+        $animal->delete();
+
+        return redirect()->route('admin.animals.index')
+            ->with('success', 'Animal removed from register.');
     }
 }

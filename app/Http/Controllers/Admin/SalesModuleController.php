@@ -39,4 +39,44 @@ class SalesModuleController extends Controller
         SalesOrder::create($validated);
         return redirect()->route('admin.sales.index')->with('success', 'Sales invoice created.');
     }
+
+    public function show(SalesOrder $salesOrder)
+    {
+        $salesOrder->load('customer');
+        return view('admin.sales.show', compact('salesOrder'));
+    }
+
+    public function edit(SalesOrder $salesOrder)
+    {
+        $salesOrder->load('customer');
+        $customers = CrmCustomer::orderBy('name')->get();
+        return view('admin.sales.edit', compact('salesOrder', 'customers'));
+    }
+
+    public function update(Request $request, SalesOrder $salesOrder)
+    {
+        $validated = $request->validate([
+            'invoice_number'   => 'required|string|unique:sales_orders,invoice_number,' . $salesOrder->id,
+            'crm_customer_id'  => 'nullable|exists:crm_customers,id',
+            'item_type'        => 'required|in:Milk Sales,Animal Sales,Feed Sales,Dung Sales,Franchise Royalty',
+            'sale_date'        => 'required|date',
+            'quantity'         => 'required|numeric|min:0.01',
+            'rate'             => 'required|numeric|min:0.01',
+            'payment_status'   => 'required|in:Paid,Pending,Partial',
+        ]);
+
+        $validated['total_amount'] = $validated['quantity'] * $validated['rate'];
+
+        $salesOrder->update($validated);
+
+        return redirect()->route('admin.sales.show', $salesOrder)
+            ->with('success', 'Sales order updated.');
+    }
+
+    public function destroy(SalesOrder $salesOrder)
+    {
+        $salesOrder->delete();
+        return redirect()->route('admin.sales.index')
+            ->with('success', 'Sales order deleted.');
+    }
 }

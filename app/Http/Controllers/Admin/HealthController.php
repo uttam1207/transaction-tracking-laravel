@@ -45,4 +45,44 @@ class HealthController extends Controller
 
         return redirect()->route('admin.health.index')->with('success', 'Health record logged.');
     }
+
+    public function show(HealthRecord $healthRecord)
+    {
+        $healthRecord->load('animal');
+        return view('admin.health.show', compact('healthRecord'));
+    }
+
+    public function edit(HealthRecord $healthRecord)
+    {
+        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        return view('admin.health.edit', compact('healthRecord', 'animals'));
+    }
+
+    public function update(Request $request, HealthRecord $healthRecord)
+    {
+        $validated = $request->validate([
+            'animal_id'        => 'required|exists:animals,id',
+            'record_type'      => 'required|in:Vaccination,Deworming,Treatment,Doctor Visit,Emergency',
+            'date'             => 'required|date',
+            'disease_symptoms' => 'nullable|string|max:255',
+            'treatment_given'  => 'nullable|string|max:255',
+            'medicine_used'    => 'nullable|string|max:255',
+            'vet_doctor_name'  => 'nullable|string|max:100',
+            'body_temp'        => 'nullable|numeric',
+            'cost'             => 'nullable|numeric|min:0',
+            'status'           => 'nullable|string|max:100',
+        ]);
+
+        $healthRecord->update($validated);
+
+        return redirect()->route('admin.health.index')
+            ->with('success', 'Health record updated.');
+    }
+
+    public function destroy(HealthRecord $healthRecord)
+    {
+        $healthRecord->delete();
+        return redirect()->route('admin.health.index')
+            ->with('success', 'Health record deleted.');
+    }
 }

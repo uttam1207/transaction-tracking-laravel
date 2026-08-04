@@ -98,6 +98,7 @@
                                 <th>Semen Code</th>
                                 <th>Expected Calving</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,10 +110,14 @@
                                     <td><code>{{ $r->bull_semen_code ?? '—' }}</code></td>
                                     <td>{{ $r->expected_calving_date ? $r->expected_calving_date->format('d-M-Y') : '—' }}</td>
                                     <td><span class="badge bg-info text-dark">{{ $r->status }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.breeding.show', $r) }}" class="btn btn-sm btn-outline-info">View</a>
+                                        <a href="{{ route('admin.breeding.edit', $r) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No breeding records found.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No breeding records found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

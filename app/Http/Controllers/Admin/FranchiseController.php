@@ -34,4 +34,41 @@ class FranchiseController extends Controller
         Franchise::create($validated);
         return redirect()->route('admin.franchise.index')->with('success', 'Franchise registered.');
     }
+
+    public function show(Franchise $franchise)
+    {
+        return view('admin.franchise.show', compact('franchise'));
+    }
+
+    public function edit(Franchise $franchise)
+    {
+        return view('admin.franchise.edit', compact('franchise'));
+    }
+
+    public function update(Request $request, Franchise $franchise)
+    {
+        $validated = $request->validate([
+            'franchise_code'      => 'required|string|unique:franchises,franchise_code,' . $franchise->id,
+            'owner_name'          => 'required|string|max:100',
+            'location'            => 'required|string|max:150',
+            'contact_number'      => 'required|string|max:20',
+            'agreement_date'      => 'required|date',
+            'investment_amount'   => 'required|numeric|min:0',
+            'royalty_percentage'  => 'required|numeric|min:0|max:100',
+            'status'              => 'required|in:Active,Inactive,Suspended',
+            'milk_collected_liters' => 'nullable|numeric|min:0',
+        ]);
+
+        $franchise->update($validated);
+
+        return redirect()->route('admin.franchise.show', $franchise)
+            ->with('success', 'Franchise updated.');
+    }
+
+    public function destroy(Franchise $franchise)
+    {
+        $franchise->delete();
+        return redirect()->route('admin.franchise.index')
+            ->with('success', 'Franchise removed.');
+    }
 }

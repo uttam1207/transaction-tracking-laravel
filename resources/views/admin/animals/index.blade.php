@@ -60,6 +60,7 @@
                         <th>Pregnancy Status</th>
                         <th>Shed</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,11 +82,15 @@
                                 @endif
                             </td>
                             <td>{{ $a->shed_number }}</td>
-                            <td><span class="badge bg-success">{{ $a->status }}</span></td>
+                            <td><span class="badge bg-{{ $a->status === 'Active' ? 'success' : ($a->status === 'Sold' ? 'secondary' : 'danger') }}">{{ $a->status }}</span></td>
+                            <td>
+                                <a href="{{ route('admin.animals.show', $a) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                <a href="{{ route('admin.animals.edit', $a) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-muted">No animals registered yet. Click Add New Animal to register.</td>
+                            <td colspan="10" class="text-center py-4 text-muted">No animals registered yet. Click Add New Animal to register.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -90,6 +90,7 @@
                                 <th class="text-end">Yield (kg)</th>
                                 <th class="text-end">Diesel (L)</th>
                                 <th class="text-end">Water (L)</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -100,10 +101,14 @@
                                     <td class="text-end fw-bold text-success">{{ number_format($f->yield_kg, 1) }} kg</td>
                                     <td class="text-end">{{ number_format($f->diesel_liters, 1) }} L</td>
                                     <td class="text-end">{{ number_format($f->water_usage_liters, 0) }} L</td>
+                                    <td>
+                                        <a href="{{ route('admin.farm.show', $f) }}" class="btn btn-sm btn-outline-success">View</a>
+                                        <a href="{{ route('admin.farm.edit', $f) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No farm records logged yet.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No farm records logged yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>

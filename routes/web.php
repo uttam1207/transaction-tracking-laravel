@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -47,25 +48,6 @@ use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
-
-// ─── TEMPORARY: run pending migrations via browser ───────────────────────────
-// Visit: /run-migrations?token=asdairy-migrate-2026
-// REMOVE THIS ROUTE after the migration has been applied on the server.
-Route::get('/run-migrations', function (\Illuminate\Http\Request $request) {
-    if ($request->query('token') !== 'asdairy-migrate-2026') {
-        abort(403);
-    }
-    Artisan::call('migrate', ['--force' => true]);
-    $migrateOutput = Artisan::output();
-
-    Artisan::call('db:seed', ['--class' => 'ASDairyMasterSeeder', '--force' => true]);
-    $seedOutput = Artisan::output();
-
-    return '<pre>--- MIGRATIONS ---\n' . $migrateOutput . "\n--- SEEDER ---\n" . $seedOutput . '</pre>';
-});
-// ─────────────────────────────────────────────────────────────────────────────
 
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
@@ -296,44 +278,34 @@ Route::prefix('admin')
     Route::post('/animals/{animal}/actions', [AnimalController::class, 'storeAction'])->name('animals.actions.store');
 
     // Module 3 — Milk Management
-    Route::get('/milk', [MilkController::class, 'index'])->name('milk.index');
-    Route::post('/milk', [MilkController::class, 'store'])->name('milk.store');
+    Route::resource('milk', MilkController::class)->parameters(['milk' => 'milkEntry']);
 
     // Module 4 — Breeding Management
-    Route::get('/breeding', [BreedingController::class, 'index'])->name('breeding.index');
-    Route::post('/breeding', [BreedingController::class, 'store'])->name('breeding.store');
+    Route::resource('breeding', BreedingController::class)->parameters(['breeding' => 'breedingRecord']);
 
     // Module 5 — Health Management
-    Route::get('/health', [HealthController::class, 'index'])->name('health.index');
-    Route::post('/health', [HealthController::class, 'store'])->name('health.store');
+    Route::resource('health', HealthController::class)->parameters(['health' => 'healthRecord']);
 
     // Module 7 — Farm Management
-    Route::get('/farm', [FarmController::class, 'index'])->name('farm.index');
-    Route::post('/farm', [FarmController::class, 'store'])->name('farm.store');
+    Route::resource('farm', FarmController::class)->parameters(['farm' => 'farmRecord']);
 
     // Module 11 — CRM
-    Route::get('/crm', [CrmController::class, 'index'])->name('crm.index');
-    Route::post('/crm', [CrmController::class, 'store'])->name('crm.store');
+    Route::resource('crm', CrmController::class)->parameters(['crm' => 'crmCustomer']);
 
     // Module 12 — Franchise Management
-    Route::get('/franchise', [FranchiseController::class, 'index'])->name('franchise.index');
-    Route::post('/franchise', [FranchiseController::class, 'store'])->name('franchise.store');
+    Route::resource('franchise', FranchiseController::class)->parameters(['franchise' => 'franchise']);
 
     // Module 13 — Procurement
-    Route::get('/procurement', [ProcurementController::class, 'index'])->name('procurement.index');
-    Route::post('/procurement', [ProcurementController::class, 'store'])->name('procurement.store');
+    Route::resource('procurement', ProcurementController::class)->parameters(['procurement' => 'purchaseOrder']);
 
     // Module 14 — Sales
-    Route::get('/sales', [SalesModuleController::class, 'index'])->name('sales.index');
-    Route::post('/sales', [SalesModuleController::class, 'store'])->name('sales.store');
+    Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
 
     // Module 15 — Maintenance
-    Route::get('/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index');
-    Route::post('/maintenance', [MaintenanceController::class, 'store'])->name('maintenance.store');
+    Route::resource('maintenance', MaintenanceController::class)->parameters(['maintenance' => 'machineMaintenance']);
 
     // Module 16 — Compliance
-    Route::get('/compliance', [ComplianceController::class, 'index'])->name('compliance.index');
-    Route::post('/compliance', [ComplianceController::class, 'store'])->name('compliance.store');
+    Route::resource('compliance', ComplianceController::class)->parameters(['compliance' => 'complianceDocument']);
 
     // Module 17 — Reports Center
     Route::get('/report-center', [ReportCenterController::class, 'center'])->name('reports.center');

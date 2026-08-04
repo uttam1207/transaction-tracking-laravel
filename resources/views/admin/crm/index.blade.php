@@ -94,6 +94,7 @@
                                 <th>Phone</th>
                                 <th>Business Value</th>
                                 <th>Status</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -104,10 +105,14 @@
                                     <td>{{ $c->phone ?? '—' }}</td>
                                     <td class="fw-bold text-success">₹{{ number_format($c->total_business_value, 0) }}</td>
                                     <td><span class="badge bg-success">{{ $c->status }}</span></td>
+                                    <td>
+                                        <a href="{{ route('admin.crm.show', $c) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        <a href="{{ route('admin.crm.edit', $c) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-4 text-muted">No CRM contacts registered.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">No CRM contacts registered.</td>
                                 </tr>
                             @endforelse
                         </tbody>

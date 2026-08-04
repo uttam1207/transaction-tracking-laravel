@@ -100,6 +100,7 @@
                                 <th>Symptoms / Vaccine</th>
                                 <th>Doctor</th>
                                 <th class="text-end">Cost</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -111,10 +112,14 @@
                                     <td>{{ $h->disease_symptoms ?? $h->treatment_given }}</td>
                                     <td>{{ $h->vet_doctor_name ?? '—' }}</td>
                                     <td class="text-end fw-bold">₹{{ number_format($h->cost, 2) }}</td>
+                                    <td>
+                                        <a href="{{ route('admin.health.show', $h) }}" class="btn btn-sm btn-outline-danger">View</a>
+                                        <a href="{{ route('admin.health.edit', $h) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No health records logged yet.</td>
+                                    <td colspan="7" class="text-center py-4 text-muted">No health records logged yet.</td>
                                 </tr>
                             @endforelse
                         </tbody>

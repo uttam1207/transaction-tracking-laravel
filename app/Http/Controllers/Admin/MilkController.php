@@ -58,4 +58,42 @@ class MilkController extends Controller
         return redirect()->route('admin.milk.index')
             ->with('success', 'Milk entry recorded successfully.');
     }
+
+    public function show(MilkEntry $milkEntry)
+    {
+        $milkEntry->load('animal');
+        return view('admin.milk.show', compact('milkEntry'));
+    }
+
+    public function edit(MilkEntry $milkEntry)
+    {
+        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        return view('admin.milk.edit', compact('milkEntry', 'animals'));
+    }
+
+    public function update(Request $request, MilkEntry $milkEntry)
+    {
+        $validated = $request->validate([
+            'date'            => 'required|date',
+            'shift'           => 'required|in:Morning,Evening',
+            'animal_id'       => 'nullable|exists:animals,id',
+            'quantity_liters' => 'required|numeric|min:0.1',
+            'fat_percentage'  => 'required|numeric|min:1|max:15',
+            'snf_percentage'  => 'required|numeric|min:1|max:15',
+            'quality_rating'  => 'required|string',
+            'rejected_liters' => 'nullable|numeric|min:0',
+        ]);
+
+        $milkEntry->update($validated);
+
+        return redirect()->route('admin.milk.index')
+            ->with('success', 'Milk entry updated.');
+    }
+
+    public function destroy(MilkEntry $milkEntry)
+    {
+        $milkEntry->delete();
+        return redirect()->route('admin.milk.index')
+            ->with('success', 'Milk entry deleted.');
+    }
 }
