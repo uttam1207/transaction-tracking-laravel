@@ -8,18 +8,34 @@ use Illuminate\Http\Request;
 
 class FarmController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $records = FarmRecord::latest()->paginate(15);
+        $query = FarmRecord::query();
+
+        if ($request->search) {
+            $query->where(fn($q) => $q
+                ->where('plot_name', 'like', '%'.$request->search.'%')
+                ->orWhere('crop_type', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->crop_type) {
+            $query->where('crop_type', $request->crop_type);
+        }
+
+        $records = $query->latest()->paginate(15)->withQueryString();
+        $cropTypes = FarmRecord::distinct()->pluck('crop_type')->sort()->values();
         $summary = [
             'total_yield' => FarmRecord::sum('yield_kg'),
             'total_diesel' => FarmRecord::sum('diesel_liters'),
             'total_water' => FarmRecord::sum('water_usage_liters'),
             'active_plots' => FarmRecord::distinct('plot_name')->count('plot_name'),
         ];
-        return view('admin.farm.index', compact('records', 'summary'));
+        return view('admin.farm.index', compact('records', 'summary', 'cropTypes'));
     }
 
+    public function create()
+    {
+        return view('admin.farm.create');
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

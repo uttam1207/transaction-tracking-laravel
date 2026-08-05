@@ -38,6 +38,11 @@ class MilkController extends Controller
         ));
     }
 
+    public function create()
+    {
+        $animals = Animal::where('status', 'Active')->where('pregnancy_status', '!=', 'Dry')->orderBy('tag_number')->get();
+        return view('admin.milk.create', compact('animals'));
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

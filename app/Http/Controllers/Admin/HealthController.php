@@ -9,9 +9,20 @@ use Illuminate\Http\Request;
 
 class HealthController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $records = HealthRecord::with('animal')->latest('date')->paginate(15);
+        $query = HealthRecord::with('animal');
+
+        if ($request->search) {
+            $query->whereHas('animal', fn($q) => $q
+                ->where('tag_number', 'like', '%'.$request->search.'%')
+                ->orWhere('name', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->record_type) {
+            $query->where('record_type', $request->record_type);
+        }
+
+        $records = $query->latest('date')->paginate(15)->withQueryString();
         $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
 
         $summary = [
@@ -23,6 +34,11 @@ class HealthController extends Controller
         return view('admin.health.index', compact('records', 'animals', 'summary'));
     }
 
+    public function create()
+    {
+        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        return view('admin.health.create', compact('animals'));
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

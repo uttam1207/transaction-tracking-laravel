@@ -8,9 +8,18 @@ use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $logs = MachineMaintenance::latest('service_date')->paginate(15);
+        $query = MachineMaintenance::query();
+
+        if ($request->search) {
+            $query->where('machine_name', 'like', '%'.$request->search.'%');
+        }
+        if ($request->maintenance_type) {
+            $query->where('maintenance_type', $request->maintenance_type);
+        }
+
+        $logs = $query->latest('service_date')->paginate(15)->withQueryString();
         $summary = [
             'total_cost' => MachineMaintenance::sum('cost'),
             'due_soon' => MachineMaintenance::where('next_service_due', '<=', now()->addDays(14))->count(),
@@ -18,6 +27,10 @@ class MaintenanceController extends Controller
         return view('admin.maintenance.index', compact('logs', 'summary'));
     }
 
+    public function create()
+    {
+        return view('admin.maintenance.create');
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

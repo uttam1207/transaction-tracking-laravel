@@ -9,9 +9,21 @@ use Illuminate\Http\Request;
 
 class SalesModuleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sales = SalesOrder::with('customer')->latest('sale_date')->paginate(15);
+        $query = SalesOrder::with('customer');
+
+        if ($request->search) {
+            $query->where('invoice_number', 'like', '%'.$request->search.'%');
+        }
+        if ($request->item_type) {
+            $query->where('item_type', $request->item_type);
+        }
+        if ($request->payment_status) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        $sales = $query->latest('sale_date')->paginate(15)->withQueryString();
         $customers = CrmCustomer::orderBy('name')->get();
         $summary = [
             'total_sales' => SalesOrder::sum('total_amount'),
@@ -22,6 +34,11 @@ class SalesModuleController extends Controller
         return view('admin.sales.index', compact('sales', 'customers', 'summary'));
     }
 
+    public function create()
+    {
+        $customers = CrmCustomer::orderBy('name')->get();
+        return view('admin.sales.create', compact('customers'));
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

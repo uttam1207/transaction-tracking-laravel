@@ -1,10 +1,11 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\AnimalAction;
+use App\Models\Breed;
 use Illuminate\Http\Request;
 
 class AnimalController extends Controller
@@ -24,6 +25,14 @@ class AnimalController extends Controller
             $query->where('pregnancy_status', $request->pregnancy_status);
         }
 
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->breed) {
+            $query->where('breed', $request->breed);
+        }
+
         $animals = $query->latest()->paginate(15)->withQueryString();
 
         $summary = [
@@ -34,12 +43,15 @@ class AnimalController extends Controller
             'calves' => Animal::where('lactation_number', 0)->count(),
         ];
 
-        return view('admin.animals.index', compact('animals', 'summary'));
+        $allBreeds = Breed::orderBy('animal_type')->orderBy('name')->get();
+
+        return view('admin.animals.index', compact('animals', 'summary', 'allBreeds'));
     }
 
     public function create()
     {
-        return view('admin.animals.create');
+        $breeds = Breed::orderBy('animal_type')->orderBy('name')->get();
+        return view('admin.animals.create', compact('breeds'));
     }
 
     public function store(Request $request)
@@ -97,7 +109,8 @@ class AnimalController extends Controller
     }
     public function edit(Animal $animal)
     {
-        return view('admin.animals.edit', compact('animal'));
+        $breeds = Breed::orderBy('animal_type')->orderBy('name')->get();
+        return view('admin.animals.edit', compact('animal', 'breeds'));
     }
 
     public function update(Request $request, Animal $animal)

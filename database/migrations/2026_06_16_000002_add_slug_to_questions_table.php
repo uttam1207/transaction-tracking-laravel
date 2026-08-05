@@ -10,6 +10,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Skip if slug column already exists (e.g. fresh install adds it in create migration)
+        if (Schema::hasColumn('questions', 'slug')) {
+            return;
+        }
+
         Schema::table('questions', function (Blueprint $table) {
             $table->string('slug')->nullable()->after('title');
         });

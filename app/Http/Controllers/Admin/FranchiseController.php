@@ -8,9 +8,21 @@ use Illuminate\Http\Request;
 
 class FranchiseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $franchises = Franchise::latest()->paginate(15);
+        $query = Franchise::query();
+
+        if ($request->search) {
+            $query->where(fn($q) => $q
+                ->where('franchise_code', 'like', '%'.$request->search.'%')
+                ->orWhere('owner_name', 'like', '%'.$request->search.'%')
+                ->orWhere('location', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $franchises = $query->latest()->paginate(15)->withQueryString();
         $summary = [
             'total_active' => Franchise::where('status', 'Active')->count(),
             'total_investment' => Franchise::sum('investment_amount'),
@@ -19,6 +31,10 @@ class FranchiseController extends Controller
         return view('admin.franchise.index', compact('franchises', 'summary'));
     }
 
+    public function create()
+    {
+        return view('admin.franchise.create');
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

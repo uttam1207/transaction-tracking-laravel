@@ -9,9 +9,20 @@ use Illuminate\Http\Request;
 
 class BreedingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $records = BreedingRecord::with('animal')->latest()->paginate(15);
+        $query = BreedingRecord::with('animal');
+
+        if ($request->search) {
+            $query->whereHas('animal', fn($q) => $q
+                ->where('tag_number', 'like', '%'.$request->search.'%')
+                ->orWhere('name', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $records = $query->latest()->paginate(15)->withQueryString();
         $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
 
         $summary = [
@@ -24,6 +35,11 @@ class BreedingController extends Controller
         return view('admin.breeding.index', compact('records', 'animals', 'summary'));
     }
 
+    public function create()
+    {
+        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        return view('admin.breeding.create', compact('animals'));
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

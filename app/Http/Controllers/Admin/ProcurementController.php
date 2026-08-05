@@ -9,9 +9,20 @@ use Illuminate\Http\Request;
 
 class ProcurementController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $orders = PurchaseOrder::with('vendor')->latest('order_date')->paginate(15);
+        $query = PurchaseOrder::with('vendor');
+
+        if ($request->search) {
+            $query->where(fn($q) => $q
+                ->where('po_number', 'like', '%'.$request->search.'%')
+                ->orWhereHas('vendor', fn($v) => $v->where('name', 'like', '%'.$request->search.'%')));
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query->latest('order_date')->paginate(15)->withQueryString();
         $vendors = Vendor::orderBy('name')->get();
         $summary = [
             'total_vendors' => Vendor::count(),
@@ -21,6 +32,11 @@ class ProcurementController extends Controller
         return view('admin.procurement.index', compact('orders', 'vendors', 'summary'));
     }
 
+    public function create()
+    {
+        $vendors = Vendor::orderBy('name')->get();
+        return view('admin.procurement.create', compact('vendors'));
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

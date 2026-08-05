@@ -1,61 +1,135 @@
 @extends('layouts.app')
 @section('title', 'Edit Farm Record #' . $farmRecord->id)
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('admin.farm.index') }}">Farm</a></li>
+    <li class="breadcrumb-item active">Edit #{{ $farmRecord->id }}</li>
+@endsection
+
 @section('content')
-<div class="container py-3" style="max-width:700px;">
-    <div class="d-flex align-items-center mb-4">
-        <a href="{{ route('admin.farm.index') }}" class="btn btn-outline-secondary me-3"><i class="bi bi-arrow-left"></i> Back</a>
-        <h1 class="h3 mb-0 fw-bold text-success"><i class="bi bi-pencil me-2"></i>Edit Farm Record #{{ $farmRecord->id }}</h1>
-    </div>
 
-    @if($errors->any())
-        <div class="alert alert-danger"><ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
-    @endif
-
-    <div class="card border-0 shadow-sm rounded-3">
-        <div class="card-body p-4">
-            <form action="{{ route('admin.farm.update', $farmRecord) }}" method="POST">
-                @csrf @method('PUT')
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Plot Name <span class="text-danger">*</span></label>
-                        <input type="text" name="plot_name" class="form-control" value="{{ old('plot_name', $farmRecord->plot_name) }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Crop Type <span class="text-danger">*</span></label>
-                        <input type="text" name="crop_type" class="form-control" value="{{ old('crop_type', $farmRecord->crop_type) }}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Plantation Date</label>
-                        <input type="date" name="plantation_date" class="form-control" value="{{ old('plantation_date', $farmRecord->plantation_date?->toDateString()) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Harvest Date</label>
-                        <input type="date" name="harvest_date" class="form-control" value="{{ old('harvest_date', $farmRecord->harvest_date?->toDateString()) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Fertilizer Used</label>
-                        <input type="text" name="fertilizer_used" class="form-control" value="{{ old('fertilizer_used', $farmRecord->fertilizer_used) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Yield (kg)</label>
-                        <input type="number" step="0.1" min="0" name="yield_kg" class="form-control" value="{{ old('yield_kg', $farmRecord->yield_kg) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Diesel (Liters)</label>
-                        <input type="number" step="0.1" min="0" name="diesel_liters" class="form-control" value="{{ old('diesel_liters', $farmRecord->diesel_liters) }}">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-bold">Water Usage (Liters)</label>
-                        <input type="number" step="0.1" min="0" name="water_usage_liters" class="form-control" value="{{ old('water_usage_liters', $farmRecord->water_usage_liters) }}">
-                    </div>
-                </div>
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <a href="{{ route('admin.farm.index') }}" class="btn btn-light border">Cancel</a>
-                    <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg me-1"></i>Update Record</button>
-                </div>
-            </form>
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <h4>Edit Farm Record</h4>
+            <p>#{{ $farmRecord->id }} &mdash; {{ $farmRecord->plot_name }} &mdash; {{ $farmRecord->crop_type }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.farm.show', $farmRecord) }}" class="btn btn-sm btn-outline-info px-4">
+                <i class="bi bi-eye me-1"></i>View
+            </a>
+            <a href="{{ route('admin.farm.index') }}" class="btn btn-sm btn-outline-secondary px-4">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
         </div>
     </div>
 </div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card-glass overflow-hidden">
+
+            <div style="background:linear-gradient(135deg,#65a30d,#16a34a);padding:22px 28px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div style="position:absolute;bottom:-20px;right:90px;width:80px;height:80px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:52px;height:52px;background:rgba(255,255,255,.18);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-tree-fill" style="font-size:1.4rem;color:#fff;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;">Edit Farm Record</div>
+                        <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.01em;">{{ $farmRecord->plot_name }}</div>
+                        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">{{ $farmRecord->crop_type }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4">
+
+                @if($errors->any())
+                    <div class="alert alert-danger mb-4">
+                        <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.farm.update', $farmRecord) }}" method="POST">
+                    @csrf @method('PUT')
+
+                    <div class="mb-4">
+                        <h6 class="form-section-label">A — Plot & Crop</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Plot Name <span class="text-danger">*</span></label>
+                                <input type="text" name="plot_name" class="form-control @error('plot_name') is-invalid @enderror"
+                                    value="{{ old('plot_name', $farmRecord->plot_name) }}" required>
+                                @error('plot_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Crop Type <span class="text-danger">*</span></label>
+                                <input type="text" name="crop_type" class="form-control @error('crop_type') is-invalid @enderror"
+                                    value="{{ old('crop_type', $farmRecord->crop_type) }}" required>
+                                @error('crop_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Plantation Date</label>
+                                <input type="date" name="plantation_date" class="form-control @error('plantation_date') is-invalid @enderror"
+                                    value="{{ old('plantation_date', $farmRecord->plantation_date?->toDateString()) }}">
+                                @error('plantation_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Harvest Date</label>
+                                <input type="date" name="harvest_date" class="form-control @error('harvest_date') is-invalid @enderror"
+                                    value="{{ old('harvest_date', $farmRecord->harvest_date?->toDateString()) }}">
+                                @error('harvest_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Fertilizer Used</label>
+                                <input type="text" name="fertilizer_used" class="form-control @error('fertilizer_used') is-invalid @enderror"
+                                    value="{{ old('fertilizer_used', $farmRecord->fertilizer_used) }}">
+                                @error('fertilizer_used')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 opacity-25">
+
+                    <div class="mb-4">
+                        <h6 class="form-section-label">B — Production Metrics</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Yield (kg)</label>
+                                <input type="number" step="0.1" min="0" name="yield_kg"
+                                    class="form-control @error('yield_kg') is-invalid @enderror"
+                                    value="{{ old('yield_kg', $farmRecord->yield_kg) }}">
+                                @error('yield_kg')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Diesel (L)</label>
+                                <input type="number" step="0.1" min="0" name="diesel_liters"
+                                    class="form-control @error('diesel_liters') is-invalid @enderror"
+                                    value="{{ old('diesel_liters', $farmRecord->diesel_liters) }}">
+                                @error('diesel_liters')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Water Usage (L)</label>
+                                <input type="number" step="0.1" min="0" name="water_usage_liters"
+                                    class="form-control @error('water_usage_liters') is-invalid @enderror"
+                                    value="{{ old('water_usage_liters', $farmRecord->water_usage_liters) }}">
+                                @error('water_usage_liters')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2">
+                        <a href="{{ route('admin.farm.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary-grad px-5">
+                            <i class="bi bi-check-lg me-1"></i>Update Record
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection

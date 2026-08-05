@@ -10,18 +10,8 @@ return new class extends Migration
     {
         Schema::create('answers', function (Blueprint $table) {
             $table->id();
-           $table->unsignedBigInteger('question_id');
-$table->unsignedBigInteger('user_id');
-
-$table->foreign('question_id')
-    ->references('my_row_id')
-    ->on('questions')
-    ->onDelete('cascade');
-
-$table->foreign('user_id')
-    ->references('my_row_id')
-    ->on('users')
-    ->onDelete('cascade');
+            $table->unsignedBigInteger('question_id')->index();
+            $table->unsignedBigInteger('user_id')->index();
             $table->text('body');
             $table->boolean('is_accepted')->default(false);
             $table->timestamps();

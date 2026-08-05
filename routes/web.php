@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\FeedController;
 use App\Http\Controllers\Admin\AnimalController;
+use App\Http\Controllers\Admin\BreedController;
 use App\Http\Controllers\Admin\MilkController;
 use App\Http\Controllers\Admin\BreedingController;
 use App\Http\Controllers\Admin\HealthController;
@@ -276,6 +277,8 @@ Route::prefix('admin')
     // Module 2 — Animal Management
     Route::resource('animals', AnimalController::class);
     Route::post('/animals/{animal}/actions', [AnimalController::class, 'storeAction'])->name('animals.actions.store');
+    // Breed Management (admin settings)
+    Route::resource('breeds', BreedController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // Module 3 — Milk Management
     Route::resource('milk', MilkController::class)->parameters(['milk' => 'milkEntry']);

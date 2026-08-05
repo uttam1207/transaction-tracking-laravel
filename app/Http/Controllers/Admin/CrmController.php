@@ -8,9 +8,24 @@ use Illuminate\Http\Request;
 
 class CrmController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = CrmCustomer::latest()->paginate(15);
+        $query = CrmCustomer::query();
+
+        if ($request->search) {
+            $query->where(fn($q) => $q
+                ->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('phone', 'like', '%'.$request->search.'%')
+                ->orWhere('email', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->category) {
+            $query->where('category', $request->category);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $customers = $query->latest()->paginate(15)->withQueryString();
         $summary = [
             'total_buyers' => CrmCustomer::where('category', 'Milk Buyer')->count(),
             'franchise_leads' => CrmCustomer::where('category', 'Franchise Lead')->count(),
@@ -20,6 +35,10 @@ class CrmController extends Controller
         return view('admin.crm.index', compact('customers', 'summary'));
     }
 
+    public function create()
+    {
+        return view('admin.crm.create');
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

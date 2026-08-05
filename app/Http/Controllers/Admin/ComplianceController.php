@@ -8,9 +8,23 @@ use Illuminate\Http\Request;
 
 class ComplianceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $documents = ComplianceDocument::latest()->paginate(15);
+        $query = ComplianceDocument::query();
+
+        if ($request->search) {
+            $query->where(fn($q) => $q
+                ->where('document_title', 'like', '%'.$request->search.'%')
+                ->orWhere('document_number', 'like', '%'.$request->search.'%'));
+        }
+        if ($request->category) {
+            $query->where('category', $request->category);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $documents = $query->latest()->paginate(15)->withQueryString();
         $summary = [
             'active_docs' => ComplianceDocument::where('status', 'Active')->count(),
             'expiring_soon' => ComplianceDocument::whereDate('expiry_date', '<=', now()->addDays(30))->count(),
@@ -18,6 +32,10 @@ class ComplianceController extends Controller
         return view('admin.compliance.index', compact('documents', 'summary'));
     }
 
+    public function create()
+    {
+        return view('admin.compliance.create');
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

@@ -23,6 +23,11 @@
             --sidebar-text: #8b95a8;
             --sidebar-active: #4f46e5;
             --header-height: 64px;
+            /* Theme palette */
+            --primary:      #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-soft: rgba(79,70,229,.10);
+            --primary-grad: linear-gradient(135deg,#4f46e5,#7c3aed);
         }
 
         [data-bs-theme="dark"] {
@@ -561,6 +566,263 @@
         }
         [data-bs-theme="dark"] .topbar-breadcrumb-wrap .breadcrumb-item.active { color: #e2e8f0; }
         [data-bs-theme="dark"] .topbar-breadcrumb-wrap { background: rgba(255,255,255,.05); }
+
+        /* ── Card Glass (modern form container) ── */
+        .card-glass {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        }
+        [data-bs-theme="dark"] .card-glass {
+            background: #1a1d27;
+            border-color: rgba(255,255,255,.08);
+            box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+        .form-section-label {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: .75rem;
+        }
+
+        /* ── KPI Stat Cards ── */
+        .kpi-card {
+            border-radius: 16px;
+            padding: 20px 16px 18px;
+            color: #fff;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 6px 24px rgba(0,0,0,.15);
+            transition: transform .18s, box-shadow .18s;
+        }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 10px 32px rgba(0,0,0,.22); }
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: -18px; right: -18px;
+            width: 72px; height: 72px;
+            background: rgba(255,255,255,.13);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            bottom: -24px; left: -12px;
+            width: 90px; height: 90px;
+            background: rgba(255,255,255,.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .kpi-icon {
+            font-size: 1.55rem;
+            margin-bottom: 10px;
+            display: block;
+            opacity: .92;
+            position: relative;
+            z-index: 1;
+        }
+        .kpi-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -.5px;
+        }
+        .kpi-label {
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .07em;
+            text-transform: uppercase;
+            opacity: .88;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Global Flat Form Style ── */
+
+        /* Label */
+        .form-label {
+            font-size: .8rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+            display: block;
+        }
+        /* Append colon to all .form-label elements (not section labels or check labels) */
+        .form-label:not(.form-section-label):not(.form-check-label)::after {
+            content: ' :';
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        /* Input & Select — flat style */
+        .form-control,
+        .form-select {
+            background-color: #f5f7fa !important;
+            border: 1.5px solid #e5e7eb !important;
+            border-radius: 9px !important;
+            font-size: .875rem !important;
+            color: #1f2937 !important;
+            padding: 9px 13px !important;
+            height: auto !important;
+            min-height: 42px;
+            transition: border-color .18s, box-shadow .18s, background .18s !important;
+            box-shadow: none !important;
+        }
+        .form-control:focus,
+        .form-select:focus {
+            background-color: #fff !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--primary-soft) !important;
+            outline: none !important;
+        }
+        .form-control.is-invalid,
+        .form-select.is-invalid {
+            border-color: #dc2626 !important;
+            background-color: #fef2f2 !important;
+        }
+        textarea.form-control {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        /* Input group text */
+        .input-group-text {
+            background-color: #eef0f5 !important;
+            border: 1.5px solid #e5e7eb !important;
+            color: #6b7280 !important;
+            font-size: .875rem;
+            border-radius: 9px 0 0 9px !important;
+        }
+        .input-group .form-control:last-child,
+        .input-group .form-select:last-child {
+            border-radius: 0 9px 9px 0 !important;
+        }
+        .input-group .form-control:not(:first-child),
+        .input-group .form-select:not(:first-child) {
+            border-left: none !important;
+        }
+
+        /* Card-glass form header */
+        .card-glass-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            border-bottom: 1.5px solid #f3f4f6;
+        }
+        .card-glass-header .card-glass-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .card-glass-header .card-glass-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--primary-grad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: .9rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Sidebar Accordion Group Buttons ── */
+        .nav-group-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: calc(100% - 20px);
+            margin: 6px 10px 2px;
+            padding: 9px 12px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.07);
+            border-radius: 10px;
+            color: #c4cad6;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            transition: background .18s, border-color .18s;
+            outline: none;
+        }
+        .nav-group-btn:hover {
+            background: rgba(255,255,255,.08);
+            border-color: rgba(255,255,255,.12);
+            color: #e2e8f0;
+        }
+        .nav-group-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        .nav-group-hamburger {
+            font-size: 1rem;
+            color: rgba(255,255,255,.35);
+            flex-shrink: 0;
+        }
+        .nav-group-icon {
+            font-size: .95rem;
+            flex-shrink: 0;
+        }
+        .nav-group-label {
+            font-size: .78rem;
+            font-weight: 800;
+            letter-spacing: .4px;
+            color: #e2e8f0;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+        .nav-group-sub {
+            font-size: .65rem;
+            font-weight: 500;
+            color: rgba(255,255,255,.35);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .nav-group-chevron {
+            font-size: .7rem;
+            color: rgba(255,255,255,.35);
+            flex-shrink: 0;
+            transition: transform .25s ease;
+        }
+        .nav-group-btn.collapsed .nav-group-chevron {
+            transform: rotate(-90deg);
+        }
+        .nav-group-collapse {
+            /* no extra padding; sidebar-link handles its own margin */
+        }
+
+        /* ── Sub-section titles within groups ── */
+        .nav-sub-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,.22);
+            font-size: .58rem;
+            font-weight: 700;
+            letter-spacing: 1.6px;
+            text-transform: uppercase;
+            padding: 12px 22px 4px;
+        }
+        .nav-sub-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,.05);
+        }
     </style>
     @stack('styles')
 </head>
@@ -612,218 +874,266 @@
                 </a>
                 @endif
 
-                <div class="nav-section-title">Main</div>
+                @php
+                    $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
+                    $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
+                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.sales.*');
+                    if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
+                @endphp
 
-                @if(!$svcUser->isManager())
-                <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
-                    <span class="nav-label">Dashboard</span>
-                </a>
-                @endif
-                <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
-                    <span class="nav-label">Document</span>
-                </a>
-                <a href="{{ route('questions.index') }}" class="sidebar-link {{ request()->routeIs('questions.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-patch-question"></i></span>
-                    <span class="nav-label">Q&amp;A</span>
-                </a>
-                @if(\App\Models\ServicePermission::canAccess('transactions', $svcUser))
-                <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span>
-                    <span class="nav-label">Transactions</span>
-                </a>
-                @endif
+                {{-- ══════════════════════════════════════════
+                     GROUP 1 — ERP (Dairy Farm Operations)
+                ══════════════════════════════════════════ --}}
+                <button class="nav-group-btn {{ $isErpActive ? '' : 'collapsed' }}"
+                        data-bs-toggle="collapse" data-bs-target="#grpErp"
+                        aria-expanded="{{ $isErpActive ? 'true' : 'false' }}">
+                    <span class="nav-group-left">
+                        <i class="bi bi-list nav-group-hamburger"></i>
+                        <i class="bi bi-buildings-fill nav-group-icon text-success"></i>
+                        <span class="nav-group-label">ERP</span>
+                        <span class="nav-group-sub">Dairy Farm Operations</span>
+                    </span>
+                    <i class="bi bi-chevron-down nav-group-chevron"></i>
+                </button>
+                <div id="grpErp" class="nav-group-collapse collapse {{ $isErpActive ? 'show' : '' }}">
+                    @if(!$svcUser->isManager())
+                    <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    @endif
+                    <a href="{{ route('documents.index') }}" class="sidebar-link {{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-folder2-open"></i></span>
+                        <span class="nav-label">Documents</span>
+                    </a>
+                    <a href="{{ route('questions.index') }}" class="sidebar-link {{ request()->routeIs('questions.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-patch-question"></i></span>
+                        <span class="nav-label">Q&amp;A</span>
+                    </a>
+                    @if(\App\Models\ServicePermission::canAccess('transactions', $svcUser))
+                    <a href="{{ route('admin.transactions.index') }}" class="sidebar-link {{ request()->routeIs('admin.transactions.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-arrow-left-right"></i></span>
+                        <span class="nav-label">Transactions</span>
+                    </a>
+                    @endif
+                    <div class="nav-sub-title">Animal & Farm</div>
+                    <a href="{{ route('admin.animals.index') }}" class="sidebar-link {{ request()->routeIs('admin.animals.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-card-checklist"></i></span>
+                        <span class="nav-label">Animals</span>
+                    </a>
+                    <a href="{{ route('admin.breeds.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeds.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-collection"></i></span>
+                        <span class="nav-label">Breeds</span>
+                    </a>
+                    <a href="{{ route('admin.milk.index') }}" class="sidebar-link {{ request()->routeIs('admin.milk.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-droplet-fill"></i></span>
+                        <span class="nav-label">Milk</span>
+                    </a>
+                    <a href="{{ route('admin.breeding.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeding.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-heart-pulse"></i></span>
+                        <span class="nav-label">Breeding</span>
+                    </a>
+                    <a href="{{ route('admin.health.index') }}" class="sidebar-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-hospital"></i></span>
+                        <span class="nav-label">Health</span>
+                    </a>
+                    <a href="{{ route('admin.feed.calculator') }}" class="sidebar-link {{ request()->routeIs('admin.feed.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cpu"></i></span>
+                        <span class="nav-label">Feed Auto-Calc</span>
+                    </a>
+                    <a href="{{ route('admin.farm.index') }}" class="sidebar-link {{ request()->routeIs('admin.farm.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-tree"></i></span>
+                        <span class="nav-label">Farm</span>
+                    </a>
+                    <div class="nav-sub-title">Finance & Stock</div>
+                    <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-receipt"></i></span>
+                        <span class="nav-label">Expenses</span>
+                    </a>
+                    <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-boxes"></i></span>
+                        <span class="nav-label">Stock</span>
+                    </a>
+                    <div class="nav-sub-title">Operations</div>
+                    <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-tools"></i></span>
+                        <span class="nav-label">Maintenance</span>
+                    </a>
+                    <a href="{{ route('admin.compliance.index') }}" class="sidebar-link {{ request()->routeIs('admin.compliance.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-shield-check"></i></span>
+                        <span class="nav-label">Compliance</span>
+                    </a>
+                    <a href="{{ route('admin.reports.center') }}" class="sidebar-link {{ request()->routeIs('admin.reports.center') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
+                        <span class="nav-label">Reports Center</span>
+                    </a>
+                </div>
 
-                <div class="nav-section-title">ASDairy ERP Modules</div>
+                {{-- ══════════════════════════════════════════
+                     GROUP 2 — HR (Employee Management)
+                ══════════════════════════════════════════ --}}
+                <button class="nav-group-btn {{ $isHrActive ? '' : 'collapsed' }}"
+                        data-bs-toggle="collapse" data-bs-target="#grpHr"
+                        aria-expanded="{{ $isHrActive ? 'true' : 'false' }}">
+                    <span class="nav-group-left">
+                        <i class="bi bi-list nav-group-hamburger"></i>
+                        <i class="bi bi-person-badge-fill nav-group-icon text-primary"></i>
+                        <span class="nav-group-label">HR</span>
+                        <span class="nav-group-sub">Employee Management</span>
+                    </span>
+                    <i class="bi bi-chevron-down nav-group-chevron"></i>
+                </button>
+                <div id="grpHr" class="nav-group-collapse collapse {{ $isHrActive ? 'show' : '' }}">
+                    <div class="nav-sub-title">People</div>
+                    @if(\App\Models\ServicePermission::canAccess('users', $svcUser))
+                    <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-people"></i></span>
+                        <span class="nav-label">Users</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('employees', $svcUser))
+                    <a href="{{ route('admin.employees.index') }}" class="sidebar-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
+                        <span class="nav-label">Employees</span>
+                    </a>
+                    @endif
+                    <div class="nav-sub-title">Work Tracking</div>
+                    @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
+                    <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
+                        <span class="nav-label">Attendance</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('tasks', $svcUser))
+                    <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-kanban"></i></span>
+                        <span class="nav-label">Tasks</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('work_reports', $svcUser))
+                    <a href="{{ route('admin.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.work-reports.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-file-earmark-check"></i></span>
+                        <span class="nav-label">Work Reports</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('timesheets', $svcUser))
+                    <a href="{{ route('admin.timesheets.index') }}" class="sidebar-link {{ request()->routeIs('admin.timesheets.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-table"></i></span>
+                        <span class="nav-label">Timesheets</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('teams', $svcUser))
+                    <a href="{{ route('admin.teams.index') }}" class="sidebar-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
+                        <span class="nav-label">Teams</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('shifts', $svcUser))
+                    <a href="{{ route('admin.shifts.index') }}" class="sidebar-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
+                        <span class="nav-label">Shifts</span>
+                    </a>
+                    @endif
+                    <div class="nav-sub-title">Organisation</div>
+                    @if(\App\Models\ServicePermission::canAccess('departments', $svcUser))
+                    <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-building"></i></span>
+                        <span class="nav-label">Departments</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('holidays', $svcUser))
+                    <a href="{{ route('admin.holidays.index') }}" class="sidebar-link {{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-calendar-heart"></i></span>
+                        <span class="nav-label">Holidays</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('projects', $svcUser))
+                    <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
+                        <span class="nav-label">Projects</span>
+                    </a>
+                    @endif
+                    <div class="nav-sub-title">Reports & System</div>
+                    @if(\App\Models\ServicePermission::canAccess('reports', $svcUser))
+                    <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
+                        <span class="nav-label">Tx Reports</span>
+                    </a>
+                    <a href="{{ route('admin.reports.financial-summary') }}" class="sidebar-link {{ request()->routeIs('admin.reports.financial-summary') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                        <span class="nav-label">Financial</span>
+                    </a>
+                    <a href="{{ route('admin.reports.employees') }}" class="sidebar-link {{ request()->routeIs('admin.reports.employees') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-graph-up"></i></span>
+                        <span class="nav-label">HR Reports</span>
+                    </a>
+                    <a href="{{ route('admin.reports.audit-logs') }}" class="sidebar-link {{ request()->routeIs('admin.reports.audit-logs') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
+                        <span class="nav-label">Audit Logs</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('queue', $svcUser))
+                    <a href="{{ route('admin.queue.index') }}" class="sidebar-link {{ request()->routeIs('admin.queue.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cpu"></i></span>
+                        <span class="nav-label">Queue Monitor</span>
+                        @php $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count(); @endphp
+                        @if($failedJobs > 0)<span class="badge bg-danger">{{ $failedJobs }}</span>@endif
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('settings', $svcUser))
+                    <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-gear"></i></span>
+                        <span class="nav-label">Settings</span>
+                    </a>
+                    @endif
+                    @if($svcUser->isSuperAdmin())
+                    <a href="{{ route('admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
+                        <span class="nav-label">Wallet</span>
+                    </a>
+                    <a href="{{ route('admin.roles.index') }}" class="sidebar-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
+                        <span class="nav-label">Roles</span>
+                    </a>
+                    <a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
+                        <span class="nav-label">Permissions</span>
+                    </a>
+                    @endif
+                </div>
 
-                <a href="{{ route('admin.animals.index') }}" class="sidebar-link {{ request()->routeIs('admin.animals.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-card-checklist"></i></span>
-                    <span class="nav-label">Mod 2 — Animals</span>
-                </a>
-                <a href="{{ route('admin.milk.index') }}" class="sidebar-link {{ request()->routeIs('admin.milk.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-droplet-fill"></i></span>
-                    <span class="nav-label">Mod 3 — Milk</span>
-                </a>
-                <a href="{{ route('admin.breeding.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeding.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-heart-pulse"></i></span>
-                    <span class="nav-label">Mod 4 — Breeding</span>
-                </a>
-                <a href="{{ route('admin.health.index') }}" class="sidebar-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-hospital"></i></span>
-                    <span class="nav-label">Mod 5 — Health</span>
-                </a>
-                <a href="{{ route('admin.feed.calculator') }}" class="sidebar-link {{ request()->routeIs('admin.feed.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-cpu"></i></span>
-                    <span class="nav-label">Mod 6 — Feed Auto</span>
-                </a>
-                <a href="{{ route('admin.farm.index') }}" class="sidebar-link {{ request()->routeIs('admin.farm.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-tree"></i></span>
-                    <span class="nav-label">Mod 7 — Farm</span>
-                </a>
-                <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-receipt"></i></span>
-                    <span class="nav-label">Mod 8 — Expense</span>
-                </a>
-                <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-boxes"></i></span>
-                    <span class="nav-label">Mod 9 — Stock</span>
-                </a>
-                <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
-                    <span class="nav-label">Mod 11 — CRM</span>
-                </a>
-                <a href="{{ route('admin.franchise.index') }}" class="sidebar-link {{ request()->routeIs('admin.franchise.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-shop"></i></span>
-                    <span class="nav-label">Mod 12 — Franchise</span>
-                </a>
-                <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
-                    <span class="nav-label">Mod 13 — Procurement</span>
-                </a>
-                <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
-                    <span class="nav-label">Mod 14 — Sales</span>
-                </a>
-                <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-tools"></i></span>
-                    <span class="nav-label">Mod 15 — Maintenance</span>
-                </a>
-                <a href="{{ route('admin.compliance.index') }}" class="sidebar-link {{ request()->routeIs('admin.compliance.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-shield-check"></i></span>
-                    <span class="nav-label">Mod 16 — Compliance</span>
-                </a>
-                <a href="{{ route('reports.center') }}" class="sidebar-link {{ request()->routeIs('reports.center') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
-                    <span class="nav-label">Mod 17 — Reports Center</span>
-                </a>
-
-                <div class="nav-section-title">People</div>
-
-                @if(\App\Models\ServicePermission::canAccess('users', $svcUser))
-                <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-people"></i></span>
-                    <span class="nav-label">Users</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('employees', $svcUser))
-                <a href="{{ route('admin.employees.index') }}" class="sidebar-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
-                    <span class="nav-label">Employees</span>
-                </a>
-                @endif
-
-                <div class="nav-section-title">Work Tracking</div>
-
-                @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
-                <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
-                    <span class="nav-label">Attendance</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('tasks', $svcUser))
-                <a href="{{ route('admin.tasks.index') }}" class="sidebar-link {{ request()->routeIs('admin.tasks.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-kanban"></i></span>
-                    <span class="nav-label">Tasks</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('work_reports', $svcUser))
-                <a href="{{ route('admin.work-reports.index') }}" class="sidebar-link {{ request()->routeIs('admin.work-reports.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-file-earmark-check"></i></span>
-                    <span class="nav-label">Work Reports</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('timesheets', $svcUser))
-                <a href="{{ route('admin.timesheets.index') }}" class="sidebar-link {{ request()->routeIs('admin.timesheets.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-table"></i></span>
-                    <span class="nav-label">Timesheets</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('teams', $svcUser))
-                <a href="{{ route('admin.teams.index') }}" class="sidebar-link {{ request()->routeIs('admin.teams.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
-                    <span class="nav-label">Teams</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('shifts', $svcUser))
-                <a href="{{ route('admin.shifts.index') }}" class="sidebar-link {{ request()->routeIs('admin.shifts.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
-                    <span class="nav-label">Shifts</span>
-                </a>
-                @endif
-
-                <div class="nav-section-title">Reports</div>
-
-                @if(\App\Models\ServicePermission::canAccess('reports', $svcUser))
-                <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
-                    <span class="nav-label">Tx Reports</span>
-                </a>
-                <a href="{{ route('admin.reports.financial-summary') }}" class="sidebar-link {{ request()->routeIs('admin.reports.financial-summary') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span>
-                    <span class="nav-label">Financial</span>
-                </a>
-                <a href="{{ route('admin.reports.employees') }}" class="sidebar-link {{ request()->routeIs('admin.reports.employees') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-graph-up"></i></span>
-                    <span class="nav-label">HR Reports</span>
-                </a>
-                <a href="{{ route('admin.reports.audit-logs') }}" class="sidebar-link {{ request()->routeIs('admin.reports.audit-logs') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
-                    <span class="nav-label">Audit Logs</span>
-                </a>
-                @endif
-
-                <div class="nav-section-title">Organisation</div>
-
-                @if(\App\Models\ServicePermission::canAccess('departments', $svcUser))
-                <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-building"></i></span>
-                    <span class="nav-label">Departments</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('holidays', $svcUser))
-                <a href="{{ route('admin.holidays.index') }}" class="sidebar-link {{ request()->routeIs('admin.holidays.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-calendar-heart"></i></span>
-                    <span class="nav-label">Holidays</span>
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('projects', $svcUser))
-                <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
-                    <span class="nav-label">Projects</span>
-                </a>
-                @endif
-
-                <div class="nav-section-title">System</div>
-
-                @if(\App\Models\ServicePermission::canAccess('queue', $svcUser))
-                <a href="{{ route('admin.queue.index') }}" class="sidebar-link {{ request()->routeIs('admin.queue.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-cpu"></i></span>
-                    <span class="nav-label">Queue Monitor</span>
-                    @php $failedJobs = \Illuminate\Support\Facades\DB::table('failed_jobs')->count(); @endphp
-                    @if($failedJobs > 0)<span class="badge bg-danger">{{ $failedJobs }}</span>@endif
-                </a>
-                @endif
-                @if(\App\Models\ServicePermission::canAccess('settings', $svcUser))
-                <a href="{{ route('admin.settings.index') }}" class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-gear"></i></span>
-                    <span class="nav-label">Settings</span>
-                </a>
-                @endif
-                @if($svcUser->isSuperAdmin())
-                <a href="{{ route('admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
-                    <span class="nav-label">Wallet</span>
-                </a>
-                <a href="{{ route('admin.roles.index') }}" class="sidebar-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
-                    <span class="nav-label">Roles</span>
-                </a>
-                <a href="{{ route('admin.permissions.index') }}" class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="bi bi-shield-lock"></i></span>
-                    <span class="nav-label">Permissions</span>
-                </a>
-                @endif
+                {{-- ══════════════════════════════════════════
+                     GROUP 3 — CRM (Customer Related)
+                ══════════════════════════════════════════ --}}
+                <button class="nav-group-btn {{ $isCrmActive ? '' : 'collapsed' }}"
+                        data-bs-toggle="collapse" data-bs-target="#grpCrm"
+                        aria-expanded="{{ $isCrmActive ? 'true' : 'false' }}">
+                    <span class="nav-group-left">
+                        <i class="bi bi-list nav-group-hamburger"></i>
+                        <i class="bi bi-handshake-fill nav-group-icon text-warning"></i>
+                        <span class="nav-group-label">CRM</span>
+                        <span class="nav-group-sub">Customer Related</span>
+                    </span>
+                    <i class="bi bi-chevron-down nav-group-chevron"></i>
+                </button>
+                <div id="grpCrm" class="nav-group-collapse collapse {{ $isCrmActive ? 'show' : '' }}">
+                    <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
+                        <span class="nav-label">Customers</span>
+                    </a>
+                    <a href="{{ route('admin.franchise.index') }}" class="sidebar-link {{ request()->routeIs('admin.franchise.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-shop"></i></span>
+                        <span class="nav-label">Franchise</span>
+                    </a>
+                    <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
+                        <span class="nav-label">Procurement</span>
+                    </a>
+                    <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
+                        <span class="nav-label">Sales</span>
+                    </a>
+                </div>
 
             @else
 

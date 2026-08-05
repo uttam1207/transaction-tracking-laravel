@@ -1,113 +1,151 @@
 @extends('layouts.app')
 @section('title', 'Machinery & Equipment Maintenance')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item active">Maintenance</li>
+@endsection
+
 @section('content')
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-warning"><i class="bi bi-tools me-2"></i>Module 15 — Maintenance Tracking</h1>
-            <p class="text-muted mb-0">Milking machines, generators, pumps, tractors, service history & breakdown logs.</p>
+            <h4>Maintenance Tracking</h4>
+            <p>Milking machines, generators, pumps, tractors, service history & breakdown logs</p>
+        </div>
+        <a href="{{ route('admin.maintenance.create') }}" class="btn btn-primary-grad btn-sm px-4">
+            <i class="bi bi-plus-lg me-1"></i>Log Maintenance
+        </a>
+    </div>
+</div>
+
+{{-- KPI Cards --}}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-6">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#dc2626,#b91c1c);">
+            <i class="bi bi-tools kpi-icon"></i>
+            <div class="kpi-value">&#8377;{{ number_format($summary['total_cost'],0) }}</div>
+            <div class="kpi-label">Maintenance Expenditure</div>
         </div>
     </div>
-
-    <div class="row g-3 mb-4">
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Total Maintenance Expenditure</div>
-                <div class="fs-3 fw-bold text-danger">₹{{ number_format($summary['total_cost'], 0) }}</div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Services Due Soon (14 Days)</div>
-                <div class="fs-3 fw-bold text-warning">{{ $summary['due_soon'] }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-warning"></i>Log Machine Maintenance</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.maintenance.store') }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Machine Name *</label>
-                            <input type="text" name="machine_name" class="form-control" placeholder="e.g. Milking Machine / Tractor" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Maintenance Type *</label>
-                            <select name="maintenance_type" class="form-select" required>
-                                <option value="Preventive Schedule">Preventive Schedule</option>
-                                <option value="Service History">Service History</option>
-                                <option value="Breakdown Log">Breakdown Log</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Service Date *</label>
-                            <input type="date" name="service_date" class="form-control" value="{{ now()->toDateString() }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Cost (₹)</label>
-                            <input type="number" step="0.01" min="0" name="cost" class="form-control" placeholder="e.g. 1200">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Serviced By</label>
-                            <input type="text" name="serviced_by" class="form-control" placeholder="e.g. Technician Name">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Next Service Due Date</label>
-                            <input type="date" name="next_service_due" class="form-control" value="{{ now()->addDays(90)->toDateString() }}">
-                        </div>
-                        <button type="submit" class="btn btn-warning text-dark w-100"><i class="bi bi-save me-1"></i> Save Maintenance Log</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Service History & Maintenance Logs</h5>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Machine</th>
-                                <th>Type</th>
-                                <th>Service Date</th>
-                                <th class="text-end">Cost</th>
-                                <th>Next Service Due</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($logs as $m)
-                                <tr>
-                                    <td class="fw-bold">{{ $m->machine_name }}</td>
-                                    <td><span class="badge bg-warning text-dark">{{ $m->maintenance_type }}</span></td>
-                                    <td>{{ $m->service_date?->format('d-M-Y') }}</td>
-                                    <td class="text-end fw-bold text-danger">₹{{ number_format($m->cost, 2) }}</td>
-                                    <td>{{ $m->next_service_due ? $m->next_service_due->format('d-M-Y') : '—' }}</td>
-                                    <td>
-                                        <a href="{{ route('admin.maintenance.show', $m) }}" class="btn btn-sm btn-outline-dark">View</a>
-                                        <a href="{{ route('admin.maintenance.edit', $m) }}" class="btn btn-sm btn-outline-warning">Edit</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No maintenance logs recorded.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="col-6 col-md-6">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#d97706,#b45309);">
+            <i class="bi bi-bell-fill kpi-icon"></i>
+            <div class="kpi-value">{{ $summary['due_soon'] }}</div>
+            <div class="kpi-label">Services Due (14 Days)</div>
         </div>
     </div>
 </div>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-3">
+        {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+{{-- Filter Bar --}}
+<form method="GET" action="{{ route('admin.maintenance.index') }}">
+<div class="card-glass mb-3 px-4 py-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-5">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Search Machine</label>
+            <div class="input-group">
+                <span class="input-group-text" style="background:#f5f7fa;border-right:0;border-color:#e5e7eb;"><i class="bi bi-search" style="color:#9ca3af;font-size:.8rem;"></i></span>
+                <input type="text" name="search" class="form-control" placeholder="Machine name&#8230;" value="{{ request('search') }}" style="border-left:0!important;border-color:#e5e7eb!important;padding-left:0!important;">
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Type</label>
+            <select name="maintenance_type" class="form-select" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                @foreach(['Preventive Schedule','Service History','Breakdown Log'] as $t)
+                    <option value="{{ $t }}" @selected(request('maintenance_type')===$t)>{{ $t }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-6 col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-grad flex-fill" style="height:42px;border-radius:9px;font-size:.85rem;">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+            @if(request()->hasAny(['search','maintenance_type']))
+                <a href="{{ route('admin.maintenance.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height:42px;width:42px;border-radius:9px;flex-shrink:0;" title="Clear">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            @endif
+        </div>
+    </div>
+</div>
+</form>
+
+{{-- Table --}}
+<div class="card-glass">
+    <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Service History & Logs</h6>
+            @if(request()->hasAny(['search','maintenance_type']))
+                <span class="badge" style="background:var(--primary-soft);color:var(--primary);font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:20px;"><i class="bi bi-funnel-fill me-1"></i>Filtered</span>
+            @endif
+        </div>
+        <span style="font-size:.78rem;color:#6b7280;font-weight:600;">{{ $logs->total() }} records</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table modern-table mb-0">
+            <thead>
+                <tr>
+                    <th>Machine</th><th>Type</th><th>Service Date</th>
+                    <th>Serviced By</th><th class="text-end">Cost</th><th>Next Due</th>
+                    <th style="width:80px;text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($logs as $m)
+                    <tr>
+                        <td>
+                            <div class="fw-bold" style="color:var(--primary);font-size:.87rem;">{{ $m->machine_name }}</div>
+                        </td>
+                        <td>
+                            @php
+                                $mColor = match($m->maintenance_type) {
+                                    'Preventive Schedule' => 'spill-success',
+                                    'Service History'     => 'spill-info',
+                                    default               => 'spill-danger',
+                                };
+                            @endphp
+                            <span class="spill {{ $mColor }}">{{ $m->maintenance_type }}</span>
+                        </td>
+                        <td style="font-size:.82rem;">{{ $m->service_date?->format('d M Y') }}</td>
+                        <td style="font-size:.82rem;">{{ $m->serviced_by ?? '&#8212;' }}</td>
+                        <td class="text-end fw-bold" style="color:#dc2626;">&#8377;{{ number_format($m->cost,2) }}</td>
+                        <td style="font-size:.82rem;">
+                            @if($m->next_service_due)
+                                @php $isDue = $m->next_service_due->lte(now()->addDays(14)); @endphp
+                                <span class="{{ $isDue ? 'text-danger fw-bold' : '' }}">
+                                    {{ $m->next_service_due->format('d M Y') }}
+                                    @if($isDue)<i class="bi bi-exclamation-circle ms-1 text-danger"></i>@endif
+                                </span>
+                            @else
+                                &#8212;
+                            @endif
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="{{ route('admin.maintenance.show',$m) }}" class="act-btn act-view"><i class="bi bi-eye"></i></a>
+                            <a href="{{ route('admin.maintenance.edit',$m) }}" class="act-btn act-edit"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="7" class="empty-state"><i class="bi bi-tools"></i><p>No maintenance logs recorded</p></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($logs->hasPages())
+        <div class="px-4 py-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div style="font-size:.78rem;color:#9ca3af;">
+                Showing <strong>{{ $logs->firstItem() }}</strong>&#8211;<strong>{{ $logs->lastItem() }}</strong> of <strong>{{ $logs->total() }}</strong> records
+            </div>
+            {{ $logs->links() }}
+        </div>
+    @endif
+</div>
+
 @endsection

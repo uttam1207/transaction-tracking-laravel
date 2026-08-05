@@ -1,148 +1,147 @@
 @extends('layouts.app')
-@section('title', 'Milk Production & Management')
+@section('title', 'Milk Production')
+
+@section('breadcrumb')
+    <li class="breadcrumb-item active">Milk</li>
+@endsection
 
 @section('content')
-<div class="container-fluid py-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
-            <h1 class="h3 mb-1 fw-bold text-success"><i class="bi bi-droplet-fill me-2"></i>Module 3 — Milk Management</h1>
-            <p class="text-muted mb-0">Daily Morning & Evening milk production, Fat %, SNF %, quality testing, and rejection tracking.</p>
+            <h4>Milk Production Management</h4>
+            <p>Daily morning &amp; evening milk production, fat %, SNF % and rejection tracking</p>
         </div>
-    </div>
-
-    <!-- KPI Summary Row -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 text-center bg-success bg-opacity-10">
-                <div class="text-muted small">Total Production Today</div>
-                <div class="fs-3 fw-bold text-success">{{ number_format($todayTotal, 1) }} Liters</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Morning Shift</div>
-                <div class="fs-4 fw-bold text-primary">{{ number_format($morningTotal, 1) }} L</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Evening Shift</div>
-                <div class="fs-4 fw-bold text-info">{{ number_format($eveningTotal, 1) }} L</div>
-            </div>
-        </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Average Fat %</div>
-                <div class="fs-4 fw-bold text-warning">{{ number_format($avgFat, 1) }} %</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm p-3 text-center">
-                <div class="text-muted small">Rejected Milk</div>
-                <div class="fs-4 fw-bold text-danger">{{ number_format($rejectedTotal, 1) }} Liters</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Entry & Production History -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-3">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-plus-circle me-2 text-success"></i>Daily Milk Entry</h5>
-                </div>
-                <div class="card-body">
-                    <form action="{{ route('admin.milk.store') }}" method="POST">
-                        @csrf
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Date</label>
-                            <input type="date" name="date" class="form-control" value="{{ now()->toDateString() }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Shift</label>
-                            <select name="shift" class="form-select">
-                                <option value="Morning">Morning Shift</option>
-                                <option value="Evening">Evening Shift</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Select Animal (Optional)</label>
-                            <select name="animal_id" class="form-select">
-                                <option value="">-- Batch Entry (Entire Shed) --</option>
-                                @foreach($animals as $a)
-                                    <option value="{{ $a->id }}">{{ $a->tag_number }} - {{ $a->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Quantity (Liters) *</label>
-                            <input type="number" step="0.1" name="quantity_liters" class="form-control" placeholder="e.g. 75.5" required>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label small fw-bold">Fat %</label>
-                                <input type="number" step="0.1" name="fat_percentage" class="form-control" value="7.8">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-bold">SNF %</label>
-                                <input type="number" step="0.1" name="snf_percentage" class="form-control" value="9.0">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Quality Grade</label>
-                            <select name="quality_rating" class="form-select">
-                                <option value="Grade A+">Grade A+ (Premium Fat > 8%)</option>
-                                <option value="Grade A" selected>Grade A (Standard Fat 7-8%)</option>
-                                <option value="Grade B">Grade B (Sub-standard)</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-save me-1"></i> Save Milk Entry</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm rounded-3 h-100">
-                <div class="card-header bg-transparent py-3">
-                    <h5 class="card-title mb-0 fw-bold"><i class="bi bi-list-stars me-2 text-primary"></i>Today's Production Records</h5>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Shift</th>
-                                <th>Animal / Source</th>
-                                <th class="text-end">Quantity</th>
-                                <th class="text-end">Fat %</th>
-                                <th class="text-end">SNF %</th>
-                                <th>Quality</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($entries as $e)
-                                <tr>
-                                    <td>
-                                        <span class="badge {{ $e->shift === 'Morning' ? 'bg-primary' : 'bg-info text-dark' }}">
-                                            {{ $e->shift }}
-                                        </span>
-                                    </td>
-                                    <td class="fw-bold">{{ $e->animal ? $e->animal->tag_number . ' (' . $e->animal->name . ')' : 'Batch Shed Total' }}</td>
-                                    <td class="text-end fw-bold text-success">{{ number_format($e->quantity_liters, 1) }} L</td>
-                                    <td class="text-end">{{ number_format($e->fat_percentage, 1) }} %</td>
-                                    <td class="text-end">{{ number_format($e->snf_percentage, 1) }} %</td>
-                                    <td><span class="badge bg-success bg-opacity-10 text-success">{{ $e->quality_rating }}</span></td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted">No milk entries recorded for today.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-success bg-opacity-20 text-success px-3 py-2" style="font-size:.82rem;">
+                <i class="bi bi-calendar2-check me-1"></i>{{ now()->format('d M Y') }}
+            </span>
+            <a href="{{ route('admin.milk.create') }}" class="btn btn-primary-grad btn-sm px-4">
+                <i class="bi bi-plus-lg me-1"></i>Add Entry
+            </a>
         </div>
     </div>
 </div>
+
+{{-- KPI Cards --}}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#059669,#0d9488);">
+            <i class="bi bi-droplet-fill kpi-icon"></i>
+            <div class="kpi-value">{{ number_format($todayTotal,1) }} <small style="font-size:.55em;font-weight:600;">L</small></div>
+            <div class="kpi-label">Total Today</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#d97706,#ea580c);">
+            <i class="bi bi-sunrise-fill kpi-icon"></i>
+            <div class="kpi-value">{{ number_format($morningTotal,1) }} <small style="font-size:.55em;font-weight:600;">L</small></div>
+            <div class="kpi-label">Morning Shift</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">
+            <i class="bi bi-moon-fill kpi-icon"></i>
+            <div class="kpi-value">{{ number_format($eveningTotal,1) }} <small style="font-size:.55em;font-weight:600;">L</small></div>
+            <div class="kpi-label">Evening Shift</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#0891b2,#0284c7);">
+            <i class="bi bi-graph-up kpi-icon"></i>
+            <div class="kpi-value">{{ number_format($avgFat,1) }} <small style="font-size:.55em;font-weight:600;">%</small></div>
+            <div class="kpi-label">Avg Fat %</div>
+        </div>
+    </div>
+</div>
+
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-3">
+        {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+{{-- Filter Bar --}}
+<form method="GET" action="{{ route('admin.milk.index') }}">
+<div class="card-glass mb-3 px-4 py-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-12 col-md-4">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Date</label>
+            <input type="date" name="date" class="form-control" value="{{ request('date', now()->toDateString()) }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Shift</label>
+            <select name="shift" class="form-select" onchange="this.form.submit()">
+                <option value="">All Shifts</option>
+                <option value="Morning" @selected(request('shift')==='Morning')>Morning</option>
+                <option value="Evening" @selected(request('shift')==='Evening')>Evening</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary-grad flex-fill" style="height:42px;border-radius:9px;font-size:.85rem;">
+                <i class="bi bi-funnel me-1"></i>Filter
+            </button>
+            @if(request()->hasAny(['shift']) || request('date') !== now()->toDateString())
+                <a href="{{ route('admin.milk.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height:42px;width:42px;border-radius:9px;flex-shrink:0;" title="Clear">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            @endif
+        </div>
+    </div>
+</div>
+</form>
+
+{{-- Table --}}
+<div class="card-glass">
+    <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-list-stars me-2 text-primary"></i>Production Records</h6>
+        <span style="font-size:.78rem;color:#6b7280;font-weight:600;">{{ $entries->total() }} entries</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table modern-table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th><th>Shift</th><th>Animal / Source</th>
+                    <th class="text-end">Qty (L)</th><th class="text-end">Fat %</th><th class="text-end">SNF %</th>
+                    <th>Quality</th><th style="width:80px;text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($entries as $e)
+                    <tr>
+                        <td style="font-size:.82rem;color:#374151;">{{ $e->date?->format('d M Y') }}</td>
+                        <td>
+                            <span class="spill {{ $e->shift==='Morning' ? 'spill-warning' : 'spill-primary' }}">
+                                <i class="bi bi-{{ $e->shift==='Morning' ? 'sunrise' : 'moon' }} me-1"></i>{{ $e->shift }}
+                            </span>
+                        </td>
+                        <td class="fw-semibold" style="font-size:.83rem;">
+                            {{ $e->animal ? $e->animal->tag_number.' — '.$e->animal->name : 'Batch Shed Total' }}
+                        </td>
+                        <td class="text-end fw-bold text-success">{{ number_format($e->quantity_liters,1) }}</td>
+                        <td class="text-end" style="font-size:.83rem;">{{ number_format($e->fat_percentage,1) }}</td>
+                        <td class="text-end" style="font-size:.83rem;">{{ number_format($e->snf_percentage,1) }}</td>
+                        <td><span class="spill spill-success">{{ $e->quality_rating }}</span></td>
+                        <td style="text-align:center;">
+                            <a href="{{ route('admin.milk.show',$e) }}" class="act-btn act-view"><i class="bi bi-eye"></i></a>
+                            <a href="{{ route('admin.milk.edit',$e) }}" class="act-btn act-edit"><i class="bi bi-pencil"></i></a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="8" class="empty-state"><i class="bi bi-droplet"></i><p>No milk entries for this date</p></td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($entries->hasPages())
+        <div class="px-4 py-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div style="font-size:.78rem;color:#9ca3af;">
+                Showing <strong>{{ $entries->firstItem() }}</strong>–<strong>{{ $entries->lastItem() }}</strong> of <strong>{{ $entries->total() }}</strong> entries
+            </div>
+            {{ $entries->links() }}
+        </div>
+    @endif
+</div>
+
 @endsection
