@@ -70,22 +70,28 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div style="background:#ecfdf5;border-radius:10px;padding:14px 16px;border:1px solid #d1fae5;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-droplet me-1"></i>Quantity</div>
                             <div class="fw-bold" style="color:#059669;font-size:1.15rem;">{{ number_format($milkEntry->quantity_liters,1) }} <small style="font-size:.65em;">L</small></div>
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
-                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-percent me-1"></i>Fat %</div>
-                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->fat_percentage,1) }}%</div>
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-droplet-half me-1"></i>Fat</div>
+                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->fat_percentage,2) }}</div>
                         </div>
                     </div>
-                    <div class="col-sm-4">
+                    <div class="col-sm-3">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
-                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-percent me-1"></i>SNF %</div>
-                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->snf_percentage,1) }}%</div>
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-bar-chart-fill me-1"></i>SNF</div>
+                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->snf_percentage,2) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div style="background:#eff6ff;border-radius:10px;padding:14px 16px;border:1px solid #bfdbfe;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-speedometer2 me-1"></i>CLR Value</div>
+                            <div class="fw-bold" style="color:#2563eb;font-size:1rem;">{{ $milkEntry->clr_value ? number_format($milkEntry->clr_value,2) : '—' }}</div>
                         </div>
                     </div>
                     <div class="col-sm-6">

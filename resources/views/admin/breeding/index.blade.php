@@ -72,7 +72,7 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Status</label>
             <select name="status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                @foreach(['Heat Detected','AI Done','Confirmed Pregnant','Calved','Repeat Breeder'] as $s)
+                @foreach(['Heat Detected','AI Done','Confirmed Pregnant','Calved','Repeat Breeder','Not Pregnant'] as $s)
                     <option value="{{ $s }}" @selected(request('status')===$s)>{{ $s }}</option>
                 @endforeach
             </select>
@@ -119,6 +119,7 @@
                             'AI Done'            => 'spill-info',
                             'Heat Detected'      => 'spill-warning',
                             'Calved'             => 'spill-success',
+                            'Not Pregnant'       => 'spill-secondary',
                             default              => 'spill-danger',
                         };
                     @endphp

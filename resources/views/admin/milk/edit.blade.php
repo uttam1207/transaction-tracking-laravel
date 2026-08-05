@@ -106,21 +106,31 @@
                     <div class="mb-4">
                         <h6 class="form-section-label">B — Quality Parameters</h6>
                         <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Fat %</label>
-                                <input type="number" step="0.1" min="1" max="15" name="fat_percentage"
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Fat <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="1" max="15" name="fat_percentage"
                                     class="form-control @error('fat_percentage') is-invalid @enderror"
+                                    placeholder="e.g. 7.8"
                                     value="{{ old('fat_percentage', $milkEntry->fat_percentage) }}">
                                 @error('fat_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">SNF %</label>
-                                <input type="number" step="0.1" min="1" max="15" name="snf_percentage"
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">SNF <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="1" max="15" name="snf_percentage"
                                     class="form-control @error('snf_percentage') is-invalid @enderror"
+                                    placeholder="e.g. 9.0"
                                     value="{{ old('snf_percentage', $milkEntry->snf_percentage) }}">
                                 @error('snf_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">CLR Value</label>
+                                <input type="number" step="0.01" min="0" max="50" name="clr_value"
+                                    class="form-control @error('clr_value') is-invalid @enderror"
+                                    placeholder="e.g. 28.5"
+                                    value="{{ old('clr_value', $milkEntry->clr_value) }}">
+                                @error('clr_value')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Quality Grade</label>
                                 <select name="quality_rating" class="form-select @error('quality_rating') is-invalid @enderror">
                                     @foreach(['Grade A+','Grade A','Grade B'] as $g)

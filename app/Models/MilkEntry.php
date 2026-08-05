@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Animal;
 
 class MilkEntry extends Model
 {
@@ -16,6 +17,7 @@ class MilkEntry extends Model
         'quantity_liters',
         'fat_percentage',
         'snf_percentage',
+        'clr_value',
         'quality_rating',
         'rejected_liters',
         'recorded_by',
@@ -26,6 +28,7 @@ class MilkEntry extends Model
         'quantity_liters' => 'decimal:2',
         'fat_percentage' => 'decimal:2',
         'snf_percentage' => 'decimal:2',
+        'clr_value' => 'decimal:2',
         'rejected_liters' => 'decimal:2',
     ];
 

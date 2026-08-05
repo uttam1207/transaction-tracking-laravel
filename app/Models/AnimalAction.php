@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Animal;
 
 class AnimalAction extends Model
 {
@@ -15,6 +16,7 @@ class AnimalAction extends Model
         'action_date',
         'cost',
         'notes',
+        'document_path',
         'performed_by',
     ];
 

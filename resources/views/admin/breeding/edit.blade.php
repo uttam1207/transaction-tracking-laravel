@@ -91,7 +91,7 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
                                 <select name="status" class="form-select @error('status') is-invalid @enderror">
-                                    @foreach(['Heat Detected','AI Done','Confirmed Pregnant','Calved','Repeat Breeder'] as $s)
+                                    @foreach(['Heat Detected','AI Done','Confirmed Pregnant','Calved','Repeat Breeder','Not Pregnant'] as $s)
                                         <option value="{{ $s }}" @selected(old('status',$breedingRecord->status)===$s)>{{ $s }}</option>
                                     @endforeach
                                 </select>

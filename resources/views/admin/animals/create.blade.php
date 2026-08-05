@@ -8,6 +8,11 @@
 
 @section('content')
 
+<style>
+.purchase-section { display: none; }
+form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { display: block; }
+</style>
+
 <div class="page-hero">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
@@ -133,35 +138,86 @@
 
                 <hr class="my-3 opacity-25">
 
-                {{-- Section C: Purchase Details --}}
+                {{-- Section C: Source & Purchase Details --}}
                 <div class="mb-4">
-                    <h6 class="form-section-label">C — Purchase Details (Optional)</h6>
+                    <h6 class="form-section-label">C — Animal Source & Purchase Details</h6>
                     <div class="row g-3">
-                        <div class="col-md-4">
+
+                        {{-- Animal Source Radio --}}
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Animal Source <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3 flex-wrap mt-1">
+                                <label style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:10px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:600;min-width:210px;">
+                                    <input type="radio" name="born_in_farm" value="1"
+                                        {{ old('born_in_farm')==='1' ? 'checked' : '' }}
+                                        style="width:18px;height:18px;accent-color:#16a34a;">
+                                    <span>
+                                        <i class="bi bi-house-heart-fill me-1" style="color:#16a34a;"></i>
+                                        Born in Own Farm
+                                    </span>
+                                </label>
+                                <label style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:10px;border:2px solid #e5e7eb;background:#fff;cursor:pointer;font-weight:600;min-width:210px;">
+                                    <input type="radio" name="born_in_farm" value="0"
+                                        {{ old('born_in_farm','0')==='0' ? 'checked' : '' }}
+                                        style="width:18px;height:18px;accent-color:#2563eb;">
+                                    <span>
+                                        <i class="bi bi-cart-check-fill me-1" style="color:#2563eb;"></i>
+                                        Purchased from Outside
+                                    </span>
+                                </label>
+                            </div>
+                            @error('born_in_farm')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+
+                        {{-- Date of Birth — always visible for both born & purchased animals --}}
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Date of Birth</label>
                             <input type="date" name="dob"
                                 class="form-control @error('dob') is-invalid @enderror"
                                 value="{{ old('dob') }}">
                             @error('dob')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Purchase Date</label>
-                            <input type="date" name="purchase_date"
-                                class="form-control @error('purchase_date') is-invalid @enderror"
-                                value="{{ old('purchase_date') }}">
-                            @error('purchase_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold">Purchase Cost (&#8377;)</label>
-                            <div class="input-group">
-                                <span class="input-group-text">&#8377;</span>
-                                <input type="number" step="0.01" min="0" name="purchase_cost"
-                                    class="form-control @error('purchase_cost') is-invalid @enderror"
-                                    value="{{ old('purchase_cost', 0) }}">
-                                @error('purchase_cost')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                    </div>
+
+                    {{-- Purchase-only fields: visible only when "Purchased from Outside" is selected --}}
+                    <div class="purchase-section">
+                        <div class="row g-3 mt-1">
+
+                            {{-- Purchase From --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Purchase From <small class="text-muted fw-normal">(Seller / Location)</small></label>
+                                <input type="text" name="purchase_from"
+                                    class="form-control @error('purchase_from') is-invalid @enderror"
+                                    placeholder="e.g. Ramesh Yadav, Nagpur Market"
+                                    value="{{ old('purchase_from') }}">
+                                @error('purchase_from')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
+                            {{-- Purchase Date --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Purchase Date</label>
+                                <input type="date" name="purchase_date"
+                                    class="form-control @error('purchase_date') is-invalid @enderror"
+                                    value="{{ old('purchase_date') }}">
+                                @error('purchase_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Purchase Cost --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Purchase Cost (&#8377;)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">&#8377;</span>
+                                    <input type="number" step="0.01" min="0" name="purchase_cost"
+                                        class="form-control @error('purchase_cost') is-invalid @enderror"
+                                        value="{{ old('purchase_cost', 0) }}">
+                                    @error('purchase_cost')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                            </div>
+
                         </div>
                     </div>
+
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 pt-2">

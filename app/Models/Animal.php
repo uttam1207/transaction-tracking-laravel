@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\AnimalAction;
+use App\Models\MilkEntry;
+use App\Models\BreedingRecord;
+use App\Models\HealthRecord;
 
 class Animal extends Model
 {
@@ -14,6 +18,8 @@ class Animal extends Model
         'name',
         'breed',
         'dob',
+        'born_in_farm',
+        'purchase_from',
         'purchase_date',
         'purchase_cost',
         'current_weight',
@@ -26,10 +32,11 @@ class Animal extends Model
     ];
 
     protected $casts = [
-        'dob' => 'date',
-        'purchase_date' => 'date',
-        'purchase_cost' => 'decimal:2',
+        'dob'            => 'date',
+        'purchase_date'  => 'date',
+        'purchase_cost'  => 'decimal:2',
         'current_weight' => 'decimal:2',
+        'born_in_farm'   => 'boolean',
     ];
 
     public function actions()

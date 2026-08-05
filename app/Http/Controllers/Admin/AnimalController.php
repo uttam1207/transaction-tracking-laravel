@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\AnimalAction;
+use App\Models\ActionType;
 use App\Models\Breed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class AnimalController extends Controller
 {
@@ -57,18 +59,22 @@ class AnimalController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tag_number' => 'required|string|unique:animals,tag_number',
-            'name' => 'nullable|string|max:100',
-            'breed' => 'required|string|max:100',
-            'dob' => 'nullable|date',
-            'purchase_date' => 'nullable|date',
-            'purchase_cost' => 'nullable|numeric|min:0',
-            'current_weight' => 'nullable|numeric|min:0',
+            'tag_number'       => 'required|string|unique:animals,tag_number',
+            'name'             => 'nullable|string|max:100',
+            'breed'            => 'required|string|max:100',
+            'dob'              => 'nullable|date',
+            'born_in_farm'     => 'nullable|boolean',
+            'purchase_from'    => 'nullable|string|max:200',
+            'purchase_date'    => 'nullable|date',
+            'purchase_cost'    => 'nullable|numeric|min:0',
+            'current_weight'   => 'nullable|numeric|min:0',
             'lactation_number' => 'required|integer|min:0',
-            'health_status' => 'required|in:Healthy,Sick,Under Treatment',
+            'health_status'    => 'required|in:Healthy,Sick,Under Treatment',
             'pregnancy_status' => 'required|in:Open,Inseminated,Pregnant,Dry',
-            'shed_number' => 'required|string|max:50',
+            'shed_number'      => 'required|string|max:50',
         ]);
+
+        $validated['born_in_farm'] = $request->boolean('born_in_farm');
 
         Animal::create($validated);
 
@@ -79,24 +85,33 @@ class AnimalController extends Controller
     public function show(Animal $animal)
     {
         $animal->load('actions', 'milkEntries', 'breedingRecords', 'healthRecords');
-        return view('admin.animals.show', compact('animal'));
+        $actionTypes = ActionType::active()->orderByDesc('is_system')->orderBy('name')->get();
+        return view('admin.animals.show', compact('animal', 'actionTypes'));
     }
 
     public function storeAction(Request $request, Animal $animal)
     {
         $validated = $request->validate([
-            'action_type' => 'required|in:Vaccination,Deworming,Heat Detection,AI,Pregnancy Check,Calving,Dry Off,Sale,Death',
-            'action_date' => 'required|date',
-            'cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string|max:1000',
+            'action_type'  => 'required|string|max:100|exists:action_types,name',
+            'action_date'  => 'required|date',
+            'cost'         => 'required|numeric|min:0',
+            'notes'        => 'nullable|string|max:1000',
+            'document'     => 'nullable|file|mimes:pdf,jpg,jpeg,png,gif,webp|max:5120',
         ]);
 
-        $validated['animal_id'] = $animal->id;
+        $validated['animal_id']   = $animal->id;
         $validated['performed_by'] = auth()->id();
 
+        // Handle optional document upload
+        if ($request->hasFile('document')) {
+            $validated['document_path'] = $request->file('document')
+                ->store('animal-docs', 'public');
+        }
+
+        unset($validated['document']); // not a DB column
         AnimalAction::create($validated);
 
-        // Update animal status if applicable
+        // Auto-update animal status based on action type
         if ($validated['action_type'] === 'Dry Off') {
             $animal->update(['pregnancy_status' => 'Dry']);
         } elseif ($validated['action_type'] === 'Sale') {
@@ -105,8 +120,21 @@ class AnimalController extends Controller
             $animal->update(['status' => 'Deceased']);
         }
 
-        return back()->with('success', 'Animal action recorded.');
+        return back()->with('success', 'Action "' . $validated['action_type'] . '" recorded successfully.');
     }
+
+    public function destroyAction(Animal $animal, AnimalAction $action)
+    {
+        // Delete the uploaded file if it exists
+        if ($action->document_path) {
+            Storage::disk('public')->delete($action->document_path);
+        }
+
+        $action->delete();
+
+        return back()->with('success', 'Action record deleted.');
+    }
+
     public function edit(Animal $animal)
     {
         $breeds = Breed::orderBy('animal_type')->orderBy('name')->get();
@@ -120,6 +148,8 @@ class AnimalController extends Controller
             'name'             => 'nullable|string|max:100',
             'breed'            => 'required|string|max:100',
             'dob'              => 'nullable|date',
+            'born_in_farm'     => 'nullable|boolean',
+            'purchase_from'    => 'nullable|string|max:200',
             'purchase_date'    => 'nullable|date',
             'purchase_cost'    => 'nullable|numeric|min:0',
             'current_weight'   => 'nullable|numeric|min:0',
@@ -129,6 +159,8 @@ class AnimalController extends Controller
             'shed_number'      => 'required|string|max:50',
             'status'           => 'required|in:Active,Sold,Deceased',
         ]);
+
+        $validated['born_in_farm'] = $request->boolean('born_in_farm');
 
         $animal->update($validated);
 

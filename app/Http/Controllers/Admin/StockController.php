@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\InventoryItem;
+use App\Models\InventoryCategory;
 use App\Models\StockMovement;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -39,9 +40,7 @@ class StockController extends Controller
             'issued_this_month' => StockMovement::where('type', 'out')->whereMonth('date', now()->month)->sum('quantity'),
         ];
 
-        $categories = [
-            'Medicine', 'Feed', 'Equipment', 'Consumables', 'Stationery', 'Uniforms', 'Cleaning Material', 'Miscellaneous'
-        ];
+        $categories = InventoryCategory::active()->orderBy('name')->get();
 
         return view('admin.stock.index', compact('items', 'summary', 'categories'));
     }

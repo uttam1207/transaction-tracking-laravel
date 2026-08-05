@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\StockMovement;
 
 class InventoryItem extends Model
 {
@@ -12,6 +13,7 @@ class InventoryItem extends Model
     protected $fillable = [
         'name',
         'category',
+        'item_type',
         'unit',
         'min_stock',
         'description',

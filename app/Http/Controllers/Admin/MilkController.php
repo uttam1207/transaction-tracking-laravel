@@ -52,6 +52,7 @@ class MilkController extends Controller
             'quantity_liters' => 'required|numeric|min:0.1',
             'fat_percentage' => 'required|numeric|min:1|max:15',
             'snf_percentage' => 'required|numeric|min:1|max:15',
+            'clr_value'      => 'nullable|numeric|min:0|max:50',
             'quality_rating' => 'required|string',
             'rejected_liters' => 'nullable|numeric|min:0',
         ]);

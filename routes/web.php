@@ -26,8 +26,12 @@ use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\InventoryItemController;
+use App\Http\Controllers\Admin\InventoryCategoryController;
+use App\Http\Controllers\Admin\InventoryItemTypeController;
 use App\Http\Controllers\Admin\FeedController;
 use App\Http\Controllers\Admin\AnimalController;
+use App\Http\Controllers\Admin\ActionTypeController;
 use App\Http\Controllers\Admin\BreedController;
 use App\Http\Controllers\Admin\MilkController;
 use App\Http\Controllers\Admin\BreedingController;
@@ -259,6 +263,9 @@ Route::prefix('admin')
     Route::get('/expenses-export/pdf', [ExpenseController::class, 'exportPdf'])->name('expenses.export.pdf');
 
     // Stock Management (Module 9)
+    Route::resource('stock-items', InventoryItemController::class)->except(['show'])->parameters(['stock-items' => 'item']);
+    Route::resource('stock-categories', InventoryCategoryController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['stock-categories' => 'stockCategory']);
+    Route::resource('stock-types', InventoryItemTypeController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['stock-types' => 'stockType']);
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
     Route::get('/stock/in', [StockController::class, 'stockInForm'])->name('stock.in');
     Route::post('/stock/in', [StockController::class, 'storeStockIn'])->name('stock.in.store');
@@ -271,12 +278,19 @@ Route::prefix('admin')
 
     // Feed Auto Calculation & Alerts
     Route::get('/feed/calculator', [FeedController::class, 'calculator'])->name('feed.calculator');
+    Route::post('/feed/groups', [FeedController::class, 'storeGroup'])->name('feed.groups.store');
     Route::post('/feed/groups/{group}', [FeedController::class, 'updateGroupCount'])->name('feed.groups.update');
+    Route::delete('/feed/groups/{group}', [FeedController::class, 'destroyGroup'])->name('feed.groups.destroy');
     Route::post('/feed/plans', [FeedController::class, 'updateFeedPlan'])->name('feed.plans.update');
+    Route::post('/feed/plans/item', [FeedController::class, 'storePlan'])->name('feed.plans.item.store');
+    Route::delete('/feed/plans/{plan}', [FeedController::class, 'destroyPlan'])->name('feed.plans.item.destroy');
 
     // Module 2 — Animal Management
     Route::resource('animals', AnimalController::class);
     Route::post('/animals/{animal}/actions', [AnimalController::class, 'storeAction'])->name('animals.actions.store');
+    Route::delete('/animals/{animal}/actions/{action}', [AnimalController::class, 'destroyAction'])->name('animals.actions.destroy');
+    // Action Type Management (admin settings)
+    Route::resource('action-types', ActionTypeController::class)->only(['index', 'store', 'update', 'destroy']);
     // Breed Management (admin settings)
     Route::resource('breeds', BreedController::class)->only(['index', 'store', 'update', 'destroy']);
 
@@ -369,4 +383,41 @@ Route::prefix('employee')
 
     // My Wallet
     Route::get('/wallet', [EmployeeWalletController::class, 'index'])->name('wallet.index');
+});
+
+// ── Temporary DB inspection route (open) ─────────────────────────────────────
+Route::get('/check-db-tables', function () {
+    $rows = DB::select("
+        SELECT t.TABLE_NAME, COALESCE(t.TABLE_ROWS,0) AS TABLE_ROWS,
+               GROUP_CONCAT(kcu.COLUMN_NAME ORDER BY kcu.ORDINAL_POSITION SEPARATOR ', ') AS primary_key
+        FROM information_schema.TABLES t
+        LEFT JOIN information_schema.KEY_COLUMN_USAGE kcu
+            ON kcu.TABLE_SCHEMA = t.TABLE_SCHEMA
+            AND kcu.TABLE_NAME  = t.TABLE_NAME
+            AND kcu.CONSTRAINT_NAME = 'PRIMARY'
+        WHERE t.TABLE_SCHEMA = DATABASE()
+        GROUP BY t.TABLE_NAME, t.TABLE_ROWS
+        ORDER BY t.TABLE_NAME
+    ");
+
+    $html  = '<style>body{font-family:monospace;font-size:13px;padding:20px;}';
+    $html .= 'table{border-collapse:collapse;width:100%;}';
+    $html .= 'th,td{border:1px solid #ccc;padding:6px 10px;text-align:left;}';
+    $html .= 'th{background:#1e40af;color:#fff;}';
+    $html .= 'tr:nth-child(even){background:#f1f5f9;}';
+    $html .= '.gipk{background:#fee2e2 !important;color:#b91c1c;font-weight:bold;}';
+    $html .= '</style>';
+    $html .= '<h2>DB: ' . DB::connection()->getDatabaseName() . ' &mdash; Host: ' . config('database.connections.mysql.host') . '</h2>';
+    $html .= '<p>Total tables: <strong>' . count($rows) . '</strong></p>';
+    $html .= '<table><tr><th>#</th><th>Table</th><th>Rows</th><th>Primary Key</th></tr>';
+
+    foreach ($rows as $i => $r) {
+        $pk   = $r->primary_key ?? 'NONE';
+        $gipk = ($pk === 'my_row_id' || $pk === 'NONE');
+        $cls  = $gipk ? ' class="gipk"' : '';
+        $html .= "<tr{$cls}><td>" . ($i + 1) . "</td><td>{$r->TABLE_NAME}</td><td>{$r->TABLE_ROWS}</td><td>{$pk}</td></tr>";
+    }
+
+    $html .= '</table>';
+    return response($html);
 });

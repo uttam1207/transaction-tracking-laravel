@@ -47,7 +47,7 @@ class BreedingController extends Controller
             'heat_date' => 'required|date',
             'ai_date' => 'nullable|date',
             'bull_semen_code' => 'nullable|string|max:100',
-            'status' => 'required|in:Heat Detected,AI Done,Confirmed Pregnant,Calved,Repeat Breeder',
+            'status' => 'required|in:Heat Detected,AI Done,Confirmed Pregnant,Calved,Repeat Breeder,Not Pregnant',
             'expected_calving_date' => 'nullable|date',
         ]);
 
@@ -91,7 +91,7 @@ class BreedingController extends Controller
 
         if ($validated['status'] === 'Confirmed Pregnant') {
             Animal::where('id', $validated['animal_id'])->update(['pregnancy_status' => 'Pregnant']);
-        } elseif ($validated['status'] === 'Calved') {
+        } elseif (in_array($validated['status'], ['Calved', 'Not Pregnant'])) {
             Animal::where('id', $validated['animal_id'])->update(['pregnancy_status' => 'Open']);
         }
 

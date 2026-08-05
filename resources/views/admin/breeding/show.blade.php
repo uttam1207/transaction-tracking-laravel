@@ -58,6 +58,7 @@
                                 'AI Done'            => 'spill-info',
                                 'Heat Detected'      => 'spill-warning',
                                 'Calved'             => 'spill-success',
+                                'Not Pregnant'       => 'spill-secondary',
                                 default              => 'spill-danger',
                             };
                         @endphp
