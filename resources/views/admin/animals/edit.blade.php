@@ -52,7 +52,12 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                     <div>
                         <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;">Edit Animal</div>
                         <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.01em;">{{ $animal->tag_number }}{{ $animal->name ? ' — '.$animal->name : '' }}</div>
-                        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">{{ $animal->breed }} &mdash; {{ $animal->health_status }}</div>
+                        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">
+                            {{ $animal->breed }} &mdash; {{ $animal->health_status }}
+                            @if($animal->animal_id)
+                                &nbsp;·&nbsp; <span style="font-family:monospace;">{{ $animal->animal_id }}</span>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -72,14 +77,21 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                     <div class="mb-4">
                         <h6 class="form-section-label">A — Animal Identity</h6>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Ear Tag Number <span class="text-danger">*</span></label>
-                                <input type="text" name="tag_number"
-                                    class="form-control @error('tag_number') is-invalid @enderror"
-                                    value="{{ old('tag_number', $animal->tag_number) }}" required>
-                                @error('tag_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                            {{-- Animal Type — first --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
+                                <select name="animal_type" class="form-select @error('animal_type') is-invalid @enderror" required>
+                                    <option value="">— Select Type —</option>
+                                    @foreach(['Cow','Buffalo','Bull','Heifer','Calf','Goat','Sheep','Ox'] as $t)
+                                        <option value="{{ $t }}" @selected(old('animal_type', $animal->animal_type)===$t)>{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                                @error('animal_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- Animal Name --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Animal Name</label>
                                 <input type="text" name="name"
                                     class="form-control @error('name') is-invalid @enderror"
@@ -87,17 +99,41 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                     value="{{ old('name', $animal->name) }}">
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
-                                <select name="animal_type" class="form-select @error('animal_type') is-invalid @enderror" required>
-                                    <option value="">— Select Type —</option>
-                                    @foreach(['Cow','Buffalo','Bull','Heifer','Calf'] as $t)
-                                        <option value="{{ $t }}" @selected(old('animal_type', $animal->animal_type)===$t)>{{ $t }}</option>
-                                    @endforeach
-                                </select>
-                                @error('animal_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                            {{-- Ear Tag No. --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Ear Tag No. <span class="text-danger">*</span></label>
+                                <input type="text" name="tag_number"
+                                    class="form-control @error('tag_number') is-invalid @enderror"
+                                    value="{{ old('tag_number', $animal->tag_number) }}" required>
+                                @error('tag_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- RFID (Optional) --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">RFID <small class="text-muted fw-normal">(Optional)</small></label>
+                                <input type="text" name="rfid"
+                                    class="form-control @error('rfid') is-invalid @enderror"
+                                    placeholder="e.g. 982-000123456789"
+                                    value="{{ old('rfid', $animal->rfid) }}">
+                                @error('rfid')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="form-text" style="font-size:.72rem;">Electronic RFID chip / transponder number</div>
+                            </div>
+
+                            {{-- Animal ID — editable --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Animal ID</label>
+                                <input type="text" name="animal_id"
+                                    class="form-control @error('animal_id') is-invalid @enderror"
+                                    style="font-family:monospace;color:#4f46e5;font-weight:600;border-color:#c7d2fe;"
+                                    placeholder="e.g. ASD-COW-1234"
+                                    value="{{ old('animal_id', $animal->animal_id) }}">
+                                @error('animal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="form-text" style="font-size:.72rem;">Auto-generated — editable if needed</div>
+                            </div>
+
+                            {{-- Breed --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Breed <span class="text-danger">*</span></label>
                                 <select name="breed" class="form-select @error('breed') is-invalid @enderror" required>
                                     <option value="">— Select Breed —</option>
@@ -116,13 +152,16 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                     </a>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- Lactation Number --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Lactation Number <span class="text-danger">*</span></label>
                                 <input type="number" name="lactation_number"
                                     class="form-control @error('lactation_number') is-invalid @enderror"
                                     value="{{ old('lactation_number', $animal->lactation_number) }}" min="0" required>
                                 @error('lactation_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
                         </div>
                     </div>
 
@@ -157,21 +196,21 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                     value="{{ old('current_weight', $animal->current_weight) }}">
                                 @error('current_weight')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Shed Number <span class="text-danger">*</span></label>
                                 <input type="text" name="shed_number"
                                     class="form-control @error('shed_number') is-invalid @enderror"
                                     value="{{ old('shed_number', $animal->shed_number) }}" required>
                                 @error('shed_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Owner Name <span class="text-danger">*</span></label>
                                 <input type="text" name="owner_name"
                                     class="form-control @error('owner_name') is-invalid @enderror"
                                     value="{{ old('owner_name', $animal->owner_name) }}" required>
                                 @error('owner_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Record Status <span class="text-danger">*</span></label>
                                 <select name="status" class="form-select @error('status') is-invalid @enderror">
                                     @foreach(['Active','Sold','Deceased'] as $s)
@@ -190,7 +229,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                         <h6 class="form-section-label">C — Animal Source & Purchase Details</h6>
                         <div class="row g-3">
 
-                            {{-- Animal Source Radio --}}
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Animal Source <span class="text-danger">*</span></label>
                                 <div class="d-flex gap-3 flex-wrap mt-1">
@@ -216,7 +254,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                 @error('born_in_farm')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
 
-                            {{-- Date of Birth — always visible for both born & purchased animals --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Date of Birth</label>
                                 <input type="date" name="dob"
@@ -227,11 +264,8 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
 
                         </div>
 
-                        {{-- Purchase-only fields: visible only when "Purchased from Outside" is selected --}}
                         <div class="purchase-section">
                             <div class="row g-3 mt-1">
-
-                                {{-- Purchase From --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase From <small class="text-muted fw-normal">(Seller / Location)</small></label>
                                     <input type="text" name="purchase_from"
@@ -240,8 +274,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         value="{{ old('purchase_from', $animal->purchase_from) }}">
                                     @error('purchase_from')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-
-                                {{-- Purchase Date --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase Date</label>
                                     <input type="date" name="purchase_date"
@@ -249,8 +281,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         value="{{ old('purchase_date', $animal->purchase_date?->toDateString()) }}">
                                     @error('purchase_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-
-                                {{-- Purchase Cost --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase Cost (&#8377;)</label>
                                     <div class="input-group">
@@ -261,7 +291,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         @error('purchase_cost')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
-
                             </div>
                         </div>
 

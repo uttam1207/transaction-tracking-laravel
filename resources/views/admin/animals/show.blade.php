@@ -56,6 +56,11 @@
                     <div>
                         <div style="font-size:1.15rem;font-weight:800;color:#fff;letter-spacing:-.01em;">{{ $animal->tag_number }}</div>
                         <div style="color:rgba(255,255,255,.75);font-size:.82rem;margin-top:2px;">{{ $animal->name ?? 'Unnamed' }}</div>
+                        @if($animal->animal_id)
+                        <div style="margin-top:5px;display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-family:monospace;font-size:.74rem;font-weight:700;padding:2px 10px;border-radius:6px;letter-spacing:.04em;">
+                            {{ $animal->animal_id }}
+                        </div>
+                        @endif
                     </div>
                     <div class="ms-auto d-flex flex-column gap-1 align-items-end">
                         @php
@@ -69,10 +74,28 @@
 
             <div class="p-4">
                 <div class="row g-3">
+                    @if($animal->animal_id)
+                    <div class="col-12">
+                        <div style="background:#eef2ff;border-radius:10px;padding:12px 14px;border:1px solid #c7d2fe;">
+                            <div style="font-size:.68rem;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;"><i class="bi bi-fingerprint me-1"></i>Animal ID</div>
+                            <div class="fw-bold" style="color:#4f46e5;font-family:monospace;font-size:1rem;letter-spacing:.04em;">{{ $animal->animal_id }}</div>
+                        </div>
+                    </div>
+                    @endif
                     <div class="col-6">
                         <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;">
-                            <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;"><i class="bi bi-tag me-1"></i>Tag No.</div>
+                            <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;"><i class="bi bi-tag me-1"></i>Ear Tag No.</div>
                             <div class="fw-bold" style="color:var(--primary);font-size:.9rem;">{{ $animal->tag_number }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;border:1px solid #e5e7eb;">
+                            <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;"><i class="bi bi-broadcast me-1"></i>RFID</div>
+                            @if($animal->rfid)
+                                <div style="color:#374151;font-family:monospace;font-size:.85rem;">{{ $animal->rfid }}</div>
+                            @else
+                                <div style="color:#d1d5db;font-size:.82rem;font-style:italic;">Not assigned</div>
+                            @endif
                         </div>
                     </div>
                     <div class="col-6">

@@ -127,6 +127,45 @@
                             <div style="color:#6b7280;font-size:.85rem;">{{ $healthRecord->created_at->format('d M Y, H:i') }}</div>
                         </div>
                     </div>
+
+                    {{-- Medical Report / Document --}}
+                    @if($healthRecord->report_path)
+                    @php $fext = strtolower(pathinfo($healthRecord->report_path, PATHINFO_EXTENSION)); @endphp
+                    <div class="col-12">
+                        <div style="background:#f0f4ff;border-radius:10px;padding:14px 16px;border:1px solid #c7d2fe;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px;"><i class="bi bi-paperclip me-1"></i>Medical Report / Document</div>
+                            @if(in_array($fext, ['jpg','jpeg','png']))
+                            <div class="d-flex align-items-start gap-3 flex-wrap">
+                                <a href="{{ asset('uploads/' . $healthRecord->report_path) }}" target="_blank" rel="noopener">
+                                    <img src="{{ asset('uploads/' . $healthRecord->report_path) }}"
+                                        alt="Medical Report"
+                                        style="max-height:160px;max-width:260px;border-radius:8px;border:2px solid #e0e7ff;object-fit:cover;display:block;">
+                                </a>
+                                <div>
+                                    <div style="font-size:.82rem;color:#374151;font-weight:600;margin-bottom:6px;">{{ basename($healthRecord->report_path) }}</div>
+                                    <a href="{{ asset('uploads/' . $healthRecord->report_path) }}" target="_blank" rel="noopener"
+                                        class="btn btn-sm" style="background:#4f46e5;color:#fff;border-radius:8px;font-size:.78rem;">
+                                        <i class="bi bi-eye me-1"></i>View Full Image
+                                    </a>
+                                </div>
+                            </div>
+                            @else
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width:44px;height:44px;background:#4f46e5;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="bi bi-file-earmark-pdf" style="font-size:1.3rem;color:#fff;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size:.82rem;color:#374151;font-weight:600;">{{ basename($healthRecord->report_path) }}</div>
+                                    <a href="{{ asset('uploads/' . $healthRecord->report_path) }}" target="_blank" rel="noopener"
+                                        style="font-size:.78rem;color:#4f46e5;font-weight:600;">
+                                        <i class="bi bi-download me-1"></i>Download / View PDF
+                                    </a>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

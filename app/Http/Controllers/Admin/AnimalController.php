@@ -57,12 +57,33 @@ class AnimalController extends Controller
         return view('admin.animals.create', compact('breeds'));
     }
 
+    private function generateAnimalId(string $type): string
+    {
+        $prefixes = [
+            'Cow'     => 'COW',
+            'Buffalo' => 'BUF',
+            'Bull'    => 'BUL',
+            'Heifer'  => 'HEF',
+            'Calf'    => 'CAL',
+            'Goat'    => 'GOA',
+            'Sheep'   => 'SHE',
+            'Ox'      => 'OX',
+        ];
+        $abbr = $prefixes[$type] ?? strtoupper(substr($type, 0, 3));
+        do {
+            $id = 'ASD-' . $abbr . '-' . random_int(1000, 9999);
+        } while (Animal::where('animal_id', $id)->exists());
+        return $id;
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'animal_id'        => 'nullable|string|max:50|unique:animals,animal_id',
             'tag_number'       => 'required|string|unique:animals,tag_number',
+            'rfid'             => 'nullable|string|max:100|unique:animals,rfid',
             'name'             => 'nullable|string|max:100',
-            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf',
+            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
             'breed'            => 'required|string|max:100',
             'dob'              => 'nullable|date',
             'born_in_farm'     => 'nullable|boolean',
@@ -73,10 +94,14 @@ class AnimalController extends Controller
             'lactation_number' => 'required|integer|min:0',
             'health_status'    => 'required|in:Healthy,Sick,Under Treatment',
             'pregnancy_status' => 'required|in:Open,Inseminated,Pregnant,Dry',
+            'owner_name'       => 'required|string|max:100',
             'shed_number'      => 'required|string|max:50',
         ]);
 
         $validated['born_in_farm'] = $request->boolean('born_in_farm');
+        if (empty($validated['animal_id'])) {
+            $validated['animal_id'] = $this->generateAnimalId($validated['animal_type']);
+        }
 
         Animal::create($validated);
 
@@ -173,9 +198,11 @@ class AnimalController extends Controller
     public function update(Request $request, Animal $animal)
     {
         $validated = $request->validate([
+            'animal_id'        => 'nullable|string|max:50|unique:animals,animal_id,' . $animal->id,
             'tag_number'       => 'required|string|unique:animals,tag_number,' . $animal->id,
+            'rfid'             => 'nullable|string|max:100|unique:animals,rfid,' . $animal->id,
             'name'             => 'nullable|string|max:100',
-            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf',
+            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
             'breed'            => 'required|string|max:100',
             'dob'              => 'nullable|date',
             'born_in_farm'     => 'nullable|boolean',
@@ -186,11 +213,16 @@ class AnimalController extends Controller
             'lactation_number' => 'required|integer|min:0',
             'health_status'    => 'required|in:Healthy,Sick,Under Treatment',
             'pregnancy_status' => 'required|in:Open,Inseminated,Pregnant,Dry',
+            'owner_name'       => 'required|string|max:100',
             'shed_number'      => 'required|string|max:50',
             'status'           => 'required|in:Active,Sold,Deceased',
         ]);
 
         $validated['born_in_farm'] = $request->boolean('born_in_farm');
+        if (empty($validated['animal_id'])) {
+            $validated['animal_id'] = $animal->animal_id
+                ?? $this->generateAnimalId($validated['animal_type']);
+        }
 
         $animal->update($validated);
 

@@ -60,7 +60,6 @@
 .pbar-fill { height:8px; border-radius:20px; transition:width .4s ease; }
 </style>
 
-<a href="{{ route('admin.projects.index') }}" class="back-btn mb-3"><i class="bi bi-arrow-left"></i>Back to Projects</a>
 
 {{-- ── Hero ── --}}
 <div class="page-hero mb-4" style="background:linear-gradient(135deg,{{ $grad }});padding:26px 28px;">
@@ -115,6 +114,9 @@
             </div>
             {{-- Actions --}}
             <div class="proj-hero-actions d-flex gap-2 flex-wrap ms-1">
+                <a href="{{ route('admin.projects.index') }}" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-arrow-left me-1"></i>Back
+                </a>
                 <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#editProjectModal">
                     <i class="bi bi-pencil-square me-1"></i>Edit
                 </button>
@@ -142,9 +144,15 @@
     <div class="col-lg-4">
 
         {{-- Project Info --}}
-        <div class="info-card mb-3">
-            <div class="info-card-hdr"><i class="bi bi-folder2-open me-2"></i>Project Info</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mb-3">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-folder2-open" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Project Info</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <dl class="info-dl mb-0">
                     @if($project->code)
                     <dt>Code</dt>
@@ -195,9 +203,15 @@
         </div>
 
         {{-- Task Breakdown --}}
-        <div class="info-card mb-3">
-            <div class="info-card-hdr"><i class="bi bi-bar-chart-steps me-2"></i>Task Breakdown</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mb-3">
+            <div style="background:linear-gradient(135deg,#0d9488,#0891b2);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart-steps" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Task Breakdown</span>
+                </div>
+            </div>
+            <div class="p-4">
                 {{-- Mini stat grid --}}
                 @php
                     $breakStats = [
@@ -232,9 +246,15 @@
 
         {{-- Team Members --}}
         @if($teamMembers->count() > 0)
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-people me-2"></i>Team Members <span style="font-size:.75rem;color:#9ca3af;font-weight:600;margin-left:4px;">{{ $teamMembers->count() }}</span></div>
-            <div class="info-card-body" style="padding:12px 16px;">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-people" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Team Members <span style="opacity:.65;font-weight:600;">{{ $teamMembers->count() }}</span></span>
+                </div>
+            </div>
+            <div class="p-3">
                 @foreach($teamMembers as $member)
                 @php
                     $memberTasks = $project->tasks->where('assigned_to', $member->id);
@@ -268,9 +288,15 @@
 
         {{-- Description --}}
         @if($project->description)
-        <div class="info-card mb-3">
-            <div class="info-card-hdr"><i class="bi bi-text-paragraph me-2"></i>Description</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mb-3">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-text-paragraph" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Description</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <p style="font-size:.87rem;color:#374151;line-height:1.7;margin:0;">{{ $project->description }}</p>
             </div>
         </div>

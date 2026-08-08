@@ -52,6 +52,7 @@ class HealthController extends Controller
             'vet_doctor_name'  => 'nullable|string|max:100',
             'body_temp'        => 'nullable|numeric',
             'cost'             => 'nullable|numeric|min:0',
+            'status'           => 'nullable|string|max:100',
             'report_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 

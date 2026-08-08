@@ -17,7 +17,7 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>Register New Animal</h4>
-            <p>Add a new buffalo or calf to the AS Dairy herd register</p>
+            <p>Add a new animal to the AS Dairy herd register</p>
         </div>
         <a href="{{ route('admin.animals.index') }}" class="btn btn-sm btn-outline-secondary px-4">
             <i class="bi bi-arrow-left me-1"></i>Back to Animals
@@ -26,7 +26,7 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="col-lg-9">
         <div class="card-glass overflow-hidden">
 
             <div style="background:linear-gradient(135deg,#d97706,#ea580c);padding:22px 28px;position:relative;overflow:hidden;">
@@ -59,15 +59,22 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                     <div class="mb-4">
                         <h6 class="form-section-label">A — Animal Identity</h6>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Ear Tag Number <span class="text-danger">*</span></label>
-                                <input type="text" name="tag_number"
-                                    class="form-control @error('tag_number') is-invalid @enderror"
-                                    placeholder="e.g. ASD-BUF-011"
-                                    value="{{ old('tag_number') }}" required>
-                                @error('tag_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                            {{-- Animal Type — first --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
+                                <select name="animal_type" id="animalTypeSelect"
+                                    class="form-select @error('animal_type') is-invalid @enderror" required>
+                                    <option value="">— Select Type —</option>
+                                    @foreach(['Cow','Buffalo','Bull','Heifer','Calf','Goat','Sheep','Ox'] as $t)
+                                        <option value="{{ $t }}" @selected(old('animal_type')===$t)>{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                                @error('animal_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- Animal Name --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Animal Name</label>
                                 <input type="text" name="name"
                                     class="form-control @error('name') is-invalid @enderror"
@@ -75,17 +82,42 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                     value="{{ old('name') }}">
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
-                                <select name="animal_type" id="animalTypeSelect" class="form-select @error('animal_type') is-invalid @enderror" required>
-                                    <option value="">— Select Type —</option>
-                                    @foreach(['Cow','Buffalo','Bull','Heifer','Calf'] as $t)
-                                        <option value="{{ $t }}" @selected(old('animal_type')===$t)>{{ $t }}</option>
-                                    @endforeach
-                                </select>
-                                @error('animal_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                            {{-- Ear Tag No. --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Ear Tag No. <span class="text-danger">*</span></label>
+                                <input type="text" name="tag_number"
+                                    class="form-control @error('tag_number') is-invalid @enderror"
+                                    placeholder="e.g. ASD-BUF-011"
+                                    value="{{ old('tag_number') }}" required>
+                                @error('tag_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- RFID (Optional) --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">RFID <small class="text-muted fw-normal">(Optional)</small></label>
+                                <input type="text" name="rfid"
+                                    class="form-control @error('rfid') is-invalid @enderror"
+                                    placeholder="e.g. 982-000123456789"
+                                    value="{{ old('rfid') }}">
+                                @error('rfid')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="form-text" style="font-size:.72rem;">Electronic RFID chip / transponder number</div>
+                            </div>
+
+                            {{-- Animal ID — editable, auto-generated if blank --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Animal ID</label>
+                                <input type="text" name="animal_id" id="animalIdInput"
+                                    class="form-control @error('animal_id') is-invalid @enderror"
+                                    style="font-family:monospace;color:#4f46e5;font-weight:600;"
+                                    placeholder="Select animal type first"
+                                    value="{{ old('animal_id') }}">
+                                @error('animal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="form-text" style="font-size:.72rem;">Auto-generated when you select animal type — editable</div>
+                            </div>
+
+                            {{-- Breed --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Breed <span class="text-danger">*</span></label>
                                 <select name="breed" class="form-select @error('breed') is-invalid @enderror" required>
                                     <option value="">— Select Breed —</option>
@@ -104,13 +136,16 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                     </a>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+
+                            {{-- Lactation Number --}}
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Lactation Number <span class="text-danger">*</span></label>
                                 <input type="number" name="lactation_number"
                                     class="form-control @error('lactation_number') is-invalid @enderror"
                                     value="{{ old('lactation_number', 0) }}" min="0" required>
                                 @error('lactation_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
                         </div>
                     </div>
 
@@ -170,7 +205,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                         <h6 class="form-section-label">C — Animal Source & Purchase Details</h6>
                         <div class="row g-3">
 
-                            {{-- Animal Source Radio --}}
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Animal Source <span class="text-danger">*</span></label>
                                 <div class="d-flex gap-3 flex-wrap mt-1">
@@ -196,7 +230,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                 @error('born_in_farm')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
                             </div>
 
-                            {{-- Date of Birth — always visible for both born & purchased animals --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Date of Birth</label>
                                 <input type="date" name="dob"
@@ -207,11 +240,8 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
 
                         </div>
 
-                        {{-- Purchase-only fields: visible only when "Purchased from Outside" is selected --}}
                         <div class="purchase-section">
                             <div class="row g-3 mt-1">
-
-                                {{-- Purchase From --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase From <small class="text-muted fw-normal">(Seller / Location)</small></label>
                                     <input type="text" name="purchase_from"
@@ -220,8 +250,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         value="{{ old('purchase_from') }}">
                                     @error('purchase_from')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-
-                                {{-- Purchase Date --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase Date</label>
                                     <input type="date" name="purchase_date"
@@ -229,8 +257,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         value="{{ old('purchase_date') }}">
                                     @error('purchase_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
-
-                                {{-- Purchase Cost --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Purchase Cost (&#8377;)</label>
                                     <div class="input-group">
@@ -241,7 +267,6 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                         @error('purchase_cost')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
-
                             </div>
                         </div>
 
@@ -260,3 +285,29 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+const prefixes = {
+    'Cow': 'COW', 'Buffalo': 'BUF', 'Bull': 'BUL',
+    'Heifer': 'HEF', 'Calf': 'CAL', 'Goat': 'GOA',
+    'Sheep': 'SHE', 'Ox': 'OX'
+};
+
+function generateAnimalId(type) {
+    const abbr = prefixes[type] || type.substring(0, 3).toUpperCase();
+    const num = Math.floor(1000 + Math.random() * 9000);
+    return 'ASD-' + abbr + '-' + num;
+}
+
+document.getElementById('animalTypeSelect').addEventListener('change', function () {
+    const input = document.getElementById('animalIdInput');
+    if (this.value) {
+        input.value = generateAnimalId(this.value);
+    } else {
+        input.value = '';
+        input.placeholder = 'Select animal type first';
+    }
+});
+</script>
+@endpush

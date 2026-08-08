@@ -18,10 +18,6 @@
     $taskColor = $taskPct >= 75 ? '#16a34a' : ($taskPct >= 40 ? '#f59e0b' : '#dc2626');
 @endphp
 
-<a href="{{ route('admin.employees.show', $employee) }}" class="back-btn">
-    <i class="bi bi-arrow-left"></i>Back to {{ $employee->full_name }}
-</a>
-
 {{-- Hero --}}
 <div class="page-hero" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
@@ -35,21 +31,26 @@
                 </p>
             </div>
         </div>
-        <div class="d-flex align-items-center gap-4">
-            <div class="page-hero-stat">
-                <div class="v">{{ $taskStats['completed'] }}</div>
-                <div class="l">Tasks Done</div>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-4">
+                <div class="page-hero-stat">
+                    <div class="v">{{ $taskStats['completed'] }}</div>
+                    <div class="l">Tasks Done</div>
+                </div>
+                <div class="hero-vr"></div>
+                <div class="page-hero-stat">
+                    <div class="v" style="color:#86efac;">{{ $attPct }}%</div>
+                    <div class="l">Attendance</div>
+                </div>
+                <div class="hero-vr"></div>
+                <div class="page-hero-stat">
+                    <div class="v" style="color:#fde047;">{{ $reportsStats['approved'] }}</div>
+                    <div class="l">Reports OK</div>
+                </div>
             </div>
-            <div class="hero-vr"></div>
-            <div class="page-hero-stat">
-                <div class="v" style="color:#86efac;">{{ $attPct }}%</div>
-                <div class="l">Attendance</div>
-            </div>
-            <div class="hero-vr"></div>
-            <div class="page-hero-stat">
-                <div class="v" style="color:#fde047;">{{ $reportsStats['approved'] }}</div>
-                <div class="l">Reports OK</div>
-            </div>
+            <a href="{{ route('admin.employees.show', $employee) }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;flex-shrink:0;">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
         </div>
     </div>
 </div>
@@ -58,7 +59,7 @@
 <div class="row g-3 mb-3">
     {{-- Task Completion Rate --}}
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid {{ $taskColor }};">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid {{ $taskColor }};">
             <div style="font-size:2rem;font-weight:800;color:{{ $taskColor }};line-height:1;">{{ $taskPct }}%</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Task Completion Rate</div>
             <div style="font-size:.76rem;color:#9ca3af;margin-top:2px;">{{ $taskStats['completed'] }} / {{ $taskStats['total'] }} tasks</div>
@@ -66,7 +67,7 @@
     </div>
     {{-- Attendance Rate --}}
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid {{ $attColor }};">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid {{ $attColor }};">
             <div style="font-size:2rem;font-weight:800;color:{{ $attColor }};line-height:1;">{{ $attPct }}%</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Attendance (This Month)</div>
             <div style="font-size:.76rem;color:#9ca3af;margin-top:2px;">{{ $attendanceStats['present'] }} days present</div>
@@ -74,7 +75,7 @@
     </div>
     {{-- Avg Work Hours --}}
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid #6366f1;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #6366f1;">
             <div style="font-size:2rem;font-weight:800;color:#6366f1;line-height:1;">{{ $attendanceStats['avg_hours'] }}h</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Avg. Work Hours/Day</div>
             <div style="font-size:.76rem;color:#9ca3af;margin-top:2px;">Current month</div>
@@ -82,7 +83,7 @@
     </div>
     {{-- Work Reports Approved --}}
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">{{ $reportsStats['approved'] }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Reports Approved</div>
             <div style="font-size:.76rem;color:#9ca3af;margin-top:2px;">of {{ $reportsStats['total'] }} total</div>
@@ -93,9 +94,15 @@
 <div class="row g-3 mb-3">
     {{-- Attendance Chart --}}
     <div class="col-lg-8">
-        <div class="info-card" style="height:100%;">
-            <div class="info-card-hdr"><i class="bi bi-bar-chart me-2"></i>Monthly Attendance (Last 6 Months)</div>
-            <div class="info-card-body" style="padding:16px;">
+        <div class="card-glass overflow-hidden" style="height:100%;">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Monthly Attendance (Last 6 Months)</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <div id="attChart" style="height:220px;"></div>
             </div>
         </div>
@@ -103,9 +110,15 @@
 
     {{-- Task Breakdown --}}
     <div class="col-lg-4">
-        <div class="info-card" style="height:100%;">
-            <div class="info-card-hdr"><i class="bi bi-list-task me-2"></i>Task Breakdown</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden" style="height:100%;">
+            <div style="background:linear-gradient(135deg,#0d9488,#0891b2);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-list-task" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Task Breakdown</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @foreach([
                     ['Completed', $taskStats['completed'], '#16a34a'],
                     ['In Progress', $taskStats['in_progress'], '#6366f1'],
@@ -139,9 +152,15 @@
 <div class="row g-3">
     {{-- Attendance Details --}}
     <div class="col-lg-4">
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-calendar-check me-2"></i>Attendance This Month</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#16a34a,#059669);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar-check" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Attendance This Month</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @foreach([
                     ['Present', $attendanceStats['present'], '#16a34a'],
                     ['Absent', $attendanceStats['absent'], '#dc2626'],
@@ -171,9 +190,15 @@
         </div>
 
         {{-- Work Reports Summary --}}
-        <div class="info-card mt-3">
-            <div class="info-card-hdr"><i class="bi bi-file-earmark-check me-2"></i>Work Reports</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mt-3">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-file-earmark-check" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Work Reports</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @foreach([
                     ['Total', $reportsStats['total'], '#6366f1'],
                     ['Approved', $reportsStats['approved'], '#16a34a'],

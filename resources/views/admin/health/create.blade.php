@@ -21,7 +21,7 @@
 </div>
 
 <div class="row justify-content-center">
-    <div class="col-lg-7">
+    <div class="col-lg-8">
         <div class="card-glass overflow-hidden">
 
             <div style="background:linear-gradient(135deg,#dc2626,#9f1239);padding:22px 28px;position:relative;overflow:hidden;">
@@ -50,15 +50,16 @@
                 <form action="{{ route('admin.health.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
+                    {{-- A — Health Event --}}
                     <div class="mb-4">
-                        <h6 class="form-section-label">A — Health Record</h6>
+                        <h6 class="form-section-label">A — Health Event</h6>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Animal <span class="text-danger">*</span></label>
                                 <select name="animal_id" class="form-select @error('animal_id') is-invalid @enderror" required>
                                     <option value="">— Choose Animal —</option>
                                     @foreach($animals as $a)
-                                        <option value="{{ $a->id }}" @selected(old('animal_id')==$a->id)>{{ $a->tag_number }} — {{ $a->name }}</option>
+                                        <option value="{{ $a->id }}" @selected(old('animal_id')==$a->id)>{{ $a->tag_number }}{{ $a->name ? ' — '.$a->name : '' }}</option>
                                     @endforeach
                                 </select>
                                 @error('animal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -79,10 +80,7 @@
                                 @error('date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Veterinary Doctor</label>
-                                <input type="text" name="vet_doctor_name" class="form-control @error('vet_doctor_name') is-invalid @enderror"
-                                    placeholder="e.g. Dr. Verma" value="{{ old('vet_doctor_name') }}">
-                                @error('vet_doctor_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                {{-- spacer --}}
                             </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Disease / Symptoms / Notes</label>
@@ -91,12 +89,39 @@
                                 @error('disease_symptoms')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Treatment Given / Medicine</label>
+                                <label class="form-label fw-semibold">Treatment Given</label>
                                 <input type="text" name="treatment_given" class="form-control @error('treatment_given') is-invalid @enderror"
                                     placeholder="e.g. Albendazole 100ml" value="{{ old('treatment_given') }}">
                                 @error('treatment_given')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 opacity-25">
+
+                    {{-- B — Clinical Details --}}
+                    <div class="mb-4">
+                        <h6 class="form-section-label">B — Clinical Details</h6>
+                        <div class="row g-3">
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Medicine Used</label>
+                                <input type="text" name="medicine_used" class="form-control @error('medicine_used') is-invalid @enderror"
+                                    placeholder="e.g. FMD Vaccine" value="{{ old('medicine_used') }}">
+                                @error('medicine_used')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Vet / Doctor Name</label>
+                                <input type="text" name="vet_doctor_name" class="form-control @error('vet_doctor_name') is-invalid @enderror"
+                                    placeholder="e.g. Dr. Verma" value="{{ old('vet_doctor_name') }}">
+                                @error('vet_doctor_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Body Temp (°F)</label>
+                                <input type="number" step="0.1" name="body_temp" class="form-control @error('body_temp') is-invalid @enderror"
+                                    placeholder="e.g. 101.5" value="{{ old('body_temp') }}">
+                                @error('body_temp')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Cost (&#8377;)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">&#8377;</span>
@@ -106,6 +131,21 @@
                                     @error('cost')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Status / Outcome</label>
+                                <input type="text" name="status" class="form-control @error('status') is-invalid @enderror"
+                                    placeholder="e.g. Recovered" value="{{ old('status') }}">
+                                @error('status')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 opacity-25">
+
+                    {{-- C — Medical Report / Document --}}
+                    <div class="mb-4">
+                        <h6 class="form-section-label">C — Medical Report / Document</h6>
+                        <div class="row g-3">
                             <div class="col-12">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-paperclip me-1"></i>Attach Medical Report / Prescription

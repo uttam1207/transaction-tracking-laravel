@@ -198,6 +198,9 @@
                             <a href="{{ route('admin.animals.show', $a) }}"
                                 style="font-weight:700;color:var(--primary);font-size:.88rem;text-decoration:none;line-height:1.25;display:block;"
                                 class="hover-underline">{{ $a->tag_number }}</a>
+                            @if($a->animal_id)
+                            <div style="font-size:.7rem;font-family:monospace;color:#6366f1;font-weight:600;margin-top:2px;letter-spacing:.02em;">{{ $a->animal_id }}</div>
+                            @endif
                             <div style="font-size:.73rem;color:#9ca3af;margin-top:1px;">{{ $a->name ?: '—' }}</div>
                         </td>
 

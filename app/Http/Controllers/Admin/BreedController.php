@@ -19,7 +19,7 @@ class BreedController extends Controller
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:100|unique:breeds,name',
-            'animal_type' => 'required|string|max:50',
+            'animal_type' => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
             'description' => 'nullable|string|max:500',
         ]);
 
@@ -32,7 +32,7 @@ class BreedController extends Controller
     {
         $validated = $request->validate([
             'name'        => 'required|string|max:100|unique:breeds,name,' . $breed->id,
-            'animal_type' => 'required|string|max:50',
+            'animal_type' => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
             'description' => 'nullable|string|max:500',
         ]);
 

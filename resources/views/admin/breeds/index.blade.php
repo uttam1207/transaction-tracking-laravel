@@ -86,7 +86,7 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
                     <select name="animal_type" class="form-select @error('animal_type') is-invalid @enderror" required>
-                        @foreach(['Buffalo','Cow','Goat','Sheep','Other'] as $t)
+                        @foreach(['Cow','Buffalo','Bull','Heifer','Calf','Goat','Sheep','Ox'] as $t)
                             <option value="{{ $t }}" @selected(old('animal_type')===$t)>{{ $t }}</option>
                         @endforeach
                     </select>
@@ -194,7 +194,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
                         <select name="animal_type" id="editAnimalType" class="form-select" required>
-                            @foreach(['Buffalo','Cow','Goat','Sheep','Other'] as $t)
+                            @foreach(['Cow','Buffalo','Bull','Heifer','Calf','Goat','Sheep','Ox'] as $t)
                                 <option value="{{ $t }}">{{ $t }}</option>
                             @endforeach
                         </select>

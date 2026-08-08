@@ -15,7 +15,9 @@ class Animal extends Model
     use HasFactory;
 
     protected $fillable = [
+        'animal_id',
         'tag_number',
+        'rfid',
         'animal_type',
         'name',
         'breed',
