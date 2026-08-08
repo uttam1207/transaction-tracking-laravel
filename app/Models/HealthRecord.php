@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Animal;
 
 class HealthRecord extends Model
 {
@@ -20,6 +21,7 @@ class HealthRecord extends Model
         'body_temp',
         'cost',
         'status',
+        'report_path',
     ];
 
     protected $casts = [

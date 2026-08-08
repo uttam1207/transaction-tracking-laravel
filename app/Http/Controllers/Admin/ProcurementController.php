@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProcurementController extends Controller
 {
@@ -40,13 +41,19 @@ class ProcurementController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'po_number' => 'required|string|unique:purchase_orders,po_number',
-            'vendor_id' => 'required|exists:vendors,id',
-            'order_date' => 'required|date',
+            'po_number'    => 'required|string|unique:purchase_orders,po_number',
+            'vendor_id'    => 'required|exists:vendors,id',
+            'order_date'   => 'required|date',
             'total_amount' => 'required|numeric|min:0.01',
-            'status' => 'required|in:Draft,Sent,Received,Paid',
-            'remarks' => 'nullable|string|max:500',
+            'status'       => 'required|in:Draft,Sent,Received,Paid',
+            'remarks'      => 'nullable|string|max:500',
+            'invoice_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('invoice_file')) {
+            $validated['invoice_path'] = $request->file('invoice_file')->store('procurement-invoices', 'uploads');
+        }
+        unset($validated['invoice_file']);
 
         PurchaseOrder::create($validated);
         return redirect()->route('admin.procurement.index')->with('success', 'Purchase order created.');
@@ -74,7 +81,16 @@ class ProcurementController extends Controller
             'total_amount' => 'required|numeric|min:0.01',
             'status'       => 'required|in:Draft,Sent,Received,Paid',
             'remarks'      => 'nullable|string|max:500',
+            'invoice_file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('invoice_file')) {
+            if ($purchaseOrder->invoice_path) {
+                Storage::disk('uploads')->delete($purchaseOrder->invoice_path);
+            }
+            $validated['invoice_path'] = $request->file('invoice_file')->store('procurement-invoices', 'uploads');
+        }
+        unset($validated['invoice_file']);
 
         $purchaseOrder->update($validated);
 

@@ -30,7 +30,7 @@
 <div class="row g-3 mb-4">
     {{-- Check-In/Out --}}
     <div class="col-md-4">
-        <div class="info-card h-100 text-center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;">
+        <div class="card-glass p-4 h-100 text-center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
             @if(!$data['is_checked_in'] && !$data['check_in_time'])
                 <div style="margin-bottom:16px;">
                     <i class="bi bi-clock" style="font-size:2.5rem;color:#d1d5db;"></i>
@@ -65,47 +65,39 @@
     <div class="col-md-8">
         <div class="row g-3">
             <div class="col-6">
-                <div class="info-card" style="border-left:4px solid #f59e0b;">
-                    <div class="info-card-body">
-                        <div style="font-size:.78rem;color:#9ca3af;margin-bottom:4px;">Pending Tasks</div>
-                        <div style="font-size:1.8rem;font-weight:800;color:#111827;line-height:1;">{{ $data['pending_tasks'] }}</div>
-                        <a href="{{ route('employee.tasks.index') }}" style="font-size:.78rem;color:#6366f1;text-decoration:none;margin-top:6px;display:inline-block;">View tasks →</a>
+                <div class="card-glass p-4" style="border-left:4px solid #f59e0b;">
+                    <div style="font-size:.78rem;color:#9ca3af;margin-bottom:4px;">Pending Tasks</div>
+                    <div style="font-size:1.8rem;font-weight:800;color:#111827;line-height:1;">{{ $data['pending_tasks'] }}</div>
+                    <a href="{{ route('employee.tasks.index') }}" style="font-size:.78rem;color:#6366f1;text-decoration:none;margin-top:6px;display:inline-block;">View tasks →</a>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card-glass p-4" style="border-left:4px solid #16a34a;">
+                    <div style="font-size:.78rem;color:#9ca3af;margin-bottom:4px;">Completed This Month</div>
+                    <div style="font-size:1.8rem;font-weight:800;color:#111827;line-height:1;">{{ $data['completed_tasks_month'] }}</div>
+                    <div style="font-size:.78rem;color:#9ca3af;margin-top:6px;">tasks done</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card-glass p-4" style="border-left:4px solid #6366f1;">
+                    <div style="font-size:.78rem;color:#9ca3af;margin-bottom:6px;">Performance Score</div>
+                    <div style="font-size:1.4rem;font-weight:800;color:#6366f1;margin-bottom:6px;">{{ $data['performance_score'] }}%</div>
+                    <div style="height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
+                        <div style="width:{{ $data['performance_score'] }}%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:3px;"></div>
                     </div>
                 </div>
             </div>
             <div class="col-6">
-                <div class="info-card" style="border-left:4px solid #16a34a;">
-                    <div class="info-card-body">
-                        <div style="font-size:.78rem;color:#9ca3af;margin-bottom:4px;">Completed This Month</div>
-                        <div style="font-size:1.8rem;font-weight:800;color:#111827;line-height:1;">{{ $data['completed_tasks_month'] }}</div>
-                        <div style="font-size:.78rem;color:#9ca3af;margin-top:6px;">tasks done</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="info-card" style="border-left:4px solid #6366f1;">
-                    <div class="info-card-body">
-                        <div style="font-size:.78rem;color:#9ca3af;margin-bottom:6px;">Performance Score</div>
-                        <div style="font-size:1.4rem;font-weight:800;color:#6366f1;margin-bottom:6px;">{{ $data['performance_score'] }}%</div>
-                        <div style="height:5px;background:#f3f4f6;border-radius:3px;overflow:hidden;">
-                            <div style="width:{{ $data['performance_score'] }}%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:3px;"></div>
+                <div class="card-glass p-4" style="border-left:4px solid #0ea5e9;">
+                    <div style="font-size:.78rem;color:#9ca3af;margin-bottom:8px;">Leave Balance</div>
+                    <div class="d-flex gap-3">
+                        <div>
+                            <div style="font-size:1.3rem;font-weight:800;color:#16a34a;line-height:1;">{{ $data['leave_balance']['annual'] }}</div>
+                            <div style="font-size:.72rem;color:#9ca3af;">Annual</div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="info-card" style="border-left:4px solid #0ea5e9;">
-                    <div class="info-card-body">
-                        <div style="font-size:.78rem;color:#9ca3af;margin-bottom:8px;">Leave Balance</div>
-                        <div class="d-flex gap-3">
-                            <div>
-                                <div style="font-size:1.3rem;font-weight:800;color:#16a34a;line-height:1;">{{ $data['leave_balance']['annual'] }}</div>
-                                <div style="font-size:.72rem;color:#9ca3af;">Annual</div>
-                            </div>
-                            <div>
-                                <div style="font-size:1.3rem;font-weight:800;color:#0ea5e9;line-height:1;">{{ $data['leave_balance']['sick'] }}</div>
-                                <div style="font-size:.72rem;color:#9ca3af;">Sick</div>
-                            </div>
+                        <div>
+                            <div style="font-size:1.3rem;font-weight:800;color:#0ea5e9;line-height:1;">{{ $data['leave_balance']['sick'] }}</div>
+                            <div style="font-size:.72rem;color:#9ca3af;">Sick</div>
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\StockExport;
 use App\Http\Controllers\Controller;
 use App\Models\InventoryItem;
 use App\Models\InventoryCategory;
@@ -32,17 +33,24 @@ class StockController extends Controller
             $items = $items->filter(fn ($item) => strtolower(str_replace(' ', '_', $item->stock_status)) === strtolower($request->status));
         }
 
+        // Expiry alerts for the page banner
+        $expiryAlerts = InventoryItem::whereNotNull('expiry_date')
+            ->where('expiry_date', '<=', now()->addDays(30))
+            ->orderBy('expiry_date')
+            ->get();
+
         $summary = [
-            'total_items' => InventoryItem::count(),
-            'low_stock' => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Low Stock')->count(),
-            'out_of_stock' => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Out of Stock')->count(),
+            'total_items'         => InventoryItem::count(),
+            'low_stock'           => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Low Stock')->count(),
+            'out_of_stock'        => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Out of Stock')->count(),
             'received_this_month' => StockMovement::where('type', 'in')->whereMonth('date', now()->month)->sum('quantity'),
-            'issued_this_month' => StockMovement::where('type', 'out')->whereMonth('date', now()->month)->sum('quantity'),
+            'issued_this_month'   => StockMovement::where('type', 'out')->whereMonth('date', now()->month)->sum('quantity'),
+            'expiring_soon'       => $expiryAlerts->count(),
         ];
 
         $categories = InventoryCategory::active()->orderBy('name')->get();
 
-        return view('admin.stock.index', compact('items', 'summary', 'categories'));
+        return view('admin.stock.index', compact('items', 'summary', 'categories', 'expiryAlerts'));
     }
 
     // Stock In Form (/stock/in)
@@ -56,15 +64,15 @@ class StockController extends Controller
     public function storeStockIn(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'inventory_item_id' => 'required|exists:inventory_items,id',
-            'quantity' => 'required|numeric|min:0.01',
-            'source_purpose' => 'nullable|string|max:200', // Purchase, Harvest, Return
-            'issued_to_or_vendor' => 'nullable|string|max:200',
-            'remarks' => 'nullable|string|max:1000',
+            'date'                 => 'required|date',
+            'inventory_item_id'    => 'required|exists:inventory_items,id',
+            'quantity'             => 'required|numeric|min:0.01',
+            'source_purpose'       => 'nullable|string|max:200',
+            'issued_to_or_vendor'  => 'nullable|string|max:200',
+            'remarks'              => 'nullable|string|max:1000',
         ]);
 
-        $validated['type'] = 'in';
+        $validated['type']        = 'in';
         $validated['recorded_by'] = auth()->id();
 
         StockMovement::create($validated);
@@ -84,12 +92,12 @@ class StockController extends Controller
     public function storeStockOut(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'inventory_item_id' => 'required|exists:inventory_items,id',
-            'quantity' => 'required|numeric|min:0.01',
-            'source_purpose' => 'required|string|max:200', // Feed, Treatment, Maintenance, etc.
-            'issued_to_or_vendor' => 'nullable|string|max:200', // Employee or Department
-            'remarks' => 'nullable|string|max:1000',
+            'date'                => 'required|date',
+            'inventory_item_id'   => 'required|exists:inventory_items,id',
+            'quantity'            => 'required|numeric|min:0.01',
+            'source_purpose'      => 'required|string|max:200',
+            'issued_to_or_vendor' => 'nullable|string|max:200',
+            'remarks'             => 'nullable|string|max:1000',
         ]);
 
         $item = InventoryItem::findOrFail($request->inventory_item_id);
@@ -99,7 +107,7 @@ class StockController extends Controller
             ]);
         }
 
-        $validated['type'] = 'out';
+        $validated['type']        = 'out';
         $validated['recorded_by'] = auth()->id();
 
         StockMovement::create($validated);
@@ -119,12 +127,12 @@ class StockController extends Controller
     public function storeAdjustment(Request $request)
     {
         $validated = $request->validate([
-            'date' => 'required|date',
-            'inventory_item_id' => 'required|exists:inventory_items,id',
-            'adjustment_type' => 'required|in:Increase,Decrease',
-            'quantity' => 'required|numeric|min:0.01',
-            'reason' => 'required|string|max:200', // Damage, Expired, Physical Count
-            'remarks' => 'nullable|string|max:1000',
+            'date'             => 'required|date',
+            'inventory_item_id'=> 'required|exists:inventory_items,id',
+            'adjustment_type'  => 'required|in:Increase,Decrease',
+            'quantity'         => 'required|numeric|min:0.01',
+            'reason'           => 'required|string|max:200',
+            'remarks'          => 'nullable|string|max:1000',
         ]);
 
         $item = InventoryItem::findOrFail($request->inventory_item_id);
@@ -136,13 +144,13 @@ class StockController extends Controller
         }
 
         StockMovement::create([
-            'inventory_item_id' => $validated['inventory_item_id'],
-            'type' => 'adjustment',
-            'quantity' => $validated['quantity'],
-            'date' => $validated['date'],
-            'reason' => $validated['adjustment_type'] . ' - ' . $validated['reason'],
-            'remarks' => $validated['remarks'],
-            'recorded_by' => auth()->id(),
+            'inventory_item_id'   => $validated['inventory_item_id'],
+            'type'                => 'adjustment',
+            'quantity'            => $validated['quantity'],
+            'date'                => $validated['date'],
+            'reason'              => $validated['adjustment_type'] . ' - ' . $validated['reason'],
+            'remarks'             => $validated['remarks'],
+            'recorded_by'         => auth()->id(),
         ]);
 
         return redirect()->route('admin.stock.index')
@@ -171,7 +179,7 @@ class StockController extends Controller
         }
 
         $movements = $query->latest('date')->paginate(25)->withQueryString();
-        $items = InventoryItem::orderBy('name')->get();
+        $items     = InventoryItem::orderBy('name')->get();
 
         return view('admin.stock.movements', compact('movements', 'items'));
     }
@@ -180,7 +188,23 @@ class StockController extends Controller
     public function exportPdf()
     {
         $items = InventoryItem::with('stockMovements')->orderBy('name')->get();
-        $pdf = Pdf::loadView('admin.stock.pdf', compact('items'))->setPaper('a4', 'portrait');
+        $pdf   = Pdf::loadView('admin.stock.pdf', compact('items'))->setPaper('a4', 'portrait');
         return $pdf->download('stock_report_' . now()->format('Ymd_His') . '.pdf');
+    }
+
+    // Export Stock Report as Excel
+    public function exportExcel(Request $request)
+    {
+        $filters  = $request->only(['category', 'status']);
+        $filename = 'stock_report_' . now()->format('Ymd_His') . '.xlsx';
+        return Excel::download(new StockExport($filters), $filename);
+    }
+
+    // Export Stock Report as CSV
+    public function exportCsv(Request $request)
+    {
+        $filters  = $request->only(['category', 'status']);
+        $filename = 'stock_report_' . now()->format('Ymd_His') . '.csv';
+        return Excel::download(new StockExport($filters), $filename, \Maatwebsite\Excel\Excel::CSV);
     }
 }

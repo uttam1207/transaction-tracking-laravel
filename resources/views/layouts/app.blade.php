@@ -876,8 +876,8 @@
 
                 @php
                     $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
-                    $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
-                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.sales.*');
+                    $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
+                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
                 @endphp
 
@@ -946,11 +946,15 @@
                         <span class="nav-label">Farm</span>
                     </a>
                     <div class="nav-sub-title">Finance & Stock</div>
-                    <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') && !request()->routeIs('admin.expense-categories.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-receipt"></i></span>
                         <span class="nav-label">Expenses</span>
                     </a>
-                    <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.expense-categories.index') }}" class="sidebar-link {{ request()->routeIs('admin.expense-categories.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-tags"></i></span>
+                        <span class="nav-label">Expense Categories</span>
+                    </a>
+                    <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') || request()->routeIs('admin.stock-items.*') || request()->routeIs('admin.stock-categories.*') || request()->routeIs('admin.stock-types.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-boxes"></i></span>
                         <span class="nav-label">Stock</span>
                     </a>
@@ -997,6 +1001,10 @@
                         <span class="nav-label">Employees</span>
                     </a>
                     @endif
+                    <a href="{{ route('admin.salaries.index') }}" class="sidebar-link {{ request()->routeIs('admin.salaries.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
+                        <span class="nav-label">Salary & Payroll</span>
+                    </a>
                     <div class="nav-sub-title">Work Tracking</div>
                     @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
                     <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
@@ -1128,6 +1136,10 @@
                     <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
                         <span class="nav-label">Procurement</span>
+                    </a>
+                    <a href="{{ route('admin.vendors.index') }}" class="sidebar-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-building"></i></span>
+                        <span class="nav-label">Vendors</span>
                     </a>
                     <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>

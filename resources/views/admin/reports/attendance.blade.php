@@ -57,25 +57,25 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:1.8rem;font-weight:800;color:#16a34a;line-height:1;">{{ $totalPresent }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Present Days</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #dc2626;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:1.8rem;font-weight:800;color:#dc2626;line-height:1;">{{ $totalAbsent }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Absent Days</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #f59e0b;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #f59e0b;">
             <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;line-height:1;">{{ $totalLate }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Late Days</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #6366f1;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #6366f1;">
             <div style="font-size:1.8rem;font-weight:800;color:#6366f1;line-height:1;">{{ number_format($avgAtt, 1) }}%</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Avg Attendance</div>
         </div>

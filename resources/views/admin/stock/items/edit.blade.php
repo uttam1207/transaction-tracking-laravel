@@ -112,6 +112,17 @@
                                     value="{{ old('min_stock', $item->min_stock) }}" required>
                                 @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expiry Date <small class="text-muted fw-normal">(medicines/vaccines)</small></label>
+                                <input type="date" name="expiry_date" class="form-control @error('expiry_date') is-invalid @enderror"
+                                    value="{{ old('expiry_date', $item->expiry_date?->toDateString()) }}">
+                                @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @if($item->is_expired)
+                                    <div style="font-size:.72rem;color:#ef4444;margin-top:4px;"><i class="bi bi-exclamation-triangle me-1"></i>This item has EXPIRED!</div>
+                                @elseif($item->is_expiring_soon)
+                                    <div style="font-size:.72rem;color:#f59e0b;margin-top:4px;"><i class="bi bi-clock me-1"></i>Expires in {{ $item->days_to_expiry }} days</div>
+                                @endif
+                            </div>
                             <div class="col-md-8">
                                 <label class="form-label fw-semibold">Description <small class="text-muted fw-normal">(optional)</small></label>
                                 <textarea name="description" class="form-control @error('description') is-invalid @enderror"

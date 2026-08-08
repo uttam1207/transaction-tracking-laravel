@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\HealthRecord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class HealthController extends Controller
 {
@@ -42,16 +43,22 @@ class HealthController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'animal_id' => 'required|exists:animals,id',
-            'record_type' => 'required|in:Vaccination,Deworming,Treatment,Doctor Visit,Emergency',
-            'date' => 'required|date',
+            'animal_id'        => 'required|exists:animals,id',
+            'record_type'      => 'required|in:Vaccination,Deworming,Treatment,Doctor Visit,Emergency',
+            'date'             => 'required|date',
             'disease_symptoms' => 'nullable|string|max:255',
-            'treatment_given' => 'nullable|string|max:255',
-            'medicine_used' => 'nullable|string|max:255',
-            'vet_doctor_name' => 'nullable|string|max:100',
-            'body_temp' => 'nullable|numeric',
-            'cost' => 'nullable|numeric|min:0',
+            'treatment_given'  => 'nullable|string|max:255',
+            'medicine_used'    => 'nullable|string|max:255',
+            'vet_doctor_name'  => 'nullable|string|max:100',
+            'body_temp'        => 'nullable|numeric',
+            'cost'             => 'nullable|numeric|min:0',
+            'report_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('report_file')) {
+            $validated['report_path'] = $request->file('report_file')->store('health-reports', 'uploads');
+        }
+        unset($validated['report_file']);
 
         HealthRecord::create($validated);
 
@@ -87,7 +94,16 @@ class HealthController extends Controller
             'body_temp'        => 'nullable|numeric',
             'cost'             => 'nullable|numeric|min:0',
             'status'           => 'nullable|string|max:100',
+            'report_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('report_file')) {
+            if ($healthRecord->report_path) {
+                Storage::disk('uploads')->delete($healthRecord->report_path);
+            }
+            $validated['report_path'] = $request->file('report_file')->store('health-reports', 'uploads');
+        }
+        unset($validated['report_file']);
 
         $healthRecord->update($validated);
 

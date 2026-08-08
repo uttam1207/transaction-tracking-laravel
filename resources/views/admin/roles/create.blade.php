@@ -3,16 +3,14 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);">
-    <div class="page-hero-body">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div>
-                <div class="page-hero-title"><i class="bi bi-plus-circle me-2"></i>Create New Role</div>
-                <div class="page-hero-sub">Define a custom role and assign service access</div>
-            </div>
-            <a href="{{ route('admin.roles.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
-                <i class="bi bi-arrow-left me-1"></i>Back
-            </a>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" style="position:relative;z-index:1;">
+        <div>
+            <h4 style="margin:0;font-weight:800;color:#fff;"><i class="bi bi-plus-circle me-2"></i>Create New Role</h4>
+            <p style="opacity:.8;margin:4px 0 0;font-size:.85rem;color:#fff;">Define a custom role and assign service access</p>
         </div>
+        <a href="{{ route('admin.roles.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
     </div>
 </div>
 
@@ -22,7 +20,7 @@
 
     {{-- Left: Role Details --}}
     <div class="col-lg-7">
-        <div class="info-card" style="padding:0;overflow:hidden;">
+        <div class="card-glass overflow-hidden">
             <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;">
                 <i class="bi bi-person-badge" style="color:#4f46e5;margin-right:6px;"></i>Role Details
             </div>
@@ -64,7 +62,7 @@
         </div>
 
         {{-- Service Permissions --}}
-        <div class="info-card mt-4" style="padding:0;overflow:hidden;">
+        <div class="card-glass overflow-hidden mt-4">
             <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;display:flex;align-items:center;justify-content:space-between;">
                 <span><i class="bi bi-grid-3x3-gap" style="color:#4f46e5;margin-right:6px;"></i>Service Access</span>
                 <div style="display:flex;gap:8px;">
@@ -100,7 +98,7 @@
     {{-- Right: Preview + Actions --}}
     <div class="col-lg-5">
         {{-- Live Preview --}}
-        <div class="info-card" style="padding:0;overflow:hidden;margin-bottom:20px;">
+        <div class="card-glass overflow-hidden" style="margin-bottom:20px;">
             <div style="padding:14px 20px;border-bottom:1px solid #f3f4f6;background:#f9fafb;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#6b7280;">
                 <i class="bi bi-eye" style="color:#4f46e5;margin-right:6px;"></i>Live Preview
             </div>

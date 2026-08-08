@@ -8,8 +8,6 @@
 
 @section('content')
 
-<a href="{{ route('admin.employees.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Employees</a>
-
 @php
     $status = $employee->status ?? 'active';
     $score = $employee->performance_score ?? 0;
@@ -40,14 +38,14 @@
 <div class="row g-4">
     {{-- Left Sidebar --}}
     <div class="col-lg-4">
-        <div class="info-card text-center" style="padding:24px 20px;">
+        <div class="card-glass p-4 text-center">
             <img src="{{ $employee->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($employee->full_name).'&size=100&background=6366f1&color=fff' }}"
                 class="rounded-circle mx-auto mb-3"
                 style="width:88px;height:88px;border:3px solid #e0e7ff;object-fit:cover;display:block;" alt="">
             <div style="font-size:1.05rem;font-weight:800;color:#111827;">{{ $employee->full_name }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">{{ $employee->designation ?? 'Employee' }}</div>
             <div style="font-size:.78rem;color:#9ca3af;font-family:monospace;margin-top:2px;">{{ $employee->employee_id }}</div>
-            <span class="spill spill-{{ $status === 'active' ? 'active' : 'inactive' }}" style="margin-top:10px;">{{ ucfirst($status) }}</span>
+            <span class="spill spill-{{ $status === 'active' ? 'active' : 'inactive' }}" style="margin-top:10px;display:inline-block;">{{ ucfirst($status) }}</span>
 
             <div style="border-top:1px solid #f3f4f6;margin-top:20px;padding-top:16px;text-align:left;">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
@@ -71,10 +69,16 @@
             </div>
         </div>
 
-        <div class="info-card mt-3">
-            <div class="info-card-hdr"><i class="bi bi-calendar3 me-2"></i>Leave Balance</div>
-            <div class="info-card-body">
-                <dl class="dl">
+        <div class="card-glass overflow-hidden mt-3">
+            <div style="background:linear-gradient(135deg,#16a34a,#059669);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-calendar3" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Leave Balance</span>
+                </div>
+            </div>
+            <div class="p-3">
+                <dl class="dl mb-0">
                     <dt>Annual Leave</dt>
                     <dd><span style="color:#16a34a;font-weight:700;">{{ $employee->annual_leave_balance ?? 0 }}</span> days</dd>
                     <dt>Sick Leave</dt>
@@ -86,9 +90,15 @@
 
     {{-- Right Panel --}}
     <div class="col-lg-8">
-        <div class="info-card mb-3">
-            <div class="info-card-hdr"><i class="bi bi-briefcase me-2"></i>Employment Details</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mb-3">
+            <div style="background:linear-gradient(135deg,#0891b2,#2563eb);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-briefcase-fill" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Employment Details</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <div style="font-size:.74rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Employee ID</div>

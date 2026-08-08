@@ -5,41 +5,39 @@
 @section('content')
 <div class="container-fluid py-4">
 
-    {{-- Header --}}
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="{{ route('questions.index') }}" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i>
-        </a>
-        <div>
-            <h4 class="mb-0 fw-semibold">Ask a Question</h4>
-            <p class="text-muted small mb-0">Share a question with your team</p>
-        </div>
-    </div>
-
     <div class="row justify-content-center">
         <div class="col-lg-8">
 
-            @if($errors->any())
-                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                    <strong>Please fix the following errors:</strong>
-                    <ul class="mb-0 mt-2">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <div class="card-glass overflow-hidden">
+                <div style="background:linear-gradient(135deg,#2563eb,#4f46e5);padding:22px 28px;position:relative;overflow:hidden;">
+                    <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                    <div style="position:absolute;bottom:-20px;right:90px;width:80px;height:80px;background:rgba(255,255,255,.05);border-radius:50%;pointer-events:none;"></div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:52px;height:52px;background:rgba(255,255,255,.18);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <i class="bi bi-question-circle-fill" style="font-size:1.4rem;color:#fff;"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;">Community</div>
+                            <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.01em;">Ask a Question</div>
+                            <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">Share a question with your team</div>
+                        </div>
+                    </div>
                 </div>
-            @endif
+                <div class="p-4">
 
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="mb-0 fw-semibold">
-                        <i class="bi bi-question-circle text-primary me-2"></i>
-                        Question Details
-                    </h6>
-                </div>
-                <div class="card-body p-4">
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
                     <form action="{{ route('questions.store') }}" method="POST">
                         @csrf
 
@@ -102,7 +100,7 @@
                             <a href="{{ route('questions.index') }}" class="btn btn-outline-secondary px-4">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary px-5">
+                            <button type="submit" class="btn btn-primary-grad px-5">
                                 <i class="bi bi-send me-1"></i> Post Question
                             </button>
                         </div>

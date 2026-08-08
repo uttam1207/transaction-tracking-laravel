@@ -34,7 +34,7 @@
                 <div class="card-glass-title">Compliance Document Details</div>
             </div>
 
-            <form action="{{ route('admin.compliance.store') }}" method="POST">
+            <form action="{{ route('admin.compliance.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="row g-3">
                     <div class="col-12">
@@ -81,6 +81,20 @@
                     </div>
                 </div>
 
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-paperclip me-1"></i>Attach Document / Scan
+                        </label>
+                        <input type="file" name="file" id="complianceFile"
+                            class="form-control @error('file') is-invalid @enderror"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onchange="showFileName(this,'complianceFileHint')">
+                        <div id="complianceFileHint" class="form-text text-muted" style="font-size:.75rem;">
+                            PDF, JPG, PNG — max 10 MB
+                        </div>
+                        @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
                 <div class="d-flex justify-content-end gap-2 mt-4">
                     <a href="{{ route('admin.compliance.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
                     <button type="submit" class="btn btn-primary-grad px-5">
@@ -93,3 +107,16 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+function showFileName(input, hintId) {
+    const hint = document.getElementById(hintId);
+    if (input.files && input.files[0]) {
+        const f = input.files[0];
+        const mb = (f.size / 1048576).toFixed(2);
+        hint.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>' + f.name + '</strong> (' + mb + ' MB)';
+    }
+}
+</script>
+@endpush

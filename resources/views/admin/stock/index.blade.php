@@ -29,6 +29,12 @@
             <a href="{{ route('admin.stock.export.pdf') }}" class="btn btn-sm btn-outline-secondary px-3" style="border-radius:9px;font-size:.83rem;">
                 <i class="bi bi-file-pdf me-1"></i>PDF
             </a>
+            <a href="{{ route('admin.stock.export.excel') }}" class="btn btn-sm btn-outline-success px-3" style="border-radius:9px;font-size:.83rem;">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.stock.export.csv') }}" class="btn btn-sm btn-outline-secondary px-3" style="border-radius:9px;font-size:.83rem;">
+                <i class="bi bi-filetype-csv me-1"></i>CSV
+            </a>
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle px-3" style="border-radius:9px;font-size:.83rem;" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-gear me-1"></i>Manage
@@ -73,7 +79,33 @@
             <div class="kpi-label">Received This Month</div>
         </div>
     </div>
+    @if(($summary['expiring_soon'] ?? 0) > 0)
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#7c3aed,#c084fc);">
+            <i class="bi bi-clock-history kpi-icon"></i>
+            <div class="kpi-value">{{ $summary['expiring_soon'] }}</div>
+            <div class="kpi-label">Expiring ≤30 Days</div>
+        </div>
+    </div>
+    @endif
 </div>
+
+@if(!empty($expiryAlerts) && $expiryAlerts->count() > 0)
+<div class="alert mb-3 d-flex align-items-start gap-3" style="background:#fef3c7;border:1px solid #fcd34d;border-radius:12px;padding:14px 18px;">
+    <i class="bi bi-exclamation-triangle-fill" style="color:#d97706;font-size:1.2rem;flex-shrink:0;margin-top:2px;"></i>
+    <div>
+        <div class="fw-bold" style="color:#92400e;font-size:.88rem;">Expiry Alert — {{ $expiryAlerts->count() }} item(s) expiring within 30 days</div>
+        <div class="mt-1 d-flex flex-wrap gap-2">
+            @foreach($expiryAlerts as $alert)
+                <span style="font-size:.75rem;background:#fde68a;color:#78350f;padding:2px 8px;border-radius:20px;font-weight:600;">
+                    {{ $alert->name }} — {{ $alert->expiry_date->format('d M Y') }}
+                    ({{ $alert->days_to_expiry }}d left)
+                </span>
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-3">
@@ -155,6 +187,7 @@
                     <th>Unit</th>
                     <th class="text-end">Available</th>
                     <th class="text-end">Min Stock</th>
+                    <th>Expiry</th>
                     <th>Status</th>
                     <th style="width:100px;text-align:center;">Actions</th>
                 </tr>
@@ -188,6 +221,19 @@
                             <span class="fw-bold" style="color:{{ $qtyColor }};font-size:.9rem;">{{ number_format($item->available_quantity, 2) }}</span>
                         </td>
                         <td class="text-end" style="font-size:.82rem;color:#6b7280;">{{ number_format($item->min_stock, 2) }}</td>
+                        <td style="font-size:.78rem;">
+                            @if($item->expiry_date)
+                                @if($item->is_expired)
+                                    <span class="spill spill-danger" style="font-size:.7rem;">Expired</span>
+                                @elseif($item->is_expiring_soon)
+                                    <span style="color:#d97706;font-weight:600;">{{ $item->expiry_date->format('d M Y') }}<br><small style="color:#f59e0b;">{{ $item->days_to_expiry }}d left</small></span>
+                                @else
+                                    <span style="color:#6b7280;">{{ $item->expiry_date->format('d M Y') }}</span>
+                                @endif
+                            @else
+                                <span style="color:#d1d5db;">—</span>
+                            @endif
+                        </td>
                         <td><span class="spill {{ $statusColor }}" style="font-size:.72rem;">{{ $item->stock_status }}</span></td>
                         <td style="text-align:center;">
                             <a href="{{ route('admin.stock.in', ['item_id' => $item->id]) }}" class="act-btn act-view" title="Stock In"><i class="bi bi-plus-circle"></i></a>
@@ -196,7 +242,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="empty-state">
+                        <td colspan="9" class="empty-state">
                             <i class="bi bi-boxes"></i>
                             <p>No stock items found. <a href="{{ route('admin.stock-items.index') }}">Add items</a> first.</p>
                         </td>

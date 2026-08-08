@@ -118,7 +118,7 @@
                             <label class="form-label fw-semibold">Bill / Invoice</label>
                             @if($expense->bill_path)
                                 <div class="mb-2">
-                                    <a href="{{ Storage::url($expense->bill_path) }}" target="_blank" class="btn btn-xs btn-outline-info">
+                                    <a href="{{ asset('uploads/' . $expense->bill_path) }}" target="_blank" class="btn btn-xs btn-outline-info">
                                         <i class="bi bi-file-earmark me-1"></i>View Current Bill
                                     </a>
                                 </div>

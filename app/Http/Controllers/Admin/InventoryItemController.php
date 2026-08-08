@@ -43,6 +43,7 @@ class InventoryItemController extends Controller
             'item_type'   => 'nullable|string|max:100|exists:inventory_item_types,name',
             'unit'        => 'required|string|max:50',
             'min_stock'   => 'required|numeric|min:0',
+            'expiry_date' => 'nullable|date|after:today',
             'description' => 'nullable|string|max:500',
         ]);
         $validated['is_active'] = true;
@@ -68,6 +69,7 @@ class InventoryItemController extends Controller
             'item_type'   => 'nullable|string|max:100|exists:inventory_item_types,name',
             'unit'        => 'required|string|max:50',
             'min_stock'   => 'required|numeric|min:0',
+            'expiry_date' => 'nullable|date',
             'description' => 'nullable|string|max:500',
         ]);
         $validated['is_active'] = $request->boolean('is_active');

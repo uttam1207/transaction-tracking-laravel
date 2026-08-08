@@ -55,3 +55,10 @@ Schedule::command('fraud:check-high-risk --threshold=80')
     ->everyThirtyMinutes()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+// ── ASDairy Dairy Operations Alerts ──
+// Send calving, low-stock, and expiry alerts every morning at 7 AM
+Schedule::command('dairy:send-alerts')
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/dairy-alerts.log'));

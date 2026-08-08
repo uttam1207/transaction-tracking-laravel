@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\BreedingRecord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BreedingController extends Controller
 {
@@ -43,13 +44,19 @@ class BreedingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'animal_id' => 'required|exists:animals,id',
-            'heat_date' => 'required|date',
-            'ai_date' => 'nullable|date',
-            'bull_semen_code' => 'nullable|string|max:100',
-            'status' => 'required|in:Heat Detected,AI Done,Confirmed Pregnant,Calved,Repeat Breeder,Not Pregnant',
+            'animal_id'             => 'required|exists:animals,id',
+            'heat_date'             => 'required|date',
+            'ai_date'               => 'nullable|date',
+            'bull_semen_code'       => 'nullable|string|max:100',
+            'status'                => 'required|in:Heat Detected,AI Done,Confirmed Pregnant,Calved,Repeat Breeder,Not Pregnant',
             'expected_calving_date' => 'nullable|date',
+            'certificate_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('certificate_file')) {
+            $validated['certificate_path'] = $request->file('certificate_file')->store('breeding-certificates', 'uploads');
+        }
+        unset($validated['certificate_file']);
 
         BreedingRecord::create($validated);
 
@@ -85,7 +92,16 @@ class BreedingController extends Controller
             'expected_calving_date' => 'nullable|date',
             'actual_calving_date'   => 'nullable|date',
             'calf_tag_number'       => 'nullable|string|max:50',
+            'certificate_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('certificate_file')) {
+            if ($breedingRecord->certificate_path) {
+                Storage::disk('uploads')->delete($breedingRecord->certificate_path);
+            }
+            $validated['certificate_path'] = $request->file('certificate_file')->store('breeding-certificates', 'uploads');
+        }
+        unset($validated['certificate_file']);
 
         $breedingRecord->update($validated);
 

@@ -10,10 +10,11 @@
     $pBorderColor = ['low'=>'#16a34a','medium'=>'#f59e0b','high'=>'#dc2626','urgent'=>'#7f1d1d'][$task->priority] ?? '#6366f1';
 @endphp
 
-<a href="{{ route('employee.tasks.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Tasks</a>
-
 <div class="page-hero" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);">
-    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;gap:12px;">
+        <a href="{{ route('employee.tasks.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;flex-shrink:0;">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
         <div style="flex:1;min-width:0;">
             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <span class="spill spill-{{ $statusColors[$ts] ?? 'secondary' }}" style="font-size:.72rem;">
@@ -56,9 +57,15 @@
     {{-- Main Column --}}
     <div class="col-lg-8">
         {{-- Task Details Card --}}
-        <div class="info-card mb-3">
-            <div class="info-card-hdr"><i class="bi bi-info-circle me-2"></i>Task Details</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mb-3">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Task Details</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @if($task->description)
                 <p style="font-size:.87rem;color:#374151;line-height:1.6;margin-bottom:16px;">{{ $task->description }}</p>
                 @endif
@@ -112,9 +119,15 @@
         </div>
 
         {{-- Comments --}}
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-chat-dots me-2"></i>Comments ({{ $task->comments->count() }})</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#0891b2,#2563eb);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-dots" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Comments ({{ $task->comments->count() }})</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @forelse($task->comments as $comment)
                 <div class="d-flex gap-3 mb-3" style="padding-bottom:14px;border-bottom:1px solid #f3f4f6;">
                     <img src="{{ $comment->user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($comment->user->name ?? 'U').'&size=36&background=6366f1&color=fff' }}"
@@ -155,8 +168,14 @@
     {{-- Sidebar --}}
     <div class="col-lg-4">
         {{-- Time Logs --}}
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-stopwatch me-2"></i>Time Logs</div>
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-stopwatch" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Time Logs</span>
+                </div>
+            </div>
             @forelse($task->timesheets ?? [] as $log)
             <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #f3f4f6;">
                 <div>

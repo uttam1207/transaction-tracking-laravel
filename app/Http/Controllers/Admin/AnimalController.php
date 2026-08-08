@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\AnimalAction;
+use App\Models\AnimalPhoto;
 use App\Models\ActionType;
 use App\Models\Breed;
 use Illuminate\Http\Request;
@@ -61,6 +62,7 @@ class AnimalController extends Controller
         $validated = $request->validate([
             'tag_number'       => 'required|string|unique:animals,tag_number',
             'name'             => 'nullable|string|max:100',
+            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf',
             'breed'            => 'required|string|max:100',
             'dob'              => 'nullable|date',
             'born_in_farm'     => 'nullable|boolean',
@@ -84,9 +86,36 @@ class AnimalController extends Controller
 
     public function show(Animal $animal)
     {
-        $animal->load('actions', 'milkEntries', 'breedingRecords', 'healthRecords');
+        $animal->load('actions', 'milkEntries', 'breedingRecords', 'healthRecords', 'photos');
         $actionTypes = ActionType::active()->orderByDesc('is_system')->orderBy('name')->get();
         return view('admin.animals.show', compact('animal', 'actionTypes'));
+    }
+
+    public function storePhotos(Request $request, Animal $animal)
+    {
+        $request->validate([
+            'photos'    => 'required|array|min:1|max:20',
+            'photos.*'  => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        foreach ($request->file('photos') as $photo) {
+            $path = $photo->store('animal-photos', 'uploads');
+            AnimalPhoto::create([
+                'animal_id'  => $animal->id,
+                'photo_path' => $path,
+                'caption'    => null,
+                'is_primary' => false,
+            ]);
+        }
+
+        return back()->with('success', count($request->file('photos')) . ' photo(s) uploaded successfully.');
+    }
+
+    public function destroyPhoto(Animal $animal, AnimalPhoto $photo)
+    {
+        Storage::disk('uploads')->delete($photo->photo_path);
+        $photo->delete();
+        return back()->with('success', 'Photo deleted.');
     }
 
     public function storeAction(Request $request, Animal $animal)
@@ -105,7 +134,7 @@ class AnimalController extends Controller
         // Handle optional document upload
         if ($request->hasFile('document')) {
             $validated['document_path'] = $request->file('document')
-                ->store('animal-docs', 'public');
+                ->store('animal-docs', 'uploads');
         }
 
         unset($validated['document']); // not a DB column
@@ -127,7 +156,7 @@ class AnimalController extends Controller
     {
         // Delete the uploaded file if it exists
         if ($action->document_path) {
-            Storage::disk('public')->delete($action->document_path);
+            Storage::disk('uploads')->delete($action->document_path);
         }
 
         $action->delete();
@@ -146,6 +175,7 @@ class AnimalController extends Controller
         $validated = $request->validate([
             'tag_number'       => 'required|string|unique:animals,tag_number,' . $animal->id,
             'name'             => 'nullable|string|max:100',
+            'animal_type'      => 'required|in:Cow,Buffalo,Bull,Heifer,Calf',
             'breed'            => 'required|string|max:100',
             'dob'              => 'nullable|date',
             'born_in_farm'     => 'nullable|boolean',

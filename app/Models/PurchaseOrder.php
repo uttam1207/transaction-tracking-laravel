@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Vendor;
 
 class PurchaseOrder extends Model
 {
@@ -16,6 +17,7 @@ class PurchaseOrder extends Model
         'total_amount',
         'status',
         'remarks',
+        'invoice_path',
     ];
 
     protected $casts = [

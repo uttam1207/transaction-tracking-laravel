@@ -8,25 +8,28 @@
 
 @section('content')
 
-<a href="{{ route('admin.fraud-alerts.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Alerts</a>
-
 <div class="page-hero" style="background:linear-gradient(135deg,#7f1d1d,#991b1b,#7f1d1d);">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>Blacklist Management</h4>
             <p>Block suspicious IPs, emails, accounts and more</p>
         </div>
-        <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);"
-            data-bs-toggle="modal" data-bs-target="#addBlacklistModal">
-            <i class="bi bi-ban me-1"></i>Add to Blacklist
-        </button>
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.fraud-alerts.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);"
+                data-bs-toggle="modal" data-bs-target="#addBlacklistModal">
+                <i class="bi bi-ban me-1"></i>Add to Blacklist
+            </button>
+        </div>
     </div>
 </div>
 
 <div class="row g-3 mb-4">
     @foreach(['ip'=>'IP Addresses','email'=>'Emails','account'=>'Accounts','country'=>'Countries'] as $type => $label)
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:16px;border-top:4px solid #dc2626;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:1.8rem;font-weight:800;color:#dc2626;line-height:1;">{{ $blacklists->where('type',$type)->count() }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">{{ $label }}</div>
         </div>

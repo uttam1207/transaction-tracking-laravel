@@ -3,28 +3,26 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-    <div class="page-hero-body">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div>
-                <div class="page-hero-title"><i class="bi bi-wallet2 me-2"></i>Company Wallet</div>
-                <div class="page-hero-sub">Central company wallet — all transactions flow through this</div>
-            </div>
-            <div class="d-flex gap-2">
-                <button type="button" onclick="openAddMoney()"
-                    class="btn btn-sm"
-                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;"
-                    @if($wallet->status === 'frozen') disabled @endif>
-                    <i class="bi bi-plus-circle me-1"></i>Add Money
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" style="position:relative;z-index:1;">
+        <div>
+            <h4 style="margin:0;font-weight:800;color:#fff;"><i class="bi bi-wallet2 me-2"></i>Company Wallet</h4>
+            <p style="opacity:.8;margin:4px 0 0;font-size:.85rem;color:#fff;">Central company wallet — all transactions flow through this</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" onclick="openAddMoney()"
+                class="btn btn-sm"
+                style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;"
+                @if($wallet->status === 'frozen') disabled @endif>
+                <i class="bi bi-plus-circle me-1"></i>Add Money
+            </button>
+            <form action="{{ route('admin.wallets.toggleFreeze', $wallet->id) }}" method="POST" class="d-inline">
+                @csrf @method('PATCH')
+                <button type="submit" class="btn btn-sm"
+                    style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+                    <i class="bi bi-{{ $wallet->status === 'active' ? 'lock' : 'unlock' }} me-1"></i>
+                    {{ $wallet->status === 'active' ? 'Freeze' : 'Unfreeze' }}
                 </button>
-                <form action="{{ route('admin.wallets.toggleFreeze', $wallet->id) }}" method="POST" class="d-inline">
-                    @csrf @method('PATCH')
-                    <button type="submit" class="btn btn-sm"
-                        style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
-                        <i class="bi bi-{{ $wallet->status === 'active' ? 'lock' : 'unlock' }} me-1"></i>
-                        {{ $wallet->status === 'active' ? 'Freeze' : 'Unfreeze' }}
-                    </button>
-                </form>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -39,7 +37,7 @@
 {{-- Balance + Stats --}}
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #7c3aed;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #7c3aed;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Current Balance</div>
             <div style="font-size:2.8rem;font-weight:800;color:#7c3aed;line-height:1;">₹{{ number_format($wallet->balance, 2) }}</div>
             <div class="mt-2">
@@ -52,14 +50,14 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #16a34a;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Total Credited</div>
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">₹{{ number_format($stats['total_credited'], 2) }}</div>
             <div style="font-size:.78rem;color:#9ca3af;margin-top:6px;">All credits incl. top-ups</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #dc2626;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Total Debited</div>
             <div style="font-size:2rem;font-weight:800;color:#dc2626;line-height:1;">₹{{ number_format($stats['total_debited'], 2) }}</div>
             <div style="font-size:.78rem;color:#9ca3af;margin-top:6px;">{{ number_format($stats['txn_count']) }} total entries</div>
@@ -69,11 +67,11 @@
 
 {{-- Transaction History --}}
 <div class="table-card">
-    <div class="table-card-hdr">
-        <div class="table-card-title"><i class="bi bi-clock-history me-2"></i>Wallet Transaction History</div>
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-clock-history me-2"></i>Wallet Transaction History</span>
     </div>
     <div class="table-responsive">
-        <table class="modern-table">
+        <table class="table modern-table mb-0">
             <thead>
                 <tr>
                     <th>Date & Time</th>

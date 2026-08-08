@@ -359,6 +359,157 @@
     </div>
 </div>
 
+{{-- ════════════════════════════════════════
+     DAIRY OPERATIONS OVERVIEW
+     ════════════════════════════════════════ --}}
+<div class="d-flex align-items-center gap-3 mb-3 mt-2">
+    <div style="height:2px;flex:1;background:linear-gradient(90deg,#0d9488,transparent);border-radius:2px;"></div>
+    <span style="font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.1em;white-space:nowrap;">
+        <i class="bi bi-droplet-fill me-1" style="color:#0d9488;"></i>Dairy Operations Overview
+    </span>
+    <div style="height:2px;flex:1;background:linear-gradient(90deg,transparent,#0d9488);border-radius:2px;"></div>
+</div>
+
+{{-- Animal KPI Row --}}
+@if(isset($animalStats))
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #0d9488;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Total Herd</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#0d9488;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['total'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">animals</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #0891b2;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Milking</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#0891b2;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['milking'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">lactating</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #7c3aed;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Pregnant</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#7c3aed;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['pregnant'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">in-calf</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #f59e0b;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Dry</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['dry'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">cows</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #6b7280;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Calves</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#6b7280;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['calves'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">young stock</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="card-glass p-3 text-center h-100" style="border-top:3px solid #ef4444;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Sick</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#ef4444;letter-spacing:-1px;line-height:1.1;" class="my-1">{{ $animalStats['sick'] ?? 0 }}</div>
+            <div style="font-size:.7rem;color:#9ca3af;">under care</div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Milk Production KPI Row --}}
+@if(isset($milkStats))
+<div class="row g-3 mb-3">
+    <div class="col-6 col-md-3">
+        <div class="card-glass p-3 h-100" style="border-left:4px solid #0d9488;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Today's Yield</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#0d9488;letter-spacing:-1px;" class="mt-1">{{ number_format($milkStats['today_liters'] ?? 0, 1) }} L</div>
+            @if(($milkStats['today_rejected'] ?? 0) > 0)
+                <div style="font-size:.72rem;color:#ef4444;"><i class="bi bi-x-circle me-1"></i>{{ number_format($milkStats['today_rejected'], 1) }} L rejected</div>
+            @else
+                <div style="font-size:.72rem;color:#10b981;"><i class="bi bi-check-circle me-1"></i>No rejections</div>
+            @endif
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-glass p-3 h-100" style="border-left:4px solid #0891b2;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Month Yield</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#0891b2;letter-spacing:-1px;" class="mt-1">{{ number_format($milkStats['month_liters'] ?? 0, 0) }} L</div>
+            <div style="font-size:.72rem;color:#9ca3af;">{{ now()->format('F Y') }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-glass p-3 h-100" style="border-left:4px solid #4f46e5;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Avg Fat %</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#4f46e5;letter-spacing:-1px;" class="mt-1">{{ $milkStats['avg_fat'] ? number_format($milkStats['avg_fat'], 2) . '%' : '—' }}</div>
+            <div style="font-size:.72rem;color:#9ca3af;">Target: 6.0–8.0%</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card-glass p-3 h-100" style="border-left:4px solid #7c3aed;">
+            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;">Avg SNF %</div>
+            <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;letter-spacing:-1px;" class="mt-1">{{ $milkStats['avg_snf'] ? number_format($milkStats['avg_snf'], 2) . '%' : '—' }}</div>
+            <div style="font-size:.72rem;color:#9ca3af;">Target: 8.5–9.5%</div>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- Milk Trend + Stock Alerts --}}
+<div class="row g-3 mb-4">
+    {{-- 14-Day Milk Trend --}}
+    <div class="col-lg-8">
+        <div class="chart-card h-100">
+            <div class="chart-card-header">
+                <span class="chart-card-title"><i class="bi bi-droplet-fill me-2" style="color:#0d9488;"></i>14-Day Milk Production Trend</span>
+                <a href="{{ route('admin.reports.milk') }}" class="btn btn-sm btn-outline-primary py-0 px-3" style="border-radius:8px;font-size:.78rem;">Full Report</a>
+            </div>
+            <div class="chart-card-body">
+                <div id="milkTrendChart" style="height:220px;"></div>
+            </div>
+        </div>
+    </div>
+    {{-- Stock Alerts Panel --}}
+    <div class="col-lg-4">
+        <div class="chart-card h-100">
+            <div class="chart-card-header">
+                <span class="chart-card-title"><i class="bi bi-boxes me-2 text-warning"></i>Stock Alerts</span>
+                <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-outline-secondary py-0 px-2" style="border-radius:8px;font-size:.78rem;">View</a>
+            </div>
+            <div class="chart-card-body">
+                @if(isset($stockAlerts))
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);">
+                        <div>
+                            <div style="font-size:.72rem;font-weight:700;color:#ef4444;text-transform:uppercase;">Out of Stock</div>
+                            <div style="font-size:1.4rem;font-weight:800;color:#ef4444;">{{ $stockAlerts['out_of_stock'] ?? 0 }}</div>
+                        </div>
+                        <i class="bi bi-x-circle-fill" style="font-size:1.6rem;color:#ef4444;opacity:.6;"></i>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);">
+                        <div>
+                            <div style="font-size:.72rem;font-weight:700;color:#d97706;text-transform:uppercase;">Low Stock</div>
+                            <div style="font-size:1.4rem;font-weight:800;color:#d97706;">{{ $stockAlerts['low_stock'] ?? 0 }}</div>
+                        </div>
+                        <i class="bi bi-exclamation-triangle-fill" style="font-size:1.6rem;color:#d97706;opacity:.6;"></i>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between p-3 rounded" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);">
+                        <div>
+                            <div style="font-size:.72rem;font-weight:700;color:#7c3aed;text-transform:uppercase;">Expiring Soon</div>
+                            <div style="font-size:1.4rem;font-weight:800;color:#7c3aed;">{{ $stockAlerts['expiring_soon'] ?? 0 }}</div>
+                        </div>
+                        <i class="bi bi-clock-history" style="font-size:1.6rem;color:#7c3aed;opacity:.6;"></i>
+                    </div>
+                </div>
+                @else
+                <div class="text-muted text-center py-4" style="font-size:.82rem;">No stock data available.</div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- ── Charts Row 1 ── --}}
 <div class="row g-3 mb-4">
     <div class="col-lg-8">
@@ -686,6 +837,38 @@ new ApexCharts(document.getElementById('revenueChart'), {
     plotOptions: { bar: { borderRadius: 6 } },
     dataLabels: { enabled: false },
 }).render();
+
+// ── Milk Trend Chart ──
+@if(isset($milkTrend) && $milkTrend->count() > 0)
+const milkTrendData = @json($milkTrend);
+new ApexCharts(document.getElementById('milkTrendChart'), {
+    series: [
+        { name: 'Yield (L)', data: milkTrendData.map(r => parseFloat(r.liters || 0).toFixed(1)) },
+        { name: 'Fat %', data: milkTrendData.map(r => parseFloat(r.fat_pct || 0).toFixed(2)) },
+    ],
+    chart: { type: 'line', height: 220, toolbar: { show: false } },
+    stroke: { curve: 'smooth', width: [2.5, 1.5], dashArray: [0, 4] },
+    colors: ['#0d9488', '#7c3aed'],
+    xaxis: {
+        categories: milkTrendData.map(r => {
+            const d = new Date(r.day);
+            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        }),
+        labels: { style: { fontSize: '10px' } },
+    },
+    yaxis: [
+        { title: { text: 'Liters' }, labels: { formatter: v => v + ' L', style: { fontSize: '10px' } } },
+        { opposite: true, title: { text: 'Fat %' }, labels: { formatter: v => v + '%', style: { fontSize: '10px' } }, min: 0, max: 12 },
+    ],
+    legend: { position: 'top', fontSize: '11px' },
+    dataLabels: { enabled: false },
+    markers: { size: [3, 2] },
+    grid: { borderColor: 'rgba(0,0,0,0.04)' },
+}).render();
+@else
+const milkEl = document.getElementById('milkTrendChart');
+if (milkEl) milkEl.innerHTML = '<div style="height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;"><i class="bi bi-droplet" style="font-size:2rem;opacity:.2;"></i><span style="font-size:.8rem;color:#9ca3af;">No milk data in last 14 days</span></div>';
+@endif
 
 function updateChart(type, days) {
     $.get('/admin/dashboard/chart', { type, days }, function (data) {

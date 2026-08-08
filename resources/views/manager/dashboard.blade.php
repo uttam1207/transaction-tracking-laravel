@@ -36,7 +36,7 @@
 
     {{-- Check-In/Out --}}
     <div class="col-md-3">
-        <div class="info-card h-100 text-center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px;">
+        <div class="card-glass p-4 h-100 text-center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
             @if(!$isCheckedIn && !$isDayComplete)
                 <div style="margin-bottom:16px;">
                     <i class="bi bi-clock" style="font-size:2.2rem;color:#d1d5db;"></i>
@@ -73,8 +73,8 @@
 
     {{-- My Tasks --}}
     <div class="col-md-3">
-        <div class="info-card h-100" style="border-left:4px solid #f59e0b;">
-            <div class="info-card-body d-flex flex-column justify-content-between h-100" style="padding:20px;">
+        <div class="card-glass p-4 h-100" style="border-left:4px solid #f59e0b;">
+            <div class="d-flex flex-column justify-content-between h-100">
                 <div>
                     <div style="font-size:.75rem;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">My Tasks</div>
                     <div style="font-size:2rem;font-weight:800;color:#111827;line-height:1;">{{ $myPendingTasks }}</div>
@@ -90,8 +90,8 @@
 
     {{-- Leave Balance --}}
     <div class="col-md-3">
-        <div class="info-card h-100" style="border-left:4px solid #0ea5e9;">
-            <div class="info-card-body" style="padding:20px;">
+        <div class="card-glass p-4 h-100" style="border-left:4px solid #0ea5e9;">
+            <div>
                 <div style="font-size:.75rem;color:#9ca3af;margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px;">My Leave Balance</div>
                 <div class="d-flex gap-4">
                     <div>
@@ -110,8 +110,8 @@
 
     {{-- Performance --}}
     <div class="col-md-3">
-        <div class="info-card h-100" style="border-left:4px solid #6366f1;">
-            <div class="info-card-body" style="padding:20px;">
+        <div class="card-glass p-4 h-100" style="border-left:4px solid #6366f1;">
+            <div>
                 <div style="font-size:.75rem;color:#9ca3af;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">My Performance</div>
                 <div style="font-size:2rem;font-weight:800;color:#6366f1;line-height:1;">{{ $employee->performance_score ?? 0 }}%</div>
                 <div style="height:6px;background:#f3f4f6;border-radius:3px;overflow:hidden;margin-top:10px;">
@@ -131,7 +131,7 @@
 
     {{-- Total Team Members --}}
     <div class="col-6 col-md-3">
-        <div class="info-card text-center" style="padding:20px 12px;">
+        <div class="card-glass p-4 text-center">
             <div style="font-size:2rem;font-weight:800;color:#374151;line-height:1;">{{ $teamEmployees->count() }}</div>
             <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">Team Members</div>
             <i class="bi bi-people-fill" style="font-size:1.4rem;color:#e5e7eb;margin-top:8px;display:block;"></i>
@@ -140,7 +140,7 @@
 
     {{-- Present Today --}}
     <div class="col-6 col-md-3">
-        <div class="info-card text-center" style="padding:20px 12px;border-bottom:3px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-bottom:3px solid #16a34a;">
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">{{ $teamPresentToday }}</div>
             <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">Present Today</div>
             <i class="bi bi-person-check-fill" style="font-size:1.4rem;color:#dcfce7;margin-top:8px;display:block;"></i>
@@ -149,7 +149,7 @@
 
     {{-- On Leave Today --}}
     <div class="col-6 col-md-3">
-        <div class="info-card text-center" style="padding:20px 12px;border-bottom:3px solid #f59e0b;">
+        <div class="card-glass p-4 text-center" style="border-bottom:3px solid #f59e0b;">
             <div style="font-size:2rem;font-weight:800;color:#d97706;line-height:1;">{{ $teamOnLeaveToday }}</div>
             <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">On Leave Today</div>
             <i class="bi bi-calendar-x-fill" style="font-size:1.4rem;color:#fef3c7;margin-top:8px;display:block;"></i>
@@ -158,7 +158,7 @@
 
     {{-- Pending Leave Approvals --}}
     <div class="col-6 col-md-3">
-        <div class="info-card text-center" style="padding:20px 12px;border-bottom:3px solid {{ $pendingLeaves->count() > 0 ? '#dc2626' : '#e5e7eb' }};">
+        <div class="card-glass p-4 text-center" style="border-bottom:3px solid {{ $pendingLeaves->count() > 0 ? '#dc2626' : '#e5e7eb' }};">
             <div style="font-size:2rem;font-weight:800;color:{{ $pendingLeaves->count() > 0 ? '#dc2626' : '#374151' }};line-height:1;">{{ $pendingLeaves->count() }}</div>
             <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">Pending Leave Requests</div>
             <i class="bi bi-hourglass-split" style="font-size:1.4rem;color:{{ $pendingLeaves->count() > 0 ? '#fee2e2' : '#f3f4f6' }};margin-top:8px;display:block;"></i>
@@ -169,7 +169,7 @@
 {{-- Team Task Stats --}}
 <div class="row g-3 mb-4">
     <div class="col-12">
-        <div class="info-card" style="padding:20px 24px;">
+        <div class="card-glass p-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div style="font-size:.88rem;font-weight:700;color:#111827;">Team Task Progress</div>
                 <a href="{{ route('admin.tasks.kanban') }}" style="font-size:.78rem;color:#6366f1;text-decoration:none;">Kanban Board →</a>

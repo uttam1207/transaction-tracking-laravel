@@ -278,7 +278,7 @@
                         {{-- Document attachment link --}}
                         @if($action->document_path)
                             <div class="mt-1">
-                                <a href="{{ Storage::url($action->document_path) }}" target="_blank"
+                                <a href="{{ asset('uploads/' . $action->document_path) }}" target="_blank"
                                     style="font-size:.75rem;color:{{ $docIcon[1] }};text-decoration:none;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:{{ $ext === 'pdf' ? '#fef2f2' : '#eff6ff' }};border-radius:6px;border:1px solid {{ $ext === 'pdf' ? '#fecaca' : '#bfdbfe' }};">
                                     <i class="bi {{ $docIcon[0] }}"></i>
                                     {{ basename($action->document_path) }}
@@ -293,6 +293,72 @@
                     </div>
                 @endforelse
             </div>
+        </div>
+
+        {{-- Bulk Photo Upload --}}
+        <div class="card-glass mb-4">
+            <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:36px;height:36px;background:linear-gradient(135deg,#7c3aed,#9333ea);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-images" style="color:#fff;font-size:.9rem;"></i>
+                    </div>
+                    <h6 class="mb-0 fw-bold">Animal Photos</h6>
+                </div>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary">{{ $animal->photos->count() }} photo(s)</span>
+            </div>
+
+            {{-- Upload Form --}}
+            <div class="px-4 pt-3 pb-2">
+                <form action="{{ route('admin.animals.photos.store', $animal) }}" method="POST"
+                    enctype="multipart/form-data" id="photoUploadForm">
+                    @csrf
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold" style="font-size:.78rem;">
+                            <i class="bi bi-upload me-1"></i>Upload Photos (select multiple)
+                        </label>
+                        <input type="file" name="photos[]" id="bulkPhotos" multiple
+                            class="form-control form-control-sm @error('photos') is-invalid @enderror @error('photos.*') is-invalid @enderror"
+                            accept="image/jpeg,image/png,image/webp"
+                            onchange="previewBulkPhotos(this)">
+                        <div class="form-text" style="font-size:.72rem;color:#9ca3af;">
+                            JPG, PNG, WEBP — max 5 MB each, up to 20 photos at once
+                        </div>
+                        @error('photos')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                        @error('photos.*')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                    <div id="bulkPhotoPreview" class="d-flex flex-wrap gap-2 mb-2"></div>
+                    <button type="submit" id="uploadPhotosBtn" class="btn btn-primary-grad btn-sm px-4" style="display:none;">
+                        <i class="bi bi-cloud-upload me-1"></i>Upload Selected Photos
+                    </button>
+                </form>
+            </div>
+
+            {{-- Photo Gallery --}}
+            @if($animal->photos->count() > 0)
+            <div class="px-4 pb-3">
+                <div class="d-flex flex-wrap gap-2 mt-1">
+                    @foreach($animal->photos as $photo)
+                    <div style="position:relative;width:100px;height:100px;border-radius:10px;overflow:hidden;border:2px solid #e5e7eb;flex-shrink:0;">
+                        <img src="{{ asset('uploads/' . $photo->photo_path) }}" alt="Animal photo"
+                            style="width:100%;height:100%;object-fit:cover;">
+                        <form method="POST" action="{{ route('admin.animals.photos.destroy', [$animal, $photo]) }}"
+                            onsubmit="return confirm('Delete this photo?')"
+                            style="position:absolute;top:3px;right:3px;margin:0;">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                style="width:22px;height:22px;background:rgba(220,38,38,.85);border:none;border-radius:5px;color:#fff;font-size:.6rem;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
+                                <i class="bi bi-trash3"></i>
+                            </button>
+                        </form>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="px-4 pb-3 text-center" style="color:#9ca3af;font-size:.82rem;padding-top:8px;">
+                <i class="bi bi-camera d-block mb-1" style="font-size:1.5rem;opacity:.4;"></i>No photos yet
+            </div>
+            @endif
         </div>
 
         {{-- Recent Health Records --}}
@@ -330,6 +396,26 @@
 
 @push('scripts')
 <script>
+function previewBulkPhotos(input) {
+    const preview = document.getElementById('bulkPhotoPreview');
+    const btn = document.getElementById('uploadPhotosBtn');
+    preview.innerHTML = '';
+    if (!input.files || input.files.length === 0) { btn.style.display = 'none'; return; }
+    Array.from(input.files).forEach(function(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:2px solid #e5e7eb;flex-shrink:0;';
+            div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;">';
+            preview.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+    btn.style.display = '';
+    btn.textContent = '';
+    btn.innerHTML = '<i class="bi bi-cloud-upload me-1"></i>Upload ' + input.files.length + ' Photo(s)';
+}
+
 function previewFile(input) {
     const preview = document.getElementById('filePreview');
     if (input.files && input.files[0]) {

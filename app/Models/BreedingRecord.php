@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Animal;
 
 class BreedingRecord extends Model
 {
@@ -20,6 +21,7 @@ class BreedingRecord extends Model
         'actual_calving_date',
         'calf_tag_number',
         'status',
+        'certificate_path',
     ];
 
     protected $casts = [

@@ -8,6 +8,7 @@ use App\Models\AnimalAction;
 use App\Models\MilkEntry;
 use App\Models\BreedingRecord;
 use App\Models\HealthRecord;
+use App\Models\AnimalPhoto;
 
 class Animal extends Model
 {
@@ -15,6 +16,7 @@ class Animal extends Model
 
     protected $fillable = [
         'tag_number',
+        'animal_type',
         'name',
         'breed',
         'dob',
@@ -57,5 +59,10 @@ class Animal extends Model
     public function healthRecords()
     {
         return $this->hasMany(HealthRecord::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(AnimalPhoto::class);
     }
 }

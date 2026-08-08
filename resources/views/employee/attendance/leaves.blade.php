@@ -3,38 +3,41 @@
 
 @section('content')
 
-<a href="{{ route('employee.attendance.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Attendance</a>
-
 <div class="page-hero">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>Leave Requests</h4>
             <p>Manage your leave applications</p>
         </div>
-        <button class="btn btn-sm btn-primary-grad px-4" data-bs-toggle="modal" data-bs-target="#requestLeaveModal">
-            <i class="bi bi-calendar-plus me-1"></i>Request Leave
-        </button>
+        <div class="d-flex gap-2">
+            <a href="{{ route('employee.attendance.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <button class="btn btn-sm btn-primary-grad px-4" data-bs-toggle="modal" data-bs-target="#requestLeaveModal">
+                <i class="bi bi-calendar-plus me-1"></i>Request Leave
+            </button>
+        </div>
     </div>
 </div>
 
 {{-- Leave Balance Cards --}}
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:2.2rem;font-weight:800;color:#16a34a;line-height:1;">{{ $employee->annual_leave_balance ?? 21 }}</div>
             <div style="font-size:.84rem;color:#374151;margin-top:6px;font-weight:600;">Annual Leave Balance</div>
             <div style="font-size:.74rem;color:#9ca3af;">days remaining</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid #0ea5e9;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #0ea5e9;">
             <div style="font-size:2.2rem;font-weight:800;color:#0ea5e9;line-height:1;">{{ $employee->sick_leave_balance ?? 10 }}</div>
             <div style="font-size:.84rem;color:#374151;margin-top:6px;font-weight:600;">Sick Leave Balance</div>
             <div style="font-size:.74rem;color:#9ca3af;">days remaining</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="padding:20px;border-top:4px solid #f59e0b;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #f59e0b;">
             <div style="font-size:2.2rem;font-weight:800;color:#f59e0b;line-height:1;">{{ $leaves->where('status','pending')->count() }}</div>
             <div style="font-size:.84rem;color:#374151;margin-top:6px;font-weight:600;">Pending Requests</div>
             <div style="font-size:.74rem;color:#9ca3af;">awaiting approval</div>

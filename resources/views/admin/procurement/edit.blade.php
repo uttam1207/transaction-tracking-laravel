@@ -53,7 +53,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.procurement.update', $purchaseOrder) }}" method="POST">
+                <form action="{{ route('admin.procurement.update', $purchaseOrder) }}" method="POST" enctype="multipart/form-data">
                     @csrf @method('PUT')
 
                     <div class="mb-4">
@@ -109,6 +109,42 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <h6 class="form-section-label">B — Invoice / Document</h6>
+                        <div class="row g-3">
+                            @if($purchaseOrder->invoice_path)
+                            <div class="col-12">
+                                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+                                    @php $fext = strtolower(pathinfo($purchaseOrder->invoice_path, PATHINFO_EXTENSION)); @endphp
+                                    <i class="bi {{ $fext === 'pdf' ? 'bi-file-pdf-fill' : 'bi-image-fill' }}"
+                                        style="font-size:1.3rem;color:{{ $fext === 'pdf' ? '#dc2626' : '#2563eb' }};flex-shrink:0;"></i>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:.72rem;color:#6b7280;">Current invoice</div>
+                                        <a href="{{ asset('uploads/' . $purchaseOrder->invoice_path) }}" target="_blank"
+                                            style="font-size:.82rem;color:#059669;font-weight:600;word-break:break-all;">
+                                            {{ basename($purchaseOrder->invoice_path) }}
+                                            <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.6rem;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-paperclip me-1"></i>{{ $purchaseOrder->invoice_path ? 'Replace Invoice' : 'Attach Invoice / Delivery Note' }}
+                                </label>
+                                <input type="file" name="invoice_file" id="invoiceFileEdit"
+                                    class="form-control @error('invoice_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onchange="showFileName(this,'invoiceEditHint')">
+                                <div id="invoiceEditHint" class="form-text text-muted" style="font-size:.75rem;">
+                                    PDF, JPG, PNG — max 10 MB. Leave empty to keep current file.
+                                </div>
+                                @error('invoice_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-end gap-2 pt-2">
                         <a href="{{ route('admin.procurement.show', $purchaseOrder) }}" class="btn btn-outline-secondary px-4">Cancel</a>
                         <button type="submit" class="btn btn-primary-grad px-5">
@@ -122,3 +158,16 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+function showFileName(input, hintId) {
+    const hint = document.getElementById(hintId);
+    if (input.files && input.files[0]) {
+        const f = input.files[0];
+        const mb = (f.size / 1048576).toFixed(2);
+        hint.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>' + f.name + '</strong> (' + mb + ' MB)';
+    }
+}
+</script>
+@endpush

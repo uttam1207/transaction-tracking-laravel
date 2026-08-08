@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ComplianceDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ComplianceController extends Controller
 {
@@ -45,7 +46,13 @@ class ComplianceController extends Controller
             'issue_date' => 'nullable|date',
             'expiry_date' => 'nullable|date',
             'status' => 'required|in:Active,Expiring Soon,Expired',
+            'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('file')) {
+            $validated['file_path'] = $request->file('file')->store('compliance-docs', 'uploads');
+        }
+        unset($validated['file']);
 
         ComplianceDocument::create($validated);
         return redirect()->route('admin.compliance.index')->with('success', 'Compliance document recorded.');
@@ -70,7 +77,16 @@ class ComplianceController extends Controller
             'issue_date'      => 'nullable|date',
             'expiry_date'     => 'nullable|date',
             'status'          => 'required|in:Active,Expiring Soon,Expired',
+            'file'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        if ($request->hasFile('file')) {
+            if ($complianceDocument->file_path) {
+                Storage::disk('uploads')->delete($complianceDocument->file_path);
+            }
+            $validated['file_path'] = $request->file('file')->store('compliance-docs', 'uploads');
+        }
+        unset($validated['file']);
 
         $complianceDocument->update($validated);
 

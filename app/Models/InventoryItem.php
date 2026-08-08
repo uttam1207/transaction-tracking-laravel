@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\StockMovement;
+use Carbon\Carbon;
 
 class InventoryItem extends Model
 {
@@ -16,13 +17,15 @@ class InventoryItem extends Model
         'item_type',
         'unit',
         'min_stock',
+        'expiry_date',
         'description',
         'is_active',
     ];
 
     protected $casts = [
-        'min_stock' => 'decimal:2',
-        'is_active' => 'boolean',
+        'min_stock'   => 'decimal:2',
+        'is_active'   => 'boolean',
+        'expiry_date' => 'date',
     ];
 
     public function stockMovements()
@@ -34,7 +37,7 @@ class InventoryItem extends Model
     {
         $stockIn = $this->stockMovements()->where('type', 'in')->sum('quantity');
         $stockOut = $this->stockMovements()->where('type', 'out')->sum('quantity');
-        
+
         $adjustmentsIncrease = $this->stockMovements()
             ->where('type', 'adjustment')
             ->where('reason', 'like', '%Increase%')
@@ -64,8 +67,27 @@ class InventoryItem extends Model
     {
         return match ($this->stock_status) {
             'Out of Stock' => 'bg-danger',
-            'Low Stock' => 'bg-warning text-dark',
-            default => 'bg-success',
+            'Low Stock'    => 'bg-warning text-dark',
+            default        => 'bg-success',
         };
+    }
+
+    public function getIsExpiredAttribute(): bool
+    {
+        return $this->expiry_date && $this->expiry_date->isPast();
+    }
+
+    public function getIsExpiringSoonAttribute(): bool
+    {
+        return $this->expiry_date
+            && !$this->expiry_date->isPast()
+            && $this->expiry_date->diffInDays(now()) <= 30;
+    }
+
+    public function getDaysToExpiryAttribute(): ?int
+    {
+        if (!$this->expiry_date) return null;
+        if ($this->expiry_date->isPast()) return 0;
+        return (int) now()->diffInDays($this->expiry_date);
     }
 }

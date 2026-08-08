@@ -33,19 +33,19 @@
 {{-- Stats --}}
 <div class="row g-3 mb-3">
     <div class="col-sm-4">
-        <div class="info-card text-center" style="padding:16px;border-top:4px solid #6366f1;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #6366f1;">
             <div style="font-size:1.7rem;font-weight:800;color:#6366f1;line-height:1;">{{ $stats['pending'] }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Pending Jobs</div>
         </div>
     </div>
     <div class="col-sm-4">
-        <div class="info-card text-center" style="padding:16px;border-top:4px solid #dc2626;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:1.7rem;font-weight:800;color:#dc2626;line-height:1;">{{ $stats['failed'] }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Failed Jobs</div>
         </div>
     </div>
     <div class="col-sm-4">
-        <div class="info-card text-center" style="padding:16px;border-top:4px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:1.7rem;font-weight:800;color:#16a34a;line-height:1;">{{ count($stats['byQueue']) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Active Queues</div>
         </div>

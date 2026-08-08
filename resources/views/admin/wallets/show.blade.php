@@ -3,25 +3,23 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-    <div class="page-hero-body">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-3">
-                <img src="{{ $user->avatarUrl }}" class="rounded-circle" width="52" height="52" style="object-fit:cover;border:3px solid rgba(255,255,255,.4);">
-                <div>
-                    <div class="page-hero-title">{{ $user->name }}'s Wallet</div>
-                    <div class="page-hero-sub">{{ $user->email }} &nbsp;·&nbsp; {{ ucfirst(str_replace('_',' ',$user->role)) }}</div>
-                </div>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" style="position:relative;z-index:1;">
+        <div class="d-flex align-items-center gap-3">
+            <img src="{{ $user->avatarUrl }}" class="rounded-circle" width="52" height="52" style="object-fit:cover;border:3px solid rgba(255,255,255,.4);">
+            <div>
+                <h4 style="margin:0;font-weight:800;color:#fff;">{{ $user->name }}'s Wallet</h4>
+                <p style="opacity:.8;margin:2px 0 0;font-size:.85rem;color:#fff;">{{ $user->email }} &nbsp;·&nbsp; {{ ucfirst(str_replace('_',' ',$user->role)) }}</p>
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;"
-                    onclick="openAddMoney({{ $wallet->id }}, '{{ addslashes($user->name) }}', '{{ $wallet->balance }}')"
-                    @if($wallet->status === 'frozen') disabled @endif>
-                    <i class="bi bi-plus-circle me-1"></i>Add Money
-                </button>
-                <a href="{{ route('admin.wallets.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
-                    <i class="bi bi-arrow-left me-1"></i>Back
-                </a>
-            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;"
+                onclick="openAddMoney({{ $wallet->id }}, '{{ addslashes($user->name) }}', '{{ $wallet->balance }}')"
+                @if($wallet->status === 'frozen') disabled @endif>
+                <i class="bi bi-plus-circle me-1"></i>Add Money
+            </button>
+            <a href="{{ route('admin.wallets.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
         </div>
     </div>
 </div>
@@ -29,7 +27,7 @@
 {{-- Balance Card --}}
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #7c3aed;padding:24px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #7c3aed;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Current Balance</div>
             <div style="font-size:2.4rem;font-weight:800;color:#7c3aed;line-height:1;">₹{{ number_format($wallet->balance, 2) }}</div>
             <div class="mt-2">
@@ -49,7 +47,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #16a34a;padding:24px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Total Credited</div>
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">
                 ₹{{ number_format($transactions->where('type','credit')->sum('amount'), 2) }}
@@ -58,7 +56,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #dc2626;padding:24px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Total Debited</div>
             <div style="font-size:2rem;font-weight:800;color:#dc2626;line-height:1;">
                 ₹{{ number_format($transactions->where('type','debit')->sum('amount'), 2) }}
@@ -70,11 +68,11 @@
 
 {{-- Transactions --}}
 <div class="table-card">
-    <div class="table-card-hdr">
-        <div class="table-card-title"><i class="bi bi-clock-history me-2"></i>Transaction History</div>
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-clock-history me-2"></i>Transaction History</span>
     </div>
     <div class="table-responsive">
-        <table class="modern-table">
+        <table class="table modern-table mb-0">
             <thead>
                 <tr>
                     <th>Date</th>

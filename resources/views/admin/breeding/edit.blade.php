@@ -52,7 +52,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.breeding.update', $breedingRecord) }}" method="POST">
+                <form action="{{ route('admin.breeding.update', $breedingRecord) }}" method="POST" enctype="multipart/form-data">
                     @csrf @method('PUT')
 
                     <div class="mb-4">
@@ -141,6 +141,44 @@
                         </div>
                     </div>
 
+                    <hr class="my-3 opacity-25">
+
+                    <div class="mb-4">
+                        <h6 class="form-section-label">C — Certificate / Document</h6>
+                        <div class="row g-3">
+                            @if($breedingRecord->certificate_path)
+                            <div class="col-12">
+                                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+                                    @php $fext = strtolower(pathinfo($breedingRecord->certificate_path, PATHINFO_EXTENSION)); @endphp
+                                    <i class="bi {{ $fext === 'pdf' ? 'bi-file-pdf-fill' : 'bi-image-fill' }}"
+                                        style="font-size:1.3rem;color:{{ $fext === 'pdf' ? '#dc2626' : '#2563eb' }};flex-shrink:0;"></i>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:.72rem;color:#6b7280;">Current certificate</div>
+                                        <a href="{{ asset('uploads/' . $breedingRecord->certificate_path) }}" target="_blank"
+                                            style="font-size:.82rem;color:#059669;font-weight:600;word-break:break-all;">
+                                            {{ basename($breedingRecord->certificate_path) }}
+                                            <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.6rem;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-paperclip me-1"></i>{{ $breedingRecord->certificate_path ? 'Replace Certificate' : 'Attach Certificate / AI Receipt' }}
+                                </label>
+                                <input type="file" name="certificate_file" id="breedingCertFileEdit"
+                                    class="form-control @error('certificate_file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onchange="showFileName(this,'breedingEditFileHint')">
+                                <div id="breedingEditFileHint" class="form-text text-muted" style="font-size:.75rem;">
+                                    PDF, JPG, PNG — max 10 MB. Leave empty to keep current file.
+                                </div>
+                                @error('certificate_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-end gap-2 pt-2">
                         <a href="{{ route('admin.breeding.index') }}" class="btn btn-outline-secondary px-4">Cancel</a>
                         <button type="submit" class="btn btn-primary-grad px-5">
@@ -154,3 +192,16 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+function showFileName(input, hintId) {
+    const hint = document.getElementById(hintId);
+    if (input.files && input.files[0]) {
+        const f = input.files[0];
+        const mb = (f.size / 1048576).toFixed(2);
+        hint.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>' + f.name + '</strong> (' + mb + ' MB)';
+    }
+}
+</script>
+@endpush

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Animal;
 use App\Models\AnimalGroup;
 use App\Models\FeedPlan;
 use App\Services\FeedCalculationService;
@@ -100,5 +101,39 @@ class FeedController extends Controller
         $name = $plan->feed_item_name;
         $plan->delete();
         return back()->with('success', '"' . $name . '" removed from feed plan.');
+    }
+
+    // Sync AnimalGroup head counts from actual Animal records (pregnancy_status/status fields)
+    public function syncGroupsFromAnimals()
+    {
+        $syncMap = [
+            // Milking = Active cows/buffaloes NOT Dry with at least 1 lactation
+            'lactating' => fn () => Animal::where('status', 'Active')
+                ->whereIn('animal_type', ['Cow', 'Buffalo'])
+                ->where('pregnancy_status', '!=', 'Dry')
+                ->where('lactation_number', '>', 0)->count(),
+            'pregnant'  => fn () => Animal::where('status', 'Active')
+                ->where('pregnancy_status', 'Pregnant')->count(),
+            'dry'       => fn () => Animal::where('status', 'Active')
+                ->where('pregnancy_status', 'Dry')->count(),
+            'calves'    => fn () => Animal::where('status', 'Active')
+                ->where('animal_type', 'Calf')->count(),
+            'heifers'   => fn () => Animal::where('status', 'Active')
+                ->where('animal_type', 'Heifer')->count(),
+            'bulls'     => fn () => Animal::where('status', 'Active')
+                ->where('animal_type', 'Bull')->count(),
+        ];
+
+        $updated = 0;
+        foreach ($syncMap as $groupKey => $countFn) {
+            $group = AnimalGroup::where('group_key', $groupKey)->first();
+            if ($group) {
+                $newCount = $countFn();
+                $group->update(['head_count' => $newCount]);
+                $updated++;
+            }
+        }
+
+        return back()->with('success', "Animal group counts synced from Animal records ({$updated} groups updated).");
     }
 }

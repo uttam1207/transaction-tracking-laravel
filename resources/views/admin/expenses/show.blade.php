@@ -95,9 +95,9 @@
             @if($expense->bill_path)
                 @php $ext = pathinfo($expense->bill_path, PATHINFO_EXTENSION); @endphp
                 @if(in_array(strtolower($ext), ['jpg','jpeg','png']))
-                    <img src="{{ Storage::url($expense->bill_path) }}" alt="Bill" class="img-fluid rounded mb-2" style="max-height:200px;object-fit:contain;">
+                    <img src="{{ asset('uploads/' . $expense->bill_path) }}" alt="Bill" class="img-fluid rounded mb-2" style="max-height:200px;object-fit:contain;">
                 @endif
-                <a href="{{ Storage::url($expense->bill_path) }}" target="_blank" class="btn btn-sm btn-outline-info w-100">
+                <a href="{{ asset('uploads/' . $expense->bill_path) }}" target="_blank" class="btn btn-sm btn-outline-info w-100">
                     <i class="bi bi-file-earmark-arrow-down me-1"></i>Download Bill
                 </a>
             @else

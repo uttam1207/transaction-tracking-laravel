@@ -3,16 +3,14 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#1e1b4b,#4f46e5);">
-    <div class="page-hero-body">
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div>
-                <div class="page-hero-title"><i class="bi bi-shield-lock me-2"></i>Role Management</div>
-                <div class="page-hero-sub">Create and manage roles — Super Admin only</div>
-            </div>
-            <a href="{{ route('admin.roles.create') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
-                <i class="bi bi-plus-circle me-1"></i>New Role
-            </a>
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2" style="position:relative;z-index:1;">
+        <div>
+            <h4 style="margin:0;font-weight:800;color:#fff;"><i class="bi bi-shield-lock me-2"></i>Role Management</h4>
+            <p style="opacity:.8;margin:4px 0 0;font-size:.85rem;color:#fff;">Create and manage roles — Super Admin only</p>
         </div>
+        <a href="{{ route('admin.roles.create') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+            <i class="bi bi-plus-circle me-1"></i>New Role
+        </a>
     </div>
 </div>
 
@@ -32,19 +30,19 @@
 {{-- Stats --}}
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #4f46e5;padding:20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #4f46e5;">
             <div style="font-size:.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Total Roles</div>
             <div style="font-size:2rem;font-weight:800;color:#4f46e5;">{{ $roles->count() }}</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #16a34a;padding:20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">System Roles</div>
             <div style="font-size:2rem;font-weight:800;color:#16a34a;">{{ $roles->where('is_system', true)->count() }}</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #f59e0b;padding:20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #f59e0b;">
             <div style="font-size:.78rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Custom Roles</div>
             <div style="font-size:2rem;font-weight:800;color:#f59e0b;">{{ $roles->where('is_system', false)->count() }}</div>
         </div>
@@ -55,7 +53,7 @@
 <div class="row g-3">
     @foreach($roles as $role)
     <div class="col-md-6 col-xl-4">
-        <div class="info-card" style="border-top:4px solid {{ $role->color }};padding:0;overflow:hidden;">
+        <div class="card-glass" style="border-top:4px solid {{ $role->color }};overflow:hidden;">
             <div style="padding:20px 20px 14px;">
                 <div class="d-flex align-items-start justify-content-between gap-2">
                     <div class="d-flex align-items-center gap-3">

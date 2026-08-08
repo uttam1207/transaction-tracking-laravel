@@ -83,7 +83,7 @@ class ExpenseController extends Controller
         $validated['recorded_by'] = auth()->id();
 
         if ($request->hasFile('bill')) {
-            $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'public');
+            $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'uploads');
         }
 
         Expense::create($validated);
@@ -121,9 +121,9 @@ class ExpenseController extends Controller
 
         if ($request->hasFile('bill')) {
             if ($expense->bill_path) {
-                Storage::disk('public')->delete($expense->bill_path);
+                Storage::disk('uploads')->delete($expense->bill_path);
             }
-            $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'public');
+            $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'uploads');
         }
 
         $expense->update($validated);

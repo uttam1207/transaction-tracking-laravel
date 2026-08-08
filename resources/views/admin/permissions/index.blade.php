@@ -3,25 +3,25 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#0f172a,#1e293b);">
-    <div class="page-hero-body">
-        <div class="page-hero-title"><i class="bi bi-shield-lock me-2"></i>Service Permission Management</div>
-        <div class="page-hero-sub">Control which roles can access each module — Super Admin only</div>
+    <div style="position:relative;z-index:1;">
+        <h4 style="margin:0;font-weight:800;color:#fff;"><i class="bi bi-shield-lock me-2"></i>Service Permission Management</h4>
+        <p style="opacity:.8;margin:4px 0 0;font-size:.85rem;color:#fff;">Control which roles can access each module — Super Admin only</p>
     </div>
 </div>
 
-<div class="info-card mb-2" style="border-left:4px solid #f59e0b;background:#fffbeb;border-radius:10px;padding:12px 18px;font-size:.85rem;color:#92400e;">
+<div class="mb-2" style="border-left:4px solid #f59e0b;background:#fffbeb;border-radius:10px;padding:12px 18px;font-size:.85rem;color:#92400e;">
     <i class="bi bi-info-circle me-2"></i>
     <strong>Super Admin</strong> always has access to all services and cannot be restricted.
     Changes take effect immediately for new page loads.
 </div>
 
 <div class="table-card">
-    <div class="table-card-hdr">
-        <div class="table-card-title"><i class="bi bi-grid-3x3-gap me-2"></i>Access Matrix</div>
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <span class="card-title"><i class="bi bi-grid-3x3-gap me-2"></i>Access Matrix</span>
         <div style="font-size:.8rem;color:#6b7280;">Toggle checkboxes to grant or revoke role access</div>
     </div>
     <div class="table-responsive">
-        <table class="modern-table" id="permMatrix">
+        <table class="table modern-table mb-0" id="permMatrix">
             <thead>
                 <tr>
                     <th style="min-width:200px;">Service</th>

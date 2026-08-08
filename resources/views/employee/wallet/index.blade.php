@@ -3,16 +3,16 @@
 @section('content')
 
 <div class="page-hero" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-    <div class="page-hero-body">
-        <div class="page-hero-title"><i class="bi bi-wallet2 me-2"></i>Company Wallet</div>
-        <div class="page-hero-sub">Company balance and transaction history</div>
+    <div style="position:relative;z-index:1;">
+        <h4 style="margin:0;font-weight:800;color:#fff;"><i class="bi bi-wallet2 me-2"></i>Company Wallet</h4>
+        <p style="opacity:.8;margin:4px 0 0;font-size:.85rem;color:#fff;">Company balance and transaction history</p>
     </div>
 </div>
 
 {{-- Balance Cards --}}
 <div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #7c3aed;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #7c3aed;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Available Balance</div>
             <div style="font-size:2.6rem;font-weight:800;color:#7c3aed;line-height:1;">₹{{ number_format($wallet->balance, 2) }}</div>
             <div class="mt-2">
@@ -25,7 +25,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #16a34a;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Total Received</div>
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">
                 ₹{{ number_format($transactions->where('type','credit')->sum('amount'), 2) }}
@@ -33,7 +33,7 @@
         </div>
     </div>
     <div class="col-md-4">
-        <div class="info-card text-center" style="border-top:4px solid #f59e0b;padding:28px 20px;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #f59e0b;">
             <div style="font-size:.82rem;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Total Transactions</div>
             <div style="font-size:2rem;font-weight:800;color:#f59e0b;line-height:1;">{{ $transactions->total() }}</div>
         </div>
@@ -42,11 +42,11 @@
 
 {{-- Transaction History --}}
 <div class="table-card">
-    <div class="table-card-hdr">
-        <div class="table-card-title"><i class="bi bi-clock-history me-2"></i>Transaction History</div>
+    <div class="card-header">
+        <span class="card-title"><i class="bi bi-clock-history me-2"></i>Transaction History</span>
     </div>
     <div class="table-responsive">
-        <table class="modern-table">
+        <table class="table modern-table mb-0">
             <thead>
                 <tr>
                     <th>Date</th>

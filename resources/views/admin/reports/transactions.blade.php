@@ -60,43 +60,55 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #6366f1;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #6366f1;">
             <div style="font-size:1.8rem;font-weight:800;color:#6366f1;line-height:1;">{{ number_format($stats['total_count'] ?? 0) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Transactions</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #16a34a;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:1.8rem;font-weight:800;color:#16a34a;line-height:1;">₹{{ number_format($stats['total_amount'] ?? 0, 2) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Volume</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #dc2626;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:1.8rem;font-weight:800;color:#dc2626;line-height:1;">{{ number_format($stats['flagged_count'] ?? 0) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Flagged</div>
         </div>
     </div>
     <div class="col-md-3">
-        <div class="info-card text-center" style="padding:18px;border-top:4px solid #f59e0b;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid #f59e0b;">
             <div style="font-size:1.8rem;font-weight:800;color:#f59e0b;line-height:1;">₹{{ number_format($stats['total_fees'] ?? 0, 2) }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Fees</div>
         </div>
     </div>
 </div>
 
-<div class="info-card mb-4">
-    <div class="info-card-hdr"><i class="bi bi-graph-up me-2"></i>Transaction Volume by Date</div>
-    <div class="info-card-body" style="padding:16px;">
+<div class="card-glass overflow-hidden mb-4">
+    <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+            <span style="font-size:.82rem;font-weight:700;color:#fff;">Transaction Volume by Date</span>
+        </div>
+    </div>
+    <div class="p-4">
         <div id="txChart" style="height:240px;"></div>
     </div>
 </div>
 
 <div class="row g-3">
     <div class="col-md-6">
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-pie-chart me-2"></i>By Status</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-pie-chart" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">By Status</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @foreach($byStatus ?? [] as $s)
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;">
                     <span style="font-size:.85rem;color:#374151;">{{ ucfirst($s->status) }}</span>
@@ -107,9 +119,15 @@
         </div>
     </div>
     <div class="col-md-6">
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-credit-card me-2"></i>By Payment Method</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#0891b2,#2563eb);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-credit-card" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">By Payment Method</span>
+                </div>
+            </div>
+            <div class="p-4">
                 @foreach($byMethod ?? [] as $m)
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f3f4f6;">
                     <span style="font-size:.85rem;color:#374151;">{{ ucwords(str_replace('_', ' ', $m->payment_method)) }}</span>

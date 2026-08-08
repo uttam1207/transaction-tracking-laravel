@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController
 use App\Http\Controllers\Admin\WalletController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\InventoryItemController;
 use App\Http\Controllers\Admin\InventoryCategoryController;
@@ -46,6 +47,8 @@ use App\Http\Controllers\Admin\ComplianceController;
 use App\Http\Controllers\Admin\ReportCenterController;
 use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SalaryController;
+use App\Http\Controllers\Admin\VendorController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Manager\DashboardController as ManagerDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
@@ -210,6 +213,15 @@ Route::prefix('admin')
     Route::get('/reports/{type}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
 
+    // Dairy Reports (Module 17 — specific views, all self-contained with inline @php queries)
+    Route::get('/reports/milk',          fn() => view('admin.reports.milk'))->name('reports.milk');
+    Route::get('/reports/animals',       fn() => view('admin.reports.animals'))->name('reports.animals');
+    Route::get('/reports/feed',          fn() => view('admin.reports.feed'))->name('reports.feed');
+    Route::get('/reports/breeding',      fn() => view('admin.reports.breeding'))->name('reports.breeding');
+    Route::get('/reports/health',        fn() => view('admin.reports.health'))->name('reports.health');
+    Route::get('/reports/inventory',     fn() => view('admin.reports.inventory'))->name('reports.inventory');
+    Route::get('/reports/profitability', fn() => view('admin.reports.profitability'))->name('reports.profitability');
+
     // Department Management
     Route::resource('departments', DepartmentController::class)->only(['index', 'store', 'update', 'destroy']);
 
@@ -262,6 +274,13 @@ Route::prefix('admin')
     Route::get('/expenses-export/csv', [ExpenseController::class, 'exportCsv'])->name('expenses.export.csv');
     Route::get('/expenses-export/pdf', [ExpenseController::class, 'exportPdf'])->name('expenses.export.pdf');
 
+    // Expense Categories (Module 8 — sub-resource)
+    Route::resource('expense-categories', ExpenseCategoryController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['expense-categories' => 'expenseCategory']);
+    Route::patch('/expense-categories/{expenseCategory}/toggle', [ExpenseCategoryController::class, 'toggleStatus'])
+        ->name('expense-categories.toggle');
+
     // Stock Management (Module 9)
     Route::resource('stock-items', InventoryItemController::class)->except(['show'])->parameters(['stock-items' => 'item']);
     Route::resource('stock-categories', InventoryCategoryController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['stock-categories' => 'stockCategory']);
@@ -275,6 +294,8 @@ Route::prefix('admin')
     Route::post('/stock/adjustment', [StockController::class, 'storeAdjustment'])->name('stock.adjustment.store');
     Route::get('/stock/movements', [StockController::class, 'movements'])->name('stock.movements');
     Route::get('/stock/export/pdf', [StockController::class, 'exportPdf'])->name('stock.export.pdf');
+    Route::get('/stock/export/excel', [StockController::class, 'exportExcel'])->name('stock.export.excel');
+    Route::get('/stock/export/csv', [StockController::class, 'exportCsv'])->name('stock.export.csv');
 
     // Feed Auto Calculation & Alerts
     Route::get('/feed/calculator', [FeedController::class, 'calculator'])->name('feed.calculator');
@@ -284,11 +305,14 @@ Route::prefix('admin')
     Route::post('/feed/plans', [FeedController::class, 'updateFeedPlan'])->name('feed.plans.update');
     Route::post('/feed/plans/item', [FeedController::class, 'storePlan'])->name('feed.plans.item.store');
     Route::delete('/feed/plans/{plan}', [FeedController::class, 'destroyPlan'])->name('feed.plans.item.destroy');
+    Route::post('/feed/groups/sync', [FeedController::class, 'syncGroupsFromAnimals'])->name('feed.groups.sync');
 
     // Module 2 — Animal Management
     Route::resource('animals', AnimalController::class);
     Route::post('/animals/{animal}/actions', [AnimalController::class, 'storeAction'])->name('animals.actions.store');
     Route::delete('/animals/{animal}/actions/{action}', [AnimalController::class, 'destroyAction'])->name('animals.actions.destroy');
+    Route::post('/animals/{animal}/photos', [AnimalController::class, 'storePhotos'])->name('animals.photos.store');
+    Route::delete('/animals/{animal}/photos/{photo}', [AnimalController::class, 'destroyPhoto'])->name('animals.photos.destroy');
     // Action Type Management (admin settings)
     Route::resource('action-types', ActionTypeController::class)->only(['index', 'store', 'update', 'destroy']);
     // Breed Management (admin settings)
@@ -314,6 +338,15 @@ Route::prefix('admin')
 
     // Module 13 — Procurement
     Route::resource('procurement', ProcurementController::class)->parameters(['procurement' => 'purchaseOrder']);
+
+    // Vendor Management (sub-resource of Procurement)
+    Route::resource('vendors', VendorController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Module 6 — Salary & Payroll (bulk-generate must come before resource to avoid {salary} catch-all)
+    Route::post('/salaries/bulk-generate', [SalaryController::class, 'bulkGenerate'])->name('salaries.bulk-generate');
+    Route::resource('salaries', SalaryController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+    Route::get('/salaries/{salary}/payslip', [SalaryController::class, 'payslip'])->name('salaries.payslip');
+    Route::post('/salaries/{salary}/mark-paid', [SalaryController::class, 'markPaid'])->name('salaries.mark-paid');
 
     // Module 14 — Sales
     Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);

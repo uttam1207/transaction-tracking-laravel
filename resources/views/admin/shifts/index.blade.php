@@ -29,7 +29,7 @@
 <div class="row g-3 mb-3">
     @foreach($shifts as $shift)
     <div class="col-sm-6 col-lg-3">
-        <div class="info-card text-center" style="padding:16px;border-top:4px solid {{ $shift->color ?? '#6366f1' }};position:relative;">
+        <div class="card-glass p-4 text-center" style="border-top:4px solid {{ $shift->color ?? '#6366f1' }};position:relative;">
             <div style="position:absolute;top:8px;right:8px;display:flex;gap:4px;">
                 <button class="act-btn act-edit" title="Edit Shift Type" style="width:24px;height:24px;font-size:.65rem;"
                     onclick="openEditShiftTypeModal({{ json_encode([

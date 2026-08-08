@@ -122,6 +122,29 @@
                             <div style="color:#6b7280;font-size:.85rem;">{{ $complianceDocument->created_at->format('d M Y, H:i') }}</div>
                         </div>
                     </div>
+                    @if($complianceDocument->file_path)
+                    <div class="col-12">
+                        @php $fext = strtolower(pathinfo($complianceDocument->file_path, PATHINFO_EXTENSION)); @endphp
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+                            <i class="bi {{ $fext === 'pdf' ? 'bi-file-pdf-fill' : 'bi-image-fill' }}"
+                                style="font-size:1.6rem;color:{{ $fext === 'pdf' ? '#dc2626' : '#2563eb' }};flex-shrink:0;"></i>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">
+                                    <i class="bi bi-paperclip me-1"></i>Attached Document
+                                </div>
+                                <a href="{{ asset('uploads/' . $complianceDocument->file_path) }}" target="_blank"
+                                    class="fw-bold" style="color:#059669;font-size:.88rem;word-break:break-all;">
+                                    {{ basename($complianceDocument->file_path) }}
+                                    <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.65rem;"></i>
+                                </a>
+                            </div>
+                            <a href="{{ asset('uploads/' . $complianceDocument->file_path) }}" download
+                                class="btn btn-sm btn-outline-success px-3" style="flex-shrink:0;">
+                                <i class="bi bi-download me-1"></i>Download
+                            </a>
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

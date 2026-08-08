@@ -3,8 +3,6 @@
 
 @section('content')
 
-<a href="{{ route('employee.work-reports.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Reports</a>
-
 @php
     $st = $report->status ?? 'draft';
     $score = $report->productivity_score ?? 0;
@@ -19,6 +17,9 @@
             <p style="opacity:.8;">{{ auth()->user()->name }}</p>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ route('employee.work-reports.index') }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:9px;">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
             <span class="spill spill-{{ $st === 'approved' ? 'success' : ($st === 'rejected' ? 'danger' : ($st === 'submitted' ? 'warning' : 'secondary')) }}" style="font-size:.85rem;padding:6px 16px;">{{ ucfirst($st) }}</span>
             @if($report->status === 'draft')
             <form action="{{ route('employee.work-reports.submit', $report) }}" method="POST">
@@ -34,17 +35,29 @@
 
 <div class="row g-4">
     <div class="col-lg-8">
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-journal-text me-2"></i>Work Summary</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-text" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Work Summary</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <p style="font-size:.9rem;color:#374151;line-height:1.7;margin:0;">{{ $report->summary }}</p>
             </div>
         </div>
 
         @if($report->tasks_completed && count($report->tasks_completed))
-        <div class="info-card mt-3">
-            <div class="info-card-hdr"><i class="bi bi-check2-all me-2"></i>Tasks Completed</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden mt-3">
+            <div style="background:linear-gradient(135deg,#16a34a,#059669);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check2-all" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Tasks Completed</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <ul style="margin:0;padding:0;list-style:none;">
                     @foreach($report->tasks_completed as $task)
                     <li style="display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f3f4f6;">
@@ -58,11 +71,16 @@
         @endif
 
         @if($report->reviewer_notes)
-        <div class="info-card mt-3" style="border-left:4px solid {{ $st === 'rejected' ? '#dc2626' : '#16a34a' }};">
-            <div class="info-card-hdr" style="color:{{ $st === 'rejected' ? '#dc2626' : '#16a34a' }};">
-                <i class="bi bi-chat-quote me-2"></i>Reviewer Notes
+        @php $reviewColor = $st === 'rejected' ? '#dc2626' : '#16a34a'; $reviewGrad = $st === 'rejected' ? 'linear-gradient(135deg,#dc2626,#b91c1c)' : 'linear-gradient(135deg,#16a34a,#059669)'; @endphp
+        <div class="card-glass overflow-hidden mt-3">
+            <div style="background:{{ $reviewGrad }};padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-chat-quote" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Reviewer Notes</span>
+                </div>
             </div>
-            <div class="info-card-body">
+            <div class="p-4">
                 <p style="font-size:.88rem;color:#374151;margin-bottom:8px;">{{ $report->reviewer_notes }}</p>
                 @if($report->reviewedBy)
                 <div style="font-size:.78rem;color:#9ca3af;">
@@ -76,9 +94,15 @@
     </div>
 
     <div class="col-lg-4">
-        <div class="info-card">
-            <div class="info-card-hdr"><i class="bi bi-info-circle me-2"></i>Report Details</div>
-            <div class="info-card-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-info-circle" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">Report Details</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <dl class="dl">
                     <dt>Report Date</dt>
                     <dd style="font-weight:600;">{{ \Carbon\Carbon::parse($report->report_date)->format('d M Y') }}</dd>

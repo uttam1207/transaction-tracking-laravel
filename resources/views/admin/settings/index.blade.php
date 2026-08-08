@@ -47,12 +47,15 @@
 
     {{-- Settings Form --}}
     <div class="col-lg-9">
-        <div class="form-section">
-            <div class="form-section-hdr">
-                <i class="bi bi-{{ $groups[$currentGroup]['icon'] ?? 'gear' }} me-2"></i>
-                {{ $groups[$currentGroup]['label'] ?? ucfirst($currentGroup) }} Settings
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 20px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-{{ $groups[$currentGroup]['icon'] ?? 'gear' }}" style="color:rgba(255,255,255,.85);font-size:.9rem;"></i>
+                    <span style="font-size:.82rem;font-weight:700;color:#fff;">{{ $groups[$currentGroup]['label'] ?? ucfirst($currentGroup) }} Settings</span>
+                </div>
             </div>
-            <div class="form-section-body">
+            <div class="p-4">
                 <form action="{{ route('admin.settings.update', $currentGroup) }}" method="POST">
                     @csrf
 

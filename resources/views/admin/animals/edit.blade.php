@@ -88,6 +88,16 @@ form:has(input[name="born_in_farm"][value="0"]:checked) .purchase-section { disp
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Animal Type <span class="text-danger">*</span></label>
+                                <select name="animal_type" class="form-select @error('animal_type') is-invalid @enderror" required>
+                                    <option value="">— Select Type —</option>
+                                    @foreach(['Cow','Buffalo','Bull','Heifer','Calf'] as $t)
+                                        <option value="{{ $t }}" @selected(old('animal_type', $animal->animal_type)===$t)>{{ $t }}</option>
+                                    @endforeach
+                                </select>
+                                @error('animal_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Breed <span class="text-danger">*</span></label>
                                 <select name="breed" class="form-select @error('breed') is-invalid @enderror" required>
                                     <option value="">— Select Breed —</option>

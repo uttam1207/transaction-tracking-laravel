@@ -8,8 +8,6 @@
 
 @section('content')
 
-<a href="{{ route('admin.users.index') }}" class="back-btn"><i class="bi bi-arrow-left"></i>Back to Users</a>
-
 @php
     $statusColor = match($user->status) { 'active'=>'active', 'inactive'=>'inactive', 'suspended'=>'danger', default=>'warning' };
 @endphp
@@ -33,7 +31,7 @@
 <div class="row g-4">
     {{-- Left: Profile --}}
     <div class="col-lg-4">
-        <div class="info-card text-center" style="padding:24px 20px;">
+        <div class="card-glass p-4 text-center">
             <img src="{{ $user->avatar_url }}" class="rounded-circle mx-auto mb-3"
                 style="width:88px;height:88px;border:3px solid #e0e7ff;object-fit:cover;display:block;" alt="">
             <div style="font-size:1.05rem;font-weight:800;color:#111827;">{{ $user->name }}</div>

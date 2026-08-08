@@ -20,7 +20,7 @@
 <div class="row g-4">
     {{-- Left: Profile Card --}}
     <div class="col-lg-4">
-        <div class="info-card text-center" style="padding:28px 20px;">
+        <div class="card-glass p-4 text-center">
             <img src="{{ $user->avatar_url ?? 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&size=100&background=6366f1&color=fff' }}"
                 class="rounded-circle mx-auto mb-3"
                 style="width:96px;height:96px;border:3px solid #e0e7ff;object-fit:cover;display:block;"
@@ -53,9 +53,15 @@
     {{-- Right: Forms --}}
     <div class="col-lg-8">
         {{-- Update Profile --}}
-        <div class="form-section mb-4">
-            <div class="form-section-hdr"><i class="bi bi-person me-2"></i>Update Profile</div>
-            <div class="form-section-body">
+        <div class="card-glass overflow-hidden mb-4">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:16px 24px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-person" style="color:rgba(255,255,255,.85);font-size:1rem;"></i>
+                    <span style="font-size:.9rem;font-weight:700;color:#fff;">Update Profile</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <form action="{{ route('employee.profile') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -91,9 +97,15 @@
         </div>
 
         {{-- Change Password --}}
-        <div class="form-section">
-            <div class="form-section-hdr"><i class="bi bi-lock me-2"></i>Change Password</div>
-            <div class="form-section-body">
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#374151,#1f2937);padding:16px 24px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,.07);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-lock" style="color:rgba(255,255,255,.85);font-size:1rem;"></i>
+                    <span style="font-size:.9rem;font-weight:700;color:#fff;">Change Password</span>
+                </div>
+            </div>
+            <div class="p-4">
                 <form action="{{ route('employee.profile') }}" method="POST">
                     @csrf
                     @method('PATCH')

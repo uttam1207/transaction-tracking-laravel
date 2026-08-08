@@ -13,9 +13,17 @@
             <h4>Feed Auto Calculator &amp; Alerts</h4>
             <p>Daily feed requirement auto-calculation, stock depletion forecast &amp; proactive shortage alerts</p>
         </div>
-        <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-outline-secondary px-4">
-            <i class="bi bi-boxes me-1"></i>View Stock
-        </a>
+        <div class="d-flex gap-2">
+            <form action="{{ route('admin.feed.groups.sync') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-outline-primary px-4" title="Sync animal group counts from actual animal records">
+                    <i class="bi bi-arrow-repeat me-1"></i>Sync from Animals
+                </button>
+            </form>
+            <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-outline-secondary px-4">
+                <i class="bi bi-boxes me-1"></i>View Stock
+            </a>
+        </div>
     </div>
 </div>
 

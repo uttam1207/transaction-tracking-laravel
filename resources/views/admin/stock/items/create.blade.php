@@ -116,6 +116,13 @@
                                 @error('min_stock')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 <div style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Alert triggers when available stock falls below this level</div>
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Expiry Date <small class="text-muted fw-normal">(medicines/vaccines only)</small></label>
+                                <input type="date" name="expiry_date" class="form-control @error('expiry_date') is-invalid @enderror"
+                                    value="{{ old('expiry_date') }}" min="{{ now()->addDay()->toDateString() }}">
+                                @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div style="font-size:.72rem;color:#9ca3af;margin-top:4px;">Leave blank for non-perishable items</div>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Description <small class="text-muted fw-normal">(optional)</small></label>
                                 <textarea name="description" class="form-control @error('description') is-invalid @enderror"

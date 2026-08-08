@@ -53,7 +53,7 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.compliance.update', $complianceDocument) }}" method="POST">
+                <form action="{{ route('admin.compliance.update', $complianceDocument) }}" method="POST" enctype="multipart/form-data">
                     @csrf @method('PUT')
 
                     <div class="mb-4">
@@ -104,6 +104,40 @@
                         </div>
                     </div>
 
+                    <div class="mb-3">
+                        <h6 class="form-section-label">B — Attached Document</h6>
+                        <div class="row g-3">
+                            @if($complianceDocument->file_path)
+                            <div class="col-12">
+                                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+                                    <i class="bi bi-file-earmark-check-fill text-success" style="font-size:1.2rem;"></i>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:.75rem;color:#6b7280;">Current file</div>
+                                        <a href="{{ asset('uploads/' . $complianceDocument->file_path) }}" target="_blank"
+                                            style="font-size:.82rem;color:#059669;font-weight:600;word-break:break-all;">
+                                            {{ basename($complianceDocument->file_path) }}
+                                            <i class="bi bi-box-arrow-up-right ms-1" style="font-size:.65rem;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-paperclip me-1"></i>{{ $complianceDocument->file_path ? 'Replace Document' : 'Attach Document / Scan' }}
+                                </label>
+                                <input type="file" name="file" id="complianceFileEdit"
+                                    class="form-control @error('file') is-invalid @enderror"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onchange="showFileName(this,'complianceFileEditHint')">
+                                <div id="complianceFileEditHint" class="form-text text-muted" style="font-size:.75rem;">
+                                    PDF, JPG, PNG — max 10 MB. Leave empty to keep current file.
+                                </div>
+                                @error('file')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-end gap-2 pt-2">
                         <a href="{{ route('admin.compliance.show', $complianceDocument) }}" class="btn btn-outline-secondary px-4">Cancel</a>
                         <button type="submit" class="btn btn-primary-grad px-5">
@@ -117,3 +151,16 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+function showFileName(input, hintId) {
+    const hint = document.getElementById(hintId);
+    if (input.files && input.files[0]) {
+        const f = input.files[0];
+        const mb = (f.size / 1048576).toFixed(2);
+        hint.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>' + f.name + '</strong> (' + mb + ' MB)';
+    }
+}
+</script>
+@endpush
