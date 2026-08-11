@@ -14,6 +14,10 @@ class TaskController extends Controller
     {
         $employee = auth()->user()->employee;
 
+        if (!$employee) {
+            return redirect()->route('admin.tasks.index');
+        }
+
         $query = Task::with('project', 'assignedBy')->where('assigned_to', $employee->id);
 
         if ($request->search) {

@@ -38,8 +38,10 @@
         <div class="col-md-2">
             <select name="role" class="form-select">
                 <option value="">All Roles</option>
-                @foreach(['super_admin','admin','manager','employee','auditor','viewer'] as $r)
-                    <option value="{{ $r }}" {{ request('role')==$r?'selected':'' }}>{{ ucwords(str_replace('_',' ',$r)) }}</option>
+                @foreach($roles as $role)
+                    <option value="{{ $role->name }}" {{ request('role') == $role->name ? 'selected' : '' }}>
+                        {{ $role->display_label }}
+                    </option>
                 @endforeach
             </select>
         </div>
@@ -176,8 +178,10 @@
                         <div class="col-md-6">
                             <label class="flabel">Role <span class="req">*</span></label>
                             <select name="role" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                @foreach(['admin','manager','employee','auditor','viewer'] as $r)
-                                    <option value="{{ $r }}">{{ ucwords(str_replace('_',' ',$r)) }}</option>
+                                @foreach($roles as $role)
+                                    @if($role->name !== 'super_admin')
+                                        <option value="{{ $role->name }}">{{ $role->display_label }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                         </div>

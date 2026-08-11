@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Feed Auto Calculator')
+@section('title', 'Feed Calculator & Alerts')
 
 @section('breadcrumb')
     <li class="breadcrumb-item active">Feed Calculator</li>
@@ -10,7 +10,7 @@
 <div class="page-hero">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
-            <h4>Feed Auto Calculator &amp; Alerts</h4>
+            <h4>Feed Calculator &amp; Alerts</h4>
             <p>Daily feed requirement auto-calculation, stock depletion forecast &amp; proactive shortage alerts</p>
         </div>
         <div class="d-flex gap-2">

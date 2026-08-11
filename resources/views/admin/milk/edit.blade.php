@@ -6,6 +6,26 @@
     <li class="breadcrumb-item active">Edit #{{ $milkEntry->id }}</li>
 @endsection
 
+@push('styles')
+<style>
+.entry-mode-card {
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:14px 10px;border:2px solid #e5e7eb;border-radius:14px;cursor:pointer;
+    text-align:center;transition:all .2s ease;background:#fff;user-select:none;
+}
+.entry-mode-card:hover { border-color:#059669;background:#f0fdf4; }
+.entry-mode-card.selected {
+    border-color:#059669;background:#ecfdf5;
+    box-shadow:0 0 0 3px rgba(5,150,105,.12);
+}
+.entry-mode-card .mode-icon { font-size:1.5rem;margin-bottom:6px;color:#6b7280;transition:color .2s; }
+.entry-mode-card.selected .mode-icon { color:#059669; }
+.entry-mode-card .mode-title { font-weight:700;font-size:.85rem;color:#1f2937; }
+.entry-mode-card.selected .mode-title { color:#059669; }
+.entry-mode-card .mode-desc { font-size:.7rem;color:#9ca3af;margin-top:2px; }
+</style>
+@endpush
+
 @section('content')
 
 <div class="page-hero">
@@ -39,7 +59,7 @@
                     <div>
                         <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;">Edit Milk Entry</div>
                         <div style="font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:-.01em;">{{ $milkEntry->date->format('d M Y') }} &mdash; {{ $milkEntry->shift }} Shift</div>
-                        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">{{ number_format($milkEntry->quantity_liters,1) }} L &mdash; {{ $milkEntry->animal ? $milkEntry->animal->tag_number : 'Batch Entry' }}</div>
+                        <div style="color:rgba(255,255,255,.7);font-size:.8rem;margin-top:2px;">{{ number_format($milkEntry->quantity_liters,1) }} L</div>
                     </div>
                 </div>
             </div>
@@ -54,6 +74,38 @@
 
                 <form action="{{ route('admin.milk.update', $milkEntry) }}" method="POST">
                     @csrf @method('PUT')
+
+                    {{-- ── Entry Mode Selector ──────────────────────────────────── --}}
+                    <div class="mb-4">
+                        <h6 class="form-section-label mb-3">Entry Mode</h6>
+                        <div class="row g-3">
+                            <div class="col-4">
+                                <div class="entry-mode-card" id="card-per_animal" onclick="setMode('per_animal')">
+                                    <i class="bi bi-tag-fill mode-icon"></i>
+                                    <div class="mode-title">Per Cattle</div>
+                                    <div class="mode-desc">Individual animal</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="entry-mode-card" id="card-per_shed" onclick="setMode('per_shed')">
+                                    <i class="bi bi-house-door-fill mode-icon"></i>
+                                    <div class="mode-title">Per Shed</div>
+                                    <div class="mode-desc">Shed aggregate total</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="entry-mode-card" id="card-entire_farm" onclick="setMode('entire_farm')">
+                                    <i class="bi bi-geo-alt-fill mode-icon"></i>
+                                    <div class="mode-title">Entire Farm</div>
+                                    <div class="mode-desc">All sheds combined</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="entry_type" id="entryTypeInput"
+                            value="{{ old('entry_type', $milkEntry->entry_type ?? 'per_animal') }}">
+                    </div>
+
+                    <hr class="my-3 opacity-25">
 
                     <div class="mb-4">
                         <h6 class="form-section-label">A — Entry Details</h6>
@@ -72,18 +124,62 @@
                                 </select>
                                 @error('shift')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">Animal <small class="text-muted fw-normal">(blank = batch shed total)</small></label>
-                                <select name="animal_id" class="form-select @error('animal_id') is-invalid @enderror">
-                                    <option value="">— Batch Entry (Entire Shed) —</option>
+
+                            {{-- Per Cattle --}}
+                            <div class="col-12" id="section-per_animal">
+                                <label class="form-label fw-semibold">Animal <span class="text-danger">*</span></label>
+                                <select name="animal_id" id="animalSelect" class="form-select @error('animal_id') is-invalid @enderror">
+                                    <option value="">— Select Animal —</option>
                                     @foreach($animals as $a)
-                                        <option value="{{ $a->id }}" @selected(old('animal_id',$milkEntry->animal_id)==$a->id)>
+                                        <option value="{{ $a->id }}"
+                                            data-shed="{{ $a->shed_number }}"
+                                            data-status="{{ $a->pregnancy_status }}"
+                                            @selected(old('animal_id',$milkEntry->animal_id)==$a->id)>
                                             {{ $a->tag_number }}{{ $a->name ? ' — '.$a->name : '' }}
+                                            &nbsp;({{ $a->shed_number ?? 'No Shed' }}){{ $a->pregnancy_status === 'Dry' ? ' [Dry]' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
                                 @error('animal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
+                            {{-- Per Shed --}}
+                            <div class="col-12" id="section-per_shed" style="display:none;">
+                                <label class="form-label fw-semibold">Shed <span class="text-danger">*</span></label>
+                                @if($sheds->isEmpty())
+                                    <div class="alert alert-warning py-2 mb-0">No active milking animals found.</div>
+                                @else
+                                    <select name="shed_number" id="shedSelect" class="form-select @error('shed_number') is-invalid @enderror">
+                                        <option value="">— Select Shed —</option>
+                                        @foreach($sheds as $shed)
+                                            <option value="{{ $shed->shed_number }}"
+                                                @selected(old('shed_number', $milkEntry->shed_number) === $shed->shed_number)>
+                                                {{ $shed->shed_number }}
+                                                &nbsp;({{ $shed->animal_count }} {{ Str::plural('animal', $shed->animal_count) }})
+                                            </option>
+                                        @endforeach
+                                        {{-- If saved shed_number not in active sheds, still show it --}}
+                                        @if($milkEntry->shed_number && !$sheds->pluck('shed_number')->contains($milkEntry->shed_number))
+                                            <option value="{{ $milkEntry->shed_number }}" selected>
+                                                {{ $milkEntry->shed_number }} (archived)
+                                            </option>
+                                        @endif
+                                    </select>
+                                    @error('shed_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @endif
+                            </div>
+
+                            {{-- Entire Farm --}}
+                            <div class="col-12" id="section-entire_farm" style="display:none;">
+                                <div style="background:#f0fdf4;border:1px dashed #86efac;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                                    <i class="bi bi-geo-alt-fill text-success" style="font-size:1.3rem;"></i>
+                                    <div>
+                                        <div class="fw-semibold" style="color:#166534;font-size:.88rem;">Entire Farm Entry</div>
+                                        <div style="color:#4ade80;font-size:.76rem;margin-top:2px;">Represents total milk from all sheds combined.</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Quantity (Liters) <span class="text-danger">*</span></label>
                                 <input type="number" step="0.1" min="0.1" name="quantity_liters"
@@ -110,7 +206,6 @@
                                 <label class="form-label fw-semibold">Fat <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" min="1" max="15" name="fat_percentage"
                                     class="form-control @error('fat_percentage') is-invalid @enderror"
-                                    placeholder="e.g. 7.8"
                                     value="{{ old('fat_percentage', $milkEntry->fat_percentage) }}">
                                 @error('fat_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -118,7 +213,6 @@
                                 <label class="form-label fw-semibold">SNF <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" min="1" max="15" name="snf_percentage"
                                     class="form-control @error('snf_percentage') is-invalid @enderror"
-                                    placeholder="e.g. 9.0"
                                     value="{{ old('snf_percentage', $milkEntry->snf_percentage) }}">
                                 @error('snf_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -126,7 +220,6 @@
                                 <label class="form-label fw-semibold">CLR Value</label>
                                 <input type="number" step="0.01" min="0" max="50" name="clr_value"
                                     class="form-control @error('clr_value') is-invalid @enderror"
-                                    placeholder="e.g. 28.5"
                                     value="{{ old('clr_value', $milkEntry->clr_value) }}">
                                 @error('clr_value')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -153,5 +246,29 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+const modes = ['per_animal','per_shed','entire_farm'];
+
+function setMode(mode) {
+    document.getElementById('entryTypeInput').value = mode;
+    modes.forEach(m => {
+        document.getElementById('card-' + m).classList.toggle('selected', m === mode);
+        const s = document.getElementById('section-' + m);
+        if (s) s.style.display = (m === mode) ? '' : 'none';
+    });
+    const animalSel = document.getElementById('animalSelect');
+    const shedSel   = document.getElementById('shedSelect');
+    if (animalSel) animalSel.required = (mode === 'per_animal');
+    if (shedSel)   shedSel.required   = (mode === 'per_shed');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const current = document.getElementById('entryTypeInput').value || 'per_animal';
+    setMode(current);
+});
+</script>
+@endpush
 
 @endsection

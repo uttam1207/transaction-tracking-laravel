@@ -25,6 +25,10 @@
             </div>
         </div>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#assignTaskModal"
+                style="background:rgba(255,255,255,.22);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);">
+                <i class="bi bi-list-task me-1"></i>Assign Task
+            </button>
             <a href="{{ route('admin.employees.edit', $employee) }}" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:9px;font-weight:600;backdrop-filter:blur(4px);">
                 <i class="bi bi-pencil me-1"></i>Edit
             </a>
@@ -221,4 +225,250 @@
         </div>
     </div>
 </div>
+
+{{-- ═══════════════════════════════════════════
+     Assign Task Modal
+════════════════════════════════════════════ --}}
+@php $projects = \App\Models\Project::where('status','active')->orderBy('name')->get(); @endphp
+
+<div class="modal fade" id="assignTaskModal" tabindex="-1" aria-labelledby="assignTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius:18px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.18);">
+
+            {{-- Header --}}
+            <div class="modal-header" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:18px 18px 0 0;padding:20px 28px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:38px;height:38px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-list-task" style="color:#fff;font-size:1.1rem;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="assignTaskModalLabel" style="color:#fff;">Assign New Task</h5>
+                        <div style="font-size:.78rem;color:rgba(255,255,255,.75);margin-top:2px;">
+                            Assigning to <strong>{{ $employee->full_name }}</strong>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- Body --}}
+            <div class="modal-body px-4 py-4">
+
+                {{-- Success / Error alert (hidden by default) --}}
+                <div id="taskAlertBox" class="alert d-none mb-3" role="alert"></div>
+
+                <div class="row g-3">
+                    {{-- Task Title --}}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" id="taskTitle" class="form-control"
+                               placeholder="e.g. Milk collection morning route, Feed stock audit…" maxlength="255">
+                        <div class="invalid-feedback" id="taskTitleErr"></div>
+                    </div>
+
+                    {{-- Description --}}
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Description</label>
+                        <textarea id="taskDescription" class="form-control" rows="3"
+                                  placeholder="Detailed instructions or context for this task…"></textarea>
+                    </div>
+
+                    {{-- Priority + Due Date --}}
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Priority <span class="text-danger">*</span></label>
+                        <select id="taskPriority" class="form-select">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Due Date</label>
+                        <input type="date" id="taskDueDate" class="form-control"
+                               min="{{ now()->addDay()->format('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Estimated Hours</label>
+                        <input type="number" id="taskEstHours" class="form-control" min="0" placeholder="e.g. 4">
+                    </div>
+
+                    {{-- Project (optional) --}}
+                    @if($projects->isNotEmpty())
+                    <div class="col-12">
+                        <label class="form-label fw-semibold" style="font-size:.82rem;">Link to Project <span class="text-muted fw-normal">(optional)</span></label>
+                        <select id="taskProjectId" class="form-select">
+                            <option value="">— No project —</option>
+                            @foreach($projects as $p)
+                                <option value="{{ $p->id }}">{{ $p->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
+
+                    {{-- Recurring toggle --}}
+                    <div class="col-12">
+                        <div style="background:#f5f3ff;border:1.5px solid #e0e7ff;border-radius:12px;padding:14px 16px;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div style="font-size:.84rem;font-weight:700;color:#4f46e5;">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Repeat this task
+                                    </div>
+                                    <div style="font-size:.74rem;color:#6b7280;margin-top:2px;">
+                                        Automatically re-assigns this task every day / week / month
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="taskIsRecurring"
+                                           style="width:42px;height:22px;cursor:pointer;" onchange="toggleRecurring(this.checked)">
+                                </div>
+                            </div>
+
+                            {{-- Recurring options (hidden by default) --}}
+                            <div id="recurringOptions" style="display:none;margin-top:14px;border-top:1px solid #e0e7ff;padding-top:14px;">
+                                <div class="row g-3">
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-semibold" style="font-size:.78rem;color:#4f46e5;">Repeat Every</label>
+                                        <select id="taskRecurrenceType" class="form-select form-select-sm" style="border-color:#c7d2fe;">
+                                            <option value="daily" selected>Daily — every day</option>
+                                            <option value="weekly">Weekly — same day each week</option>
+                                            <option value="monthly">Monthly — same date each month</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label fw-semibold" style="font-size:.78rem;color:#4f46e5;">End Date <span class="fw-normal text-muted">(optional)</span></label>
+                                        <input type="date" id="taskRecurringEndsAt" class="form-control form-control-sm"
+                                               style="border-color:#c7d2fe;"
+                                               min="{{ now()->addDay()->format('Y-m-d') }}">
+                                        <div style="font-size:.7rem;color:#9ca3af;margin-top:3px;">Leave blank = repeat indefinitely</div>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <div style="font-size:.7rem;color:#6366f1;background:#eef2ff;border-radius:8px;padding:6px 8px;text-align:center;line-height:1.4;">
+                                            <i class="bi bi-infinity d-block mb-1" style="font-size:1rem;"></i>
+                                            Auto
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Priority legend --}}
+                <div class="d-flex gap-3 mt-3" style="font-size:.72rem;color:#9ca3af;">
+                    <span><i class="bi bi-circle-fill me-1" style="color:#16a34a;font-size:.5rem;vertical-align:middle;"></i>Low</span>
+                    <span><i class="bi bi-circle-fill me-1" style="color:#d97706;font-size:.5rem;vertical-align:middle;"></i>Medium</span>
+                    <span><i class="bi bi-circle-fill me-1" style="color:#dc2626;font-size:.5rem;vertical-align:middle;"></i>High</span>
+                    <span><i class="bi bi-circle-fill me-1" style="color:#7c3aed;font-size:.5rem;vertical-align:middle;"></i>Urgent</span>
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="modal-footer" style="border-top:1px solid #f3f4f6;padding:16px 28px;border-radius:0 0 18px 18px;">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="assignTaskBtn" class="btn btn-primary-grad px-5 fw-semibold">
+                    <i class="bi bi-send me-2"></i>Assign Task
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.getElementById('assignTaskBtn').addEventListener('click', function () {
+    const btn   = this;
+    const title = document.getElementById('taskTitle').value.trim();
+    const alert = document.getElementById('taskAlertBox');
+
+    // Client-side validation
+    if (!title) {
+        document.getElementById('taskTitle').classList.add('is-invalid');
+        document.getElementById('taskTitleErr').textContent = 'Task title is required.';
+        return;
+    }
+    document.getElementById('taskTitle').classList.remove('is-invalid');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Assigning…';
+
+    const isRecurring = document.getElementById('taskIsRecurring').checked;
+
+    const payload = {
+        _token:             '{{ csrf_token() }}',
+        title:              title,
+        description:        document.getElementById('taskDescription').value,
+        assigned_to:        {{ $employee->id }},
+        priority:           document.getElementById('taskPriority').value,
+        due_date:           document.getElementById('taskDueDate').value || null,
+        estimated_hours:    document.getElementById('taskEstHours').value || null,
+        project_id:         document.getElementById('taskProjectId') ? document.getElementById('taskProjectId').value || null : null,
+        is_recurring:       isRecurring,
+        recurrence_type:    isRecurring ? document.getElementById('taskRecurrenceType').value : null,
+        recurring_ends_at:  isRecurring ? (document.getElementById('taskRecurringEndsAt').value || null) : null,
+    };
+
+    fetch('{{ route('admin.tasks.store') }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+        body: JSON.stringify(payload),
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send me-2"></i>Assign Task';
+
+        if (data.success) {
+            alert.className = 'alert alert-success mb-3';
+            alert.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Task "<strong>' + (data.task?.title ?? title) + '</strong>" assigned successfully!';
+            // Reset form
+            document.getElementById('taskTitle').value           = '';
+            document.getElementById('taskDescription').value     = '';
+            document.getElementById('taskPriority').value        = 'medium';
+            document.getElementById('taskDueDate').value         = '';
+            document.getElementById('taskEstHours').value        = '';
+            document.getElementById('taskIsRecurring').checked   = false;
+            document.getElementById('taskRecurrenceType').value  = 'daily';
+            document.getElementById('taskRecurringEndsAt').value = '';
+            document.getElementById('recurringOptions').style.display = 'none';
+            if (document.getElementById('taskProjectId')) document.getElementById('taskProjectId').value = '';
+            // Auto-close after 1.8s and reload tasks section
+            setTimeout(() => {
+                bootstrap.Modal.getInstance(document.getElementById('assignTaskModal')).hide();
+                alert.className = 'alert d-none mb-3';
+                window.location.reload();
+            }, 1800);
+        } else {
+            alert.className = 'alert alert-danger mb-3';
+            alert.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + (data.message ?? 'Something went wrong. Please try again.');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send me-2"></i>Assign Task';
+        alert.className = 'alert alert-danger mb-3';
+        alert.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Network error. Please try again.';
+    });
+});
+
+function toggleRecurring(checked) {
+    document.getElementById('recurringOptions').style.display = checked ? 'block' : 'none';
+}
+
+// Clear validation on typing
+document.getElementById('taskTitle').addEventListener('input', function () {
+    this.classList.remove('is-invalid');
+});
+
+// Clear alert when modal closes
+document.getElementById('assignTaskModal').addEventListener('hidden.bs.modal', function () {
+    const alert = document.getElementById('taskAlertBox');
+    alert.className = 'alert d-none mb-3';
+    alert.innerHTML = '';
+    document.getElementById('taskTitle').classList.remove('is-invalid');
+});
+</script>
+@endpush
+
 @endsection

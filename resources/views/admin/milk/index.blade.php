@@ -61,29 +61,58 @@
         {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-3">
+        {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
 
 {{-- Filter Bar --}}
 <form method="GET" action="{{ route('admin.milk.index') }}">
 <div class="card-glass mb-3 px-4 py-3">
     <div class="row g-2 align-items-end">
-        <div class="col-12 col-md-4">
-            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Date</label>
-            <input type="date" name="date" class="form-control" value="{{ request('date', now()->toDateString()) }}">
+        <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">From Date</label>
+            <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">To Date</label>
+            <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+        </div>
+        <div class="col-6 col-md-2">
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Shift</label>
-            <select name="shift" class="form-select" onchange="this.form.submit()">
+            <select name="shift" class="form-select">
                 <option value="">All Shifts</option>
                 <option value="Morning" @selected(request('shift')==='Morning')>Morning</option>
                 <option value="Evening" @selected(request('shift')==='Evening')>Evening</option>
             </select>
         </div>
-        <div class="col-6 col-md-3 d-flex gap-2">
+        <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Entry Mode</label>
+            <select name="entry_type" class="form-select">
+                <option value="">All Modes</option>
+                <option value="per_animal"   @selected(request('entry_type')==='per_animal')>Per Cattle</option>
+                <option value="per_shed"     @selected(request('entry_type')==='per_shed')>Per Shed</option>
+                <option value="entire_farm"  @selected(request('entry_type')==='entire_farm')>Entire Farm</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Shed</label>
+            <select name="shed_number" class="form-select">
+                <option value="">All Sheds</option>
+                @foreach($sheds as $shed)
+                    <option value="{{ $shed->shed_number }}" @selected(request('shed_number')===$shed->shed_number)>
+                        {{ $shed->shed_number }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-6 col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-primary-grad flex-fill" style="height:42px;border-radius:9px;font-size:.85rem;">
                 <i class="bi bi-funnel me-1"></i>Filter
             </button>
-            @if(request()->hasAny(['shift']) || request('date') !== now()->toDateString())
-                <a href="{{ route('admin.milk.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height:42px;width:42px;border-radius:9px;flex-shrink:0;" title="Clear">
+            @if(request()->hasAny(['date_from','date_to','shift','entry_type','shed_number']))
+                <a href="{{ route('admin.milk.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height:42px;width:42px;border-radius:9px;flex-shrink:0;" title="Clear filters">
                     <i class="bi bi-x-lg"></i>
                 </a>
             @endif
@@ -102,9 +131,15 @@
         <table class="table modern-table mb-0">
             <thead>
                 <tr>
-                    <th>Date</th><th>Shift</th><th>Animal / Source</th>
-                    <th class="text-end">Qty (L)</th><th class="text-end">Fat</th><th class="text-end">SNF</th><th class="text-end">CLR</th>
-                    <th>Quality</th><th style="width:80px;text-align:center;">Actions</th>
+                    <th>Date</th>
+                    <th>Shift</th>
+                    <th>Source / Mode</th>
+                    <th class="text-end">Qty (L)</th>
+                    <th class="text-end">Fat</th>
+                    <th class="text-end">SNF</th>
+                    <th class="text-end">CLR</th>
+                    <th>Quality</th>
+                    <th style="width:80px;text-align:center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,8 +151,25 @@
                                 <i class="bi bi-{{ $e->shift==='Morning' ? 'sunrise' : 'moon' }} me-1"></i>{{ $e->shift }}
                             </span>
                         </td>
-                        <td class="fw-semibold" style="font-size:.83rem;">
-                            {{ $e->animal ? $e->animal->tag_number.' — '.$e->animal->name : 'Batch Shed Total' }}
+                        <td style="font-size:.83rem;">
+                            @if($e->entry_type === 'per_animal' && $e->animal)
+                                <div class="fw-semibold">{{ $e->animal->tag_number }}{{ $e->animal->name ? ' — '.$e->animal->name : '' }}</div>
+                                @if($e->animal->shed_number)
+                                    <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">
+                                        <i class="bi bi-house-door me-1"></i>{{ $e->animal->shed_number }}
+                                    </div>
+                                @endif
+                            @elseif($e->entry_type === 'per_shed')
+                                <div class="fw-semibold">
+                                    <i class="bi bi-house-door-fill me-1 text-success"></i>{{ $e->shed_number ?? 'Shed Entry' }}
+                                </div>
+                                <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">Shed Aggregate</div>
+                            @else
+                                <div class="fw-semibold">
+                                    <i class="bi bi-geo-alt-fill me-1 text-primary"></i>Entire Farm
+                                </div>
+                                <div style="font-size:.72rem;color:#6b7280;margin-top:1px;">All Sheds Combined</div>
+                            @endif
                         </td>
                         <td class="text-end fw-bold text-success">{{ number_format($e->quantity_liters,1) }}</td>
                         <td class="text-end" style="font-size:.83rem;">{{ number_format($e->fat_percentage,2) }}</td>
@@ -130,7 +182,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="empty-state"><i class="bi bi-droplet"></i><p>No milk entries for this date</p></td></tr>
+                    <tr><td colspan="9" class="empty-state"><i class="bi bi-droplet"></i><p>No milk entries found{{ request()->hasAny(['date_from','date_to','shift','entry_type','shed_number']) ? ' for the selected filters' : '' }}.</p></td></tr>
                 @endforelse
             </tbody>
         </table>

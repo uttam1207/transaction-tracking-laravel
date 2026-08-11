@@ -18,11 +18,24 @@ class SettingController extends Controller
 
     public function update(Request $request, string $group)
     {
-        $request->validate([
-            'settings' => 'required|array',
-        ]);
+        // Checkbox fields per group — must be explicitly set to '0' when unchecked
+        $checkboxFields = [
+            'fraud'        => ['fraud_detection_enabled', 'auto_block_high_risk'],
+            'security'     => ['require_2fa'],
+            'notification' => ['email_alerts_enabled'],
+        ];
 
-        foreach ($request->settings as $key => $value) {
+        foreach ($checkboxFields[$group] ?? [] as $field) {
+            if (!$request->boolean($field)) {
+                Setting::updateOrCreate(['key' => $field], ['value' => '0', 'group' => $group]);
+                Cache::forget("setting_{$field}");
+            }
+        }
+
+        // Save all submitted scalar fields
+        $skip = ['_token', '_method'];
+        foreach ($request->except($skip) as $key => $value) {
+            if (is_array($value)) continue; // skip files/arrays
             Setting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $value, 'group' => $group]

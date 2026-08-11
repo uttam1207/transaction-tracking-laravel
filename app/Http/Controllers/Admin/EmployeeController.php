@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Imports\EmployeesImport;
 use App\Models\Department;
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
@@ -42,8 +44,9 @@ class EmployeeController extends Controller
 
         $employees = $query->latest()->paginate(15)->withQueryString();
         $departments = Department::active()->get();
+        $roles = Role::allActive();
 
-        return view('admin.employees.index', compact('employees', 'departments'));
+        return view('admin.employees.index', compact('employees', 'departments', 'roles'));
     }
 
     public function create()
@@ -68,7 +71,7 @@ class EmployeeController extends Controller
             'work_location'   => 'required|in:office,remote,hybrid',
             'salary'          => 'nullable|numeric|min:0',
             'manager_id'      => 'nullable|exists:employees,id',
-            'role'            => 'nullable|string|in:employee,manager,admin,auditor,viewer',
+            'role'            => ['nullable', 'string', Rule::in(Role::pluck('name')->toArray())],
         ]);
 
         $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));

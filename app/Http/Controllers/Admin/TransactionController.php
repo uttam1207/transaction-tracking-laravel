@@ -100,6 +100,7 @@ class TransactionController extends Controller
             'receiver_mobile'   => 'nullable|string|max:20',
             'receiver_company'  => 'nullable|string|max:255',
             'receiver_address'         => 'nullable|string|max:500',
+            'processed_at'             => 'nullable|date',
             'receipt'                  => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
             'account_owner_name'       => 'nullable|string|max:255',
             'account_owner_mobile'     => 'nullable|string|max:20',
@@ -146,6 +147,7 @@ class TransactionController extends Controller
                 'receiver_name', 'receiver_account', 'receiver_bank',
                 'receiver_mobile', 'receiver_company', 'receiver_address',
                 'reference', 'description', 'notes', 'country', 'device_id',
+                'processed_at',
             ]),
             [
                 'user_id'     => $request->user_id ?: auth()->id(),
@@ -235,8 +237,10 @@ class TransactionController extends Controller
             ], 422);
         }
         $transaction->update([
-            'status' => $request->status,
-            'processed_at' => in_array($request->status, ['success', 'failed']) ? now() : null,
+            'status'       => $request->status,
+            'processed_at' => in_array($request->status, ['success', 'failed'])
+                ? ($transaction->processed_at ?? now())   // keep existing date; only set now() if never set
+                : null,
         ]);
 
         // Update wallet balance when transaction succeeds (only once)

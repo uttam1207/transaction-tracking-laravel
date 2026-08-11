@@ -5,6 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Employee;
+use App\Models\User;
+use App\Models\Project;
+use App\Models\TaskComment;
+use App\Models\Timesheet;
 
 class Task extends Model
 {
@@ -14,15 +19,28 @@ class Task extends Model
         'task_id', 'title', 'description', 'assigned_to', 'assigned_by', 'project_id',
         'priority', 'status', 'due_date', 'started_at', 'completed_at',
         'estimated_hours', 'actual_hours', 'progress', 'tags', 'rejection_reason',
+        'is_recurring', 'recurrence_type', 'recurring_ends_at', 'parent_task_id',
     ];
 
     protected $casts = [
-        'due_date' => 'date',
-        'started_at' => 'datetime',
-        'completed_at' => 'datetime',
-        'tags' => 'array',
-        'actual_hours' => 'float',
+        'due_date'          => 'date',
+        'recurring_ends_at' => 'date',
+        'started_at'        => 'datetime',
+        'completed_at'      => 'datetime',
+        'tags'              => 'array',
+        'actual_hours'      => 'float',
+        'is_recurring'      => 'boolean',
     ];
+
+    public function parentTask()
+    {
+        return $this->belongsTo(static::class, 'parent_task_id');
+    }
+
+    public function childTasks()
+    {
+        return $this->hasMany(static::class, 'parent_task_id');
+    }
 
     public function assignedTo()
     {

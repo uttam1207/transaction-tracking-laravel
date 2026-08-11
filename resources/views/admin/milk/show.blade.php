@@ -56,20 +56,50 @@
                             <i class="bi bi-{{ $milkEntry->shift==='Morning' ? 'sunrise' : 'moon' }} me-1"></i>{{ $milkEntry->shift }}
                         </span>
                         <span class="spill spill-success" style="font-size:.8rem;">{{ $milkEntry->quality_rating }}</span>
+                        @php
+                            $modeLabels = ['per_animal' => 'Per Cattle', 'per_shed' => 'Per Shed', 'entire_farm' => 'Entire Farm'];
+                            $modeIcons  = ['per_animal' => 'tag-fill', 'per_shed' => 'house-door-fill', 'entire_farm' => 'geo-alt-fill'];
+                            $et = $milkEntry->entry_type ?? 'per_animal';
+                        @endphp
+                        <span class="spill" style="font-size:.8rem;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);">
+                            <i class="bi bi-{{ $modeIcons[$et] ?? 'tag-fill' }} me-1"></i>{{ $modeLabels[$et] ?? 'Per Cattle' }}
+                        </span>
                     </div>
                 </div>
             </div>
 
             <div class="p-4">
                 <div class="row g-3">
+
+                    {{-- Source / Animal / Shed --}}
                     <div class="col-12">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
-                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-tag me-1"></i>Animal / Source</div>
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;">
+                                <i class="bi bi-{{ $modeIcons[$et] ?? 'tag' }} me-1"></i>
+                                {{ $modeLabels[$et] ?? 'Per Cattle' }} — Source
+                            </div>
                             <div class="fw-bold" style="color:#1f2937;">
-                                {{ $milkEntry->animal ? $milkEntry->animal->tag_number . ' — ' . $milkEntry->animal->name : 'Batch Shed Total' }}
+                                @if($et === 'per_animal')
+                                    @if($milkEntry->animal)
+                                        {{ $milkEntry->animal->tag_number }} &mdash; {{ $milkEntry->animal->name }}
+                                        @if($milkEntry->animal->shed_number)
+                                            <span class="ms-2" style="font-size:.8rem;font-weight:500;color:#6b7280;">
+                                                <i class="bi bi-house-door me-1"></i>{{ $milkEntry->animal->shed_number }}
+                                            </span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">Animal not found</span>
+                                    @endif
+                                @elseif($et === 'per_shed')
+                                    <i class="bi bi-house-door-fill me-1 text-success"></i>{{ $milkEntry->shed_number ?? '—' }}
+                                    <span style="font-size:.8rem;font-weight:500;color:#6b7280;margin-left:8px;">Shed Aggregate Total</span>
+                                @else
+                                    <i class="bi bi-geo-alt-fill me-1 text-primary"></i>Entire Farm &mdash; All Sheds Combined
+                                @endif
                             </div>
                         </div>
                     </div>
+
                     <div class="col-sm-3">
                         <div style="background:#ecfdf5;border-radius:10px;padding:14px 16px;border:1px solid #d1fae5;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-droplet me-1"></i>Quantity</div>
@@ -79,13 +109,13 @@
                     <div class="col-sm-3">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-droplet-half me-1"></i>Fat</div>
-                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->fat_percentage,2) }}</div>
+                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->fat_percentage,2) }}%</div>
                         </div>
                     </div>
                     <div class="col-sm-3">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-bar-chart-fill me-1"></i>SNF</div>
-                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->snf_percentage,2) }}</div>
+                            <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($milkEntry->snf_percentage,2) }}%</div>
                         </div>
                     </div>
                     <div class="col-sm-3">

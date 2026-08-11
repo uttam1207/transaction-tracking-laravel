@@ -8,6 +8,31 @@
     <li class="breadcrumb-item active">Add Entry</li>
 @endsection
 
+@push('styles')
+<style>
+.entry-mode-card {
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:16px 10px;border:2px solid #e5e7eb;border-radius:14px;cursor:pointer;
+    text-align:center;transition:all .2s ease;background:#fff;user-select:none;
+}
+.entry-mode-card:hover { border-color:#059669;background:#f0fdf4; }
+.entry-mode-card.selected {
+    border-color:#059669;background:#ecfdf5;
+    box-shadow:0 0 0 3px rgba(5,150,105,.12);
+}
+.entry-mode-card .mode-icon { font-size:1.7rem;margin-bottom:8px;color:#6b7280;transition:color .2s; }
+.entry-mode-card.selected .mode-icon { color:#059669; }
+.entry-mode-card .mode-title { font-weight:700;font-size:.88rem;color:#1f2937; }
+.entry-mode-card.selected .mode-title { color:#059669; }
+.entry-mode-card .mode-desc { font-size:.71rem;color:#9ca3af;margin-top:3px; }
+.shed-animal-badge {
+    display:inline-flex;align-items:center;gap:6px;background:#ecfdf5;
+    border:1px solid #d1fae5;border-radius:8px;padding:6px 12px;
+    font-size:.8rem;font-weight:600;color:#059669;
+}
+</style>
+@endpush
+
 @section('content')
 
 <div class="page-hero">
@@ -53,9 +78,41 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.milk.store') }}" method="POST">
+                <form action="{{ route('admin.milk.store') }}" method="POST" id="milkForm">
                     @csrf
 
+                    {{-- ── Entry Mode Selector ─────────────────────────────────────── --}}
+                    <div class="mb-4">
+                        <h6 class="form-section-label mb-3">Entry Mode</h6>
+                        <div class="row g-3">
+                            <div class="col-4">
+                                <div class="entry-mode-card selected" id="card-per_animal" onclick="setMode('per_animal')">
+                                    <i class="bi bi-tag-fill mode-icon"></i>
+                                    <div class="mode-title">Per Cattle</div>
+                                    <div class="mode-desc">Individual animal</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="entry-mode-card" id="card-per_shed" onclick="setMode('per_shed')">
+                                    <i class="bi bi-house-door-fill mode-icon"></i>
+                                    <div class="mode-title">Per Shed</div>
+                                    <div class="mode-desc">Shed aggregate total</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="entry-mode-card" id="card-entire_farm" onclick="setMode('entire_farm')">
+                                    <i class="bi bi-geo-alt-fill mode-icon"></i>
+                                    <div class="mode-title">Entire Farm</div>
+                                    <div class="mode-desc">All sheds combined</div>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="entry_type" id="entryTypeInput" value="{{ old('entry_type', 'per_animal') }}">
+                    </div>
+
+                    <hr class="my-3 opacity-25">
+
+                    {{-- ── Section A: Entry Details ────────────────────────────────── --}}
                     <div class="mb-4">
                         <h6 class="form-section-label">A — Entry Details</h6>
                         <div class="row g-3">
@@ -73,16 +130,76 @@
                                 </select>
                                 @error('shift')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">Animal <small class="text-muted fw-normal">(leave blank for batch / full shed)</small></label>
-                                <select name="animal_id" class="form-select @error('animal_id') is-invalid @enderror">
-                                    <option value="">— Batch Entry (Entire Shed) —</option>
+
+                            {{-- Per Cattle: animal dropdown --}}
+                            <div class="col-12" id="section-per_animal">
+                                <label class="form-label fw-semibold">
+                                    Animal <span class="text-danger">*</span>
+                                </label>
+                                <select name="animal_id" id="animalSelect" class="form-select @error('animal_id') is-invalid @enderror">
+                                    <option value="">— Select Animal —</option>
                                     @foreach ($animals as $a)
-                                        <option value="{{ $a->id }}" @selected(old('animal_id') == $a->id)>{{ $a->tag_number }} — {{ $a->name }}</option>
+                                        <option value="{{ $a->id }}"
+                                            data-shed="{{ $a->shed_number }}"
+                                            data-status="{{ $a->pregnancy_status }}"
+                                            @selected(old('animal_id') == $a->id)>
+                                            {{ $a->tag_number }}{{ $a->name ? ' — '.$a->name : '' }}
+                                            &nbsp;({{ $a->shed_number ?? 'No Shed' }}){{ $a->pregnancy_status === 'Dry' ? ' [Dry]' : '' }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('animal_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div id="animalShedHint" class="mt-2" style="display:none;">
+                                    <span class="shed-animal-badge">
+                                        <i class="bi bi-house-door"></i>
+                                        <span id="animalShedLabel"></span>
+                                    </span>
+                                </div>
                             </div>
+
+                            {{-- Per Shed: shed dropdown --}}
+                            <div class="col-12" id="section-per_shed" style="display:none;">
+                                <label class="form-label fw-semibold">
+                                    Shed <span class="text-danger">*</span>
+                                </label>
+                                @if($sheds->isEmpty())
+                                    <div class="alert alert-warning py-2 mb-0">No active milking animals found to build shed list.</div>
+                                @else
+                                    <select name="shed_number" id="shedSelect" class="form-select @error('shed_number') is-invalid @enderror">
+                                        <option value="">— Select Shed —</option>
+                                        @foreach($sheds as $shed)
+                                            <option value="{{ $shed->shed_number }}"
+                                                data-count="{{ $shed->animal_count }}"
+                                                @selected(old('shed_number') === $shed->shed_number)>
+                                                {{ $shed->shed_number }}
+                                                &nbsp;({{ $shed->animal_count }} {{ Str::plural('animal', $shed->animal_count) }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('shed_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                    <div id="shedAnimalHint" class="mt-2" style="display:none;">
+                                        <span class="shed-animal-badge">
+                                            <i class="bi bi-people-fill"></i>
+                                            <span id="shedAnimalCount"></span> animals in this shed
+                                        </span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Entire Farm: info box --}}
+                            <div class="col-12" id="section-entire_farm" style="display:none;">
+                                <div style="background:#f0fdf4;border:1px dashed #86efac;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:10px;">
+                                    <i class="bi bi-geo-alt-fill text-success" style="font-size:1.3rem;"></i>
+                                    <div>
+                                        <div class="fw-semibold" style="color:#166534;font-size:.88rem;">Entire Farm Entry</div>
+                                        <div style="color:#4ade80;font-size:.76rem;margin-top:2px;">
+                                            This entry will represent total milk from all sheds combined
+                                            ({{ $sheds->sum('animal_count') }} active animals across {{ $sheds->count() }} shed{{ $sheds->count()!==1?'s':'' }}).
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Quantity (Liters) <span class="text-danger">*</span></label>
                                 <input type="number" step="0.1" min="0.1" name="quantity_liters"
@@ -95,6 +212,7 @@
 
                     <hr class="my-3 opacity-25">
 
+                    {{-- ── Section B: Quality Parameters ───────────────────────────── --}}
                     <div class="mb-4">
                         <h6 class="form-section-label">B — Quality Parameters</h6>
                         <div class="row g-3">
@@ -123,8 +241,8 @@
                                 <label class="form-label fw-semibold">Quality Grade</label>
                                 <select name="quality_rating" class="form-select @error('quality_rating') is-invalid @enderror">
                                     <option value="Grade A+" @selected(old('quality_rating') === 'Grade A+')>Grade A+ (Premium Fat &gt;8%)</option>
-                                    <option value="Grade A" @selected(old('quality_rating', 'Grade A') === 'Grade A')>Grade A (Standard 7–8%)</option>
-                                    <option value="Grade B" @selected(old('quality_rating') === 'Grade B')>Grade B (Sub-standard)</option>
+                                    <option value="Grade A"  @selected(old('quality_rating','Grade A') === 'Grade A')>Grade A (Standard 7–8%)</option>
+                                    <option value="Grade B"  @selected(old('quality_rating') === 'Grade B')>Grade B (Sub-standard)</option>
                                 </select>
                                 @error('quality_rating')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -149,5 +267,65 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+const modes = ['per_animal','per_shed','entire_farm'];
+
+function setMode(mode) {
+    document.getElementById('entryTypeInput').value = mode;
+    modes.forEach(m => {
+        document.getElementById('card-' + m).classList.toggle('selected', m === mode);
+        const s = document.getElementById('section-' + m);
+        if (s) s.style.display = (m === mode) ? '' : 'none';
+    });
+    // Toggle required on animal_id
+    const animalSel = document.getElementById('animalSelect');
+    const shedSel   = document.getElementById('shedSelect');
+    if (animalSel) animalSel.required = (mode === 'per_animal');
+    if (shedSel)   shedSel.required   = (mode === 'per_shed');
+}
+
+// Show shed hint when animal is selected
+const animalSel = document.getElementById('animalSelect');
+if (animalSel) {
+    animalSel.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const shed = opt ? opt.dataset.shed : '';
+        const hint = document.getElementById('animalShedHint');
+        const lbl  = document.getElementById('animalShedLabel');
+        if (shed && this.value) {
+            lbl.textContent = shed;
+            hint.style.display = '';
+        } else {
+            hint.style.display = 'none';
+        }
+    });
+}
+
+// Show animal count when shed is selected
+const shedSel = document.getElementById('shedSelect');
+if (shedSel) {
+    shedSel.addEventListener('change', function() {
+        const opt   = this.options[this.selectedIndex];
+        const count = opt ? opt.dataset.count : '';
+        const hint  = document.getElementById('shedAnimalHint');
+        const lbl   = document.getElementById('shedAnimalCount');
+        if (count && this.value) {
+            lbl.textContent = count;
+            hint.style.display = '';
+        } else {
+            hint.style.display = 'none';
+        }
+    });
+}
+
+// Init based on old value (validation redirect)
+document.addEventListener('DOMContentLoaded', function() {
+    const current = document.getElementById('entryTypeInput').value || 'per_animal';
+    setMode(current);
+});
+</script>
+@endpush
 
 @endsection

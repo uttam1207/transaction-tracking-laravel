@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\FraudRule;
 use App\Models\FraudAlert;
 use App\Models\Blacklist;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 
 class FraudDetectionService
@@ -15,6 +16,16 @@ class FraudDetectionService
 
     public function analyze(Transaction $transaction): array
     {
+        // Respect the global enable/disable setting
+        if (Setting::get('fraud_detection_enabled', '1') === '0') {
+            return [
+                'risk_score'      => 0,
+                'is_flagged'      => false,
+                'triggered_rules' => [],
+                'recommendation'  => 'allow',
+            ];
+        }
+
         $this->totalRiskScore = 0;
         $this->triggeredRules = [];
 
@@ -132,10 +143,13 @@ class FraudDetectionService
 
     private function checkHighAmount(Transaction $transaction): void
     {
-        if ($transaction->amount >= 50000) {
+        $criticalAmount = (int) Setting::get('fraud_critical_amount', 50000);
+        $highAmount     = (int) Setting::get('fraud_high_amount', 10000);
+
+        if ($transaction->amount >= $criticalAmount) {
             $this->totalRiskScore += 40;
             $this->triggeredRules[] = ['rule' => 'High Amount Transaction', 'type' => 'amount', 'severity' => 'high', 'score' => 40];
-        } elseif ($transaction->amount >= 10000) {
+        } elseif ($transaction->amount >= $highAmount) {
             $this->totalRiskScore += 20;
             $this->triggeredRules[] = ['rule' => 'Large Amount Transaction', 'type' => 'amount', 'severity' => 'medium', 'score' => 20];
         }
@@ -143,10 +157,12 @@ class FraudDetectionService
 
     private function checkDuplicate(Transaction $transaction): void
     {
+        $window = (int) Setting::get('fraud_duplicate_window', 10);
+
         $isDuplicate = Transaction::where('user_id', $transaction->user_id)
             ->where('amount', $transaction->amount)
             ->where('receiver_account', $transaction->receiver_account)
-            ->where('created_at', '>=', now()->subMinutes(10))
+            ->where('created_at', '>=', now()->subMinutes($window))
             ->where('id', '!=', $transaction->id)
             ->exists();
 
@@ -158,16 +174,18 @@ class FraudDetectionService
 
     private function checkVelocity(Transaction $transaction): void
     {
+        $velocityLimit = (int) Setting::get('fraud_velocity_limit', 5);
+
         $count = Transaction::where('user_id', $transaction->user_id)
             ->where('created_at', '>=', now()->subHour())
             ->count();
 
-        if ($count > 10) {
+        if ($count > ($velocityLimit * 2)) {
             $this->totalRiskScore += 60;
-            $this->triggeredRules[] = ['rule' => 'High Velocity (>10/hr)', 'type' => 'velocity', 'severity' => 'high', 'score' => 60];
-        } elseif ($count > 5) {
+            $this->triggeredRules[] = ['rule' => "High Velocity (>{$velocityLimit}x/hr)", 'type' => 'velocity', 'severity' => 'high', 'score' => 60];
+        } elseif ($count > $velocityLimit) {
             $this->totalRiskScore += 30;
-            $this->triggeredRules[] = ['rule' => 'Elevated Velocity (>5/hr)', 'type' => 'velocity', 'severity' => 'medium', 'score' => 30];
+            $this->triggeredRules[] = ['rule' => "Elevated Velocity (>{$velocityLimit}/hr)", 'type' => 'velocity', 'severity' => 'medium', 'score' => 30];
         }
     }
 

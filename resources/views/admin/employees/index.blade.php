@@ -214,11 +214,13 @@
                         <div class="col-md-4">
                             <label class="flabel">Role <span class="req">*</span></label>
                             <select name="role" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
-                                <option value="employee" selected>Employee</option>
-                                <option value="manager">Manager</option>
-                                <option value="admin">Admin</option>
-                                <option value="auditor">Auditor</option>
-                                <option value="viewer">Viewer</option>
+                                @foreach($roles as $role)
+                                    @if($role->name !== 'super_admin')
+                                        <option value="{{ $role->name }}" {{ $role->name === 'employee' ? 'selected' : '' }}>
+                                            {{ $role->display_label }}
+                                        </option>
+                                    @endif
+                                @endforeach
                             </select>
                         </div>
                         <div class="col-md-4">

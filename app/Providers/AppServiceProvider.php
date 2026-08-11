@@ -8,6 +8,7 @@ use App\Listeners\NotifyAdminsOfFraud;
 use App\Listeners\SendFraudAlertNotification;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -16,6 +17,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::useBootstrapFive();
+
         // Wire event → listeners
         Event::listen(TransactionCreated::class, SendFraudAlertNotification::class);
         Event::listen(TransactionCreated::class, NotifyAdminsOfFraud::class);

@@ -266,6 +266,12 @@ textarea.form-control { height:auto!important; }
                     <div style="font-size:.85rem;font-weight:500;color:#374151;">{{ $transaction->created_at->format('d M Y, H:i') }}</div>
                 </div>
                 <div class="mb-3">
+                    <div style="font-size:.72rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Processed At</div>
+                    <div style="font-size:.85rem;font-weight:500;color:#374151;">
+                        {{ $transaction->processed_at ? $transaction->processed_at->format('d M Y, H:i') : '—' }}
+                    </div>
+                </div>
+                <div class="mb-3">
                     <div style="font-size:.72rem;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;">Risk Score</div>
                     <div style="font-size:.85rem;font-weight:700;color:{{ $transaction->risk_score >= 70 ? '#dc2626' : ($transaction->risk_score >= 40 ? '#d97706' : '#16a34a') }};">
                         {{ $transaction->risk_score }}/100

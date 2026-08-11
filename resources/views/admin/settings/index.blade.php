@@ -147,35 +147,63 @@
                     </div>
 
                     @elseif($currentGroup === 'fraud')
+                    @php
+                        $fraudEnabled = ($settings['fraud_detection_enabled']?->value ?? '1') === '1';
+                    @endphp
                     <div class="row g-3">
+                        {{-- Master Enable / Disable --}}
+                        <div class="col-12">
+                            <div style="border-radius:10px;padding:14px 18px;border:1.5px solid {{ $fraudEnabled ? '#bbf7d0' : '#fecaca' }};background:{{ $fraudEnabled ? '#f0fdf4' : '#fef2f2' }};display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                                <div>
+                                    <div style="font-weight:700;font-size:.88rem;color:{{ $fraudEnabled ? '#166534' : '#991b1b' }};">
+                                        <i class="bi bi-shield-{{ $fraudEnabled ? 'check' : 'exclamation' }} me-1"></i>
+                                        Fraud Detection Engine — {{ $fraudEnabled ? 'Enabled' : 'Disabled' }}
+                                    </div>
+                                    <div style="font-size:.74rem;color:#6b7280;margin-top:3px;">Turn off to disable all fraud checks system-wide</div>
+                                </div>
+                                <div class="form-check form-switch mb-0" style="padding-left:2.5em;flex-shrink:0;">
+                                    <input class="form-check-input" type="checkbox" name="fraud_detection_enabled" id="fraudToggle"
+                                        value="1" @checked($fraudEnabled)
+                                        style="cursor:pointer;width:44px;height:22px;"
+                                        onchange="this.closest('[style]').style.background=this.checked?'#f0fdf4':'#fef2f2';
+                                                  this.closest('[style]').style.borderColor=this.checked?'#bbf7d0':'#fecaca';">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Thresholds --}}
                         <div class="col-md-6">
-                            <label class="flabel">High Amount Threshold ($)</label>
+                            <label class="flabel">High Amount Threshold (₹)</label>
                             <input type="number" name="fraud_high_amount" class="form-control"
-                                value="{{ $settings['fraud_high_amount'] ?? 10000 }}" min="100"
+                                value="{{ $settings['fraud_high_amount']?->value ?? 10000 }}" min="100"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.71rem;">Triggers medium-risk flag (score +20)</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="flabel">Critical Amount Threshold ($)</label>
+                            <label class="flabel">Critical Amount Threshold (₹)</label>
                             <input type="number" name="fraud_critical_amount" class="form-control"
-                                value="{{ $settings['fraud_critical_amount'] ?? 50000 }}" min="1000"
+                                value="{{ $settings['fraud_critical_amount']?->value ?? 50000 }}" min="1000"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.71rem;">Triggers high-risk flag (score +40)</div>
                         </div>
                         <div class="col-md-6">
-                            <label class="flabel">Velocity Check (transactions/hour)</label>
+                            <label class="flabel">Velocity Limit (transactions / hour)</label>
                             <input type="number" name="fraud_velocity_limit" class="form-control"
-                                value="{{ $settings['fraud_velocity_limit'] ?? 5 }}" min="1"
+                                value="{{ $settings['fraud_velocity_limit']?->value ?? 5 }}" min="1"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.71rem;">Above limit = elevated risk; 2× limit = high risk</div>
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Duplicate Detection Window (minutes)</label>
                             <input type="number" name="fraud_duplicate_window" class="form-control"
-                                value="{{ $settings['fraud_duplicate_window'] ?? 10 }}" min="1"
+                                value="{{ $settings['fraud_duplicate_window']?->value ?? 10 }}" min="1"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.71rem;">Same amount + receiver within this window = duplicate</div>
                         </div>
                         <div class="col-12">
                             <div class="form-check form-switch" style="padding-left:2.5em;">
                                 <input class="form-check-input" type="checkbox" name="auto_block_high_risk" value="1"
-                                    @checked(($settings['auto_block_high_risk'] ?? '0') === '1') style="cursor:pointer;">
+                                    @checked(($settings['auto_block_high_risk']?->value ?? '0') === '1') style="cursor:pointer;">
                                 <label class="form-check-label" style="font-size:.85rem;color:#374151;">Auto-block transactions with risk score &gt; 90</label>
                             </div>
                         </div>

@@ -79,7 +79,17 @@
     <div class="col-md-6 col-lg-4">
         <div style="background:#fff;border-radius:14px;border:1.5px solid {{ $isOverdue ? '#fecaca' : '#f0f0f5' }};border-left:4px solid {{ $borderColor }};padding:18px;height:100%;display:flex;flex-direction:column;{{ $isOverdue ? 'background:#fff5f5;' : '' }}">
             <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-                <div style="font-weight:700;font-size:.9rem;color:#111827;line-height:1.3;">{{ Str::limit($task->title, 45) }}</div>
+                <div>
+                    <div style="font-weight:700;font-size:.9rem;color:#111827;line-height:1.3;">{{ Str::limit($task->title, 45) }}</div>
+                    @if($task->is_recurring || $task->parent_task_id)
+                        <div style="margin-top:3px;">
+                            <span style="font-size:.68rem;font-weight:700;color:#6366f1;background:#eef2ff;border-radius:20px;padding:2px 8px;display:inline-flex;align-items:center;gap:4px;">
+                                <i class="bi bi-arrow-repeat"></i>
+                                {{ $task->is_recurring ? ucfirst($task->recurrence_type ?? 'recurring') : 'Daily task' }}
+                            </span>
+                        </div>
+                    @endif
+                </div>
                 <span class="spill spill-{{ $pColor }}" style="font-size:.7rem;flex-shrink:0;">{{ ucfirst($task->priority) }}</span>
             </div>
 

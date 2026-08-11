@@ -14,6 +14,8 @@ class MilkEntry extends Model
         'date',
         'shift',
         'animal_id',
+        'entry_type',
+        'shed_number',
         'quantity_liters',
         'fat_percentage',
         'snf_percentage',

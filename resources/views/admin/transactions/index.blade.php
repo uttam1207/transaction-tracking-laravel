@@ -360,7 +360,7 @@
                     <th>Category</th>
                     <th>Status</th>
                     <th>Risk Score</th>
-                    <th>Date</th>
+                    <th>Processed At</th>
                     <th style="width:80px;">Actions</th>
                 </tr>
             </thead>
@@ -398,7 +398,10 @@
                             <span class="risk-val">{{ $tx->risk_score }}</span>
                         </div>
                     </td>
-                    <td style="font-size:.78rem; color:#6b7280; white-space:nowrap;">{{ $tx->created_at->format('M d, H:i') }}</td>
+                    <td style="font-size:.78rem; color:#6b7280; white-space:nowrap;">
+                        {{ ($tx->processed_at ?? $tx->created_at)->format('d M Y') }}<br>
+                        <span style="font-size:.72rem;color:#9ca3af;">{{ ($tx->processed_at ?? $tx->created_at)->format('H:i') }}</span>
+                    </td>
                     <td onclick="event.stopPropagation();">
                         <div class="d-flex gap-1">
                             <a href="{{ route('admin.transactions.show', $tx) }}" class="action-btn view" title="View"><i class="bi bi-eye"></i></a>

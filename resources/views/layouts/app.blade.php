@@ -877,7 +877,7 @@
                 @php
                     $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
                     $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
-                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*');
+                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
                 @endphp
 
@@ -917,60 +917,86 @@
                     </a>
                     @endif
                     <div class="nav-sub-title">Animal & Farm</div>
+                    @if(\App\Models\ServicePermission::canAccess('animals', $svcUser))
                     <a href="{{ route('admin.animals.index') }}" class="sidebar-link {{ request()->routeIs('admin.animals.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-card-checklist"></i></span>
                         <span class="nav-label">Animals</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('breeds', $svcUser))
                     <a href="{{ route('admin.breeds.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeds.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-collection"></i></span>
                         <span class="nav-label">Breeds</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('milk', $svcUser))
                     <a href="{{ route('admin.milk.index') }}" class="sidebar-link {{ request()->routeIs('admin.milk.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-droplet-fill"></i></span>
                         <span class="nav-label">Milk</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('breeding', $svcUser))
                     <a href="{{ route('admin.breeding.index') }}" class="sidebar-link {{ request()->routeIs('admin.breeding.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-heart-pulse"></i></span>
                         <span class="nav-label">Breeding</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('health', $svcUser))
                     <a href="{{ route('admin.health.index') }}" class="sidebar-link {{ request()->routeIs('admin.health.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-hospital"></i></span>
                         <span class="nav-label">Health</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('feed', $svcUser))
                     <a href="{{ route('admin.feed.calculator') }}" class="sidebar-link {{ request()->routeIs('admin.feed.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cpu"></i></span>
-                        <span class="nav-label">Feed Auto-Calc</span>
+                        <span class="nav-label">Feed</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('farm', $svcUser))
                     <a href="{{ route('admin.farm.index') }}" class="sidebar-link {{ request()->routeIs('admin.farm.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-tree"></i></span>
                         <span class="nav-label">Farm</span>
                     </a>
+                    @endif
                     <div class="nav-sub-title">Finance & Stock</div>
+                    @if(\App\Models\ServicePermission::canAccess('expenses', $svcUser))
                     <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') && !request()->routeIs('admin.expense-categories.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-receipt"></i></span>
                         <span class="nav-label">Expenses</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('expense_categories', $svcUser))
                     <a href="{{ route('admin.expense-categories.index') }}" class="sidebar-link {{ request()->routeIs('admin.expense-categories.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-tags"></i></span>
                         <span class="nav-label">Expense Categories</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('stock', $svcUser))
                     <a href="{{ route('admin.stock.index') }}" class="sidebar-link {{ request()->routeIs('admin.stock.*') || request()->routeIs('admin.stock-items.*') || request()->routeIs('admin.stock-categories.*') || request()->routeIs('admin.stock-types.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-boxes"></i></span>
                         <span class="nav-label">Stock</span>
                     </a>
+                    @endif
                     <div class="nav-sub-title">Operations</div>
+                    @if(\App\Models\ServicePermission::canAccess('maintenance', $svcUser))
                     <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-tools"></i></span>
                         <span class="nav-label">Maintenance</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('compliance', $svcUser))
                     <a href="{{ route('admin.compliance.index') }}" class="sidebar-link {{ request()->routeIs('admin.compliance.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-shield-check"></i></span>
                         <span class="nav-label">Compliance</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('report_center', $svcUser))
                     <a href="{{ route('admin.reports.center') }}" class="sidebar-link {{ request()->routeIs('admin.reports.center') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
                         <span class="nav-label">Reports Center</span>
                     </a>
+                    @endif
                 </div>
 
                 {{-- ══════════════════════════════════════════
@@ -1001,10 +1027,12 @@
                         <span class="nav-label">Employees</span>
                     </a>
                     @endif
+                    @if(\App\Models\ServicePermission::canAccess('salaries', $svcUser))
                     <a href="{{ route('admin.salaries.index') }}" class="sidebar-link {{ request()->routeIs('admin.salaries.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
                         <span class="nav-label">Salary & Payroll</span>
                     </a>
+                    @endif
                     <div class="nav-sub-title">Work Tracking</div>
                     @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
                     <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
@@ -1125,26 +1153,42 @@
                     <i class="bi bi-chevron-down nav-group-chevron"></i>
                 </button>
                 <div id="grpCrm" class="nav-group-collapse collapse {{ $isCrmActive ? 'show' : '' }}">
+                    @if(\App\Models\ServicePermission::canAccess('contacts', $svcUser))
+                    <a href="{{ route('admin.contacts.index') }}" class="sidebar-link {{ request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-person-lines-fill"></i></span>
+                        <span class="nav-label">Contacts</span>
+                    </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('crm', $svcUser))
                     <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
                         <span class="nav-label">Customers</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('franchise', $svcUser))
                     <a href="{{ route('admin.franchise.index') }}" class="sidebar-link {{ request()->routeIs('admin.franchise.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-shop"></i></span>
                         <span class="nav-label">Franchise</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('procurement', $svcUser))
                     <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
                         <span class="nav-label">Procurement</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('vendors', $svcUser))
                     <a href="{{ route('admin.vendors.index') }}" class="sidebar-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-building"></i></span>
                         <span class="nav-label">Vendors</span>
                     </a>
+                    @endif
+                    @if(\App\Models\ServicePermission::canAccess('sales', $svcUser))
                     <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
                         <span class="nav-label">Sales</span>
                     </a>
+                    @endif
                 </div>
 
             @else

@@ -40,8 +40,9 @@ class UserController extends Controller
 
         $users = $query->latest()->paginate(15)->withQueryString();
         $departments = Department::active()->get();
+        $roles = Role::allActive();
 
-        return view('admin.users.index', compact('users', 'departments'));
+        return view('admin.users.index', compact('users', 'departments', 'roles'));
     }
 
     public function create()

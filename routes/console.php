@@ -62,3 +62,10 @@ Schedule::command('dairy:send-alerts')
     ->dailyAt('07:00')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/dairy-alerts.log'));
+
+// ── Recurring Tasks ──
+// Spawn today's instances of all daily/weekly/monthly recurring tasks at midnight
+Schedule::command('tasks:create-recurring')
+    ->dailyAt('00:05')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/scheduler.log'));

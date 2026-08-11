@@ -49,6 +49,8 @@ use App\Http\Controllers\Admin\ServicePermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SalaryController;
 use App\Http\Controllers\Admin\VendorController;
+use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\ContactCategoryController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Manager\DashboardController as ManagerDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
@@ -145,7 +147,7 @@ Route::get('/', function () {
 // ============================================================
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'check.status', 'role:super_admin,admin,manager,auditor'])
+    ->middleware(['auth', 'check.status', 'role:super_admin,admin,manager,auditor', 'service'])
     ->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -330,6 +332,12 @@ Route::prefix('admin')
     // Module 7 — Farm Management
     Route::resource('farm', FarmController::class)->parameters(['farm' => 'farmRecord']);
 
+    // Contacts & Connections Directory
+    Route::resource('contacts', ContactController::class);
+    Route::resource('contact-categories', ContactCategoryController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contact-categories' => 'contactCategory']);
+
     // Module 11 — CRM
     Route::resource('crm', CrmController::class)->parameters(['crm' => 'crmCustomer']);
 
@@ -372,7 +380,10 @@ Route::prefix('admin')
         Route::patch('/wallets/{wallet}/toggle-freeze', [WalletController::class, 'toggleFreeze'])->name('wallets.toggleFreeze');
 
         Route::get('/permissions', [ServicePermissionController::class, 'index'])->name('permissions.index');
+        Route::post('/permissions', [ServicePermissionController::class, 'store'])->name('permissions.store');
         Route::put('/permissions/{servicePermission}', [ServicePermissionController::class, 'update'])->name('permissions.update');
+        Route::patch('/permissions/{servicePermission}/meta', [ServicePermissionController::class, 'updateMeta'])->name('permissions.updateMeta');
+        Route::delete('/permissions/{servicePermission}', [ServicePermissionController::class, 'destroy'])->name('permissions.destroy');
 
         // Role Management
         Route::resource('roles', RoleController::class)->except(['show']);
