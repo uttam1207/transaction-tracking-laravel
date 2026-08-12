@@ -302,12 +302,12 @@ Route::prefix('admin')
     // Feed Auto Calculation & Alerts
     Route::get('/feed/calculator', [FeedController::class, 'calculator'])->name('feed.calculator');
     Route::post('/feed/groups', [FeedController::class, 'storeGroup'])->name('feed.groups.store');
+    Route::post('/feed/groups/sync', [FeedController::class, 'syncGroupsFromAnimals'])->name('feed.groups.sync');
     Route::post('/feed/groups/{group}', [FeedController::class, 'updateGroupCount'])->name('feed.groups.update');
     Route::delete('/feed/groups/{group}', [FeedController::class, 'destroyGroup'])->name('feed.groups.destroy');
     Route::post('/feed/plans', [FeedController::class, 'updateFeedPlan'])->name('feed.plans.update');
     Route::post('/feed/plans/item', [FeedController::class, 'storePlan'])->name('feed.plans.item.store');
     Route::delete('/feed/plans/{plan}', [FeedController::class, 'destroyPlan'])->name('feed.plans.item.destroy');
-    Route::post('/feed/groups/sync', [FeedController::class, 'syncGroupsFromAnimals'])->name('feed.groups.sync');
 
     // Module 2 — Animal Management
     Route::resource('animals', AnimalController::class);

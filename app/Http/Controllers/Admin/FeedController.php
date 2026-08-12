@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Animal;
 use App\Models\AnimalGroup;
 use App\Models\FeedPlan;
-use App\Services\FeedCalculationService;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Services\FeedCalculationService;
 
 class FeedController extends Controller
 {
