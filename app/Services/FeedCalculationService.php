@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Animal;
 use App\Models\AnimalGroup;
 use App\Models\InventoryItem;
 use App\Models\Setting;
