@@ -147,7 +147,7 @@ Route::get('/', function () {
 // ============================================================
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'check.status', 'role:super_admin,admin,manager,auditor', 'service'])
+    ->middleware(['auth', 'check.status', 'role:not:employee', 'service'])
     ->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

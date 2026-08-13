@@ -27,15 +27,18 @@ class ServicePermission extends Model
             return true;
         }
 
-        $permission = Cache::remember("svc_perm_{$serviceKey}", 300, function () use ($serviceKey) {
-            return static::where('service_key', $serviceKey)->where('is_active', true)->first();
+        // Cache only the allowed_roles array (not the full model) to avoid
+        // Eloquent serialization edge cases with the file/database cache drivers.
+        $allowedRoles = Cache::remember("svc_perm_{$serviceKey}", 300, function () use ($serviceKey) {
+            $record = static::where('service_key', $serviceKey)->where('is_active', true)->first();
+            return $record ? ($record->allowed_roles ?? []) : null;
         });
 
-        if (!$permission) {
+        if ($allowedRoles === null) {
             return false;
         }
 
-        return in_array($user->role, $permission->allowed_roles ?? []);
+        return in_array($user->role, $allowedRoles);
     }
 
     public static function clearCache(string $serviceKey = ''): void

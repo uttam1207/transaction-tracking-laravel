@@ -227,20 +227,35 @@ const CSRF = document.querySelector('meta[name=csrf-token]').content;
 // ── Role checkbox toggles ──────────────────────────────────────────────────
 document.querySelectorAll('.perm-toggle').forEach(cb => {
     cb.addEventListener('change', function() {
-        const svcId = this.dataset.svcId;
-        const row   = document.querySelector(`tr[data-svc-id="${svcId}"]`);
+        const checkbox = this;
+        const svcId    = this.dataset.svcId;
+        const row      = document.querySelector(`tr[data-svc-id="${svcId}"]`);
         const allChecked = [...row.querySelectorAll('.perm-toggle:checked')].map(el => el.dataset.role);
 
         showSaving();
 
         fetch(`/admin/permissions/${svcId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+            },
             body: JSON.stringify({ allowed_roles: allChecked })
         })
         .then(r => r.json())
-        .then(data => data.success ? showSaved('Saved!') : showSaved('Error saving', true))
-        .catch(() => showSaved('Network error', true));
+        .then(data => {
+            if (data.success) {
+                showSaved('Saved!');
+            } else {
+                checkbox.checked = !checkbox.checked; // revert on server error
+                showSaved(data.message || 'Error saving', true);
+            }
+        })
+        .catch(() => {
+            checkbox.checked = !checkbox.checked; // revert on network/parse error
+            showSaved('Network error', true);
+        });
     });
 });
 

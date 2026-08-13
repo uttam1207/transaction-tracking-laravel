@@ -16,21 +16,44 @@ class CheckRole
 
         $userRole = $request->user()->role;
 
-        foreach ($roles as $role) {
-            if ($userRole === $role) {
-                return $next($request);
-            }
-        }
-
         // Super admin has access to everything
         if ($userRole === 'super_admin') {
             return $next($request);
         }
 
-        if ($request->expectsJson()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        // Separate exclusion rules (not:roleName) from inclusion rules
+        $exclusions = [];
+        $inclusions = [];
+        foreach ($roles as $role) {
+            if (str_starts_with($role, 'not:')) {
+                $exclusions[] = substr($role, 4);
+            } else {
+                $inclusions[] = $role;
+            }
         }
 
-        abort(403, 'You do not have permission to access this resource.');
+        // If user's role is explicitly excluded, deny
+        if (in_array($userRole, $exclusions)) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            abort(403, 'You do not have permission to access this resource.');
+        }
+
+        // If there are inclusion rules, user must match one
+        if (!empty($inclusions)) {
+            foreach ($inclusions as $role) {
+                if ($userRole === $role) {
+                    return $next($request);
+                }
+            }
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+            abort(403, 'You do not have permission to access this resource.');
+        }
+
+        // Only exclusion rules were given (no inclusion list) → allow anyone not excluded
+        return $next($request);
     }
 }
