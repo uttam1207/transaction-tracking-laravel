@@ -116,50 +116,90 @@
 /* ── Module Grid Cards ──────────────────────────────────────── */
 .rd-modules {
     display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(210px,1fr));
-    gap:14px;
+    grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:16px;
 }
 .rd-mod-card {
     background:#fff;
-    border:1px solid #f1f5f9;
-    border-radius:16px;
-    padding:20px;
+    border:none;
+    border-radius:18px;
+    padding:0;
     text-decoration:none;
-    display:block;
-    position:relative;
+    display:flex;
+    flex-direction:column;
     overflow:hidden;
-    transition:box-shadow .2s, transform .18s, border-color .2s;
+    transition:box-shadow .25s, transform .2s;
+    box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
 .rd-mod-card:hover {
-    box-shadow:0 8px 28px rgba(0,0,0,.09);
-    transform:translateY(-3px);
-    border-color:transparent;
+    box-shadow:0 14px 40px rgba(0,0,0,.13);
+    transform:translateY(-5px);
     text-decoration:none;
 }
-.rd-mod-topbar {
-    position:absolute; top:0; left:0; right:0; height:3px;
-    border-radius:16px 16px 0 0; opacity:0;
-    transition:opacity .22s;
+/* Gradient header section */
+.rd-mod-header-section {
+    height:82px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    flex-shrink:0;
 }
-.rd-mod-card:hover .rd-mod-topbar { opacity:1; }
+.rd-mod-header-section::before {
+    content:''; position:absolute;
+    width:110px; height:110px; border-radius:50%;
+    background:rgba(255,255,255,.11);
+    bottom:-38px; right:-28px; pointer-events:none;
+}
+.rd-mod-header-section::after {
+    content:''; position:absolute;
+    width:68px; height:68px; border-radius:50%;
+    background:rgba(255,255,255,.08);
+    top:-18px; left:-14px; pointer-events:none;
+}
 .rd-mod-icon-wrap {
-    width:46px; height:46px; border-radius:13px;
+    width:52px; height:52px; border-radius:15px;
+    background:rgba(255,255,255,.22);
     display:flex; align-items:center; justify-content:center;
-    font-size:1.15rem; margin-bottom:13px;
+    font-size:1.35rem; color:#fff;
+    position:relative; z-index:1;
+    transition:transform .2s;
+}
+.rd-mod-card:hover .rd-mod-icon-wrap { transform:scale(1.08); }
+/* Body */
+.rd-mod-body {
+    padding:15px 17px 12px;
+    flex:1;
+    display:flex;
+    flex-direction:column;
 }
 .rd-mod-name {
     font-weight:700; font-size:.88rem; color:#0f172a;
-    margin-bottom:5px; line-height:1.3;
+    margin-bottom:4px; line-height:1.3;
 }
 .rd-mod-desc {
-    font-size:.74rem; color:#94a3b8; line-height:1.45;
+    font-size:.73rem; color:#94a3b8; line-height:1.45; flex:1;
 }
-.rd-mod-arrow {
-    position:absolute; top:16px; right:15px;
-    font-size:.88rem; transition:transform .18s, color .18s;
-    color:#cbd5e1;
+/* Footer */
+.rd-mod-footer {
+    padding:9px 17px;
+    border-top:1px solid #f1f5f9;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
 }
-.rd-mod-card:hover .rd-mod-arrow { transform:translate(2px,-2px); }
+.rd-mod-open {
+    font-size:.71rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em;
+    display:flex; align-items:center; gap:5px;
+    transition:gap .18s;
+}
+.rd-mod-card:hover .rd-mod-open { gap:9px; }
+.rd-mod-open i { font-size:.78rem; transition:transform .18s; }
+.rd-mod-card:hover .rd-mod-open i { transform:translateX(2px); }
+/* remove old topbar remnant */
+.rd-mod-topbar { display:none; }
 
 /* ── Empty ──────────────────────────────────────────────────── */
 .rd-empty {
@@ -171,11 +211,12 @@
 .rd-empty-sub  { font-size:.8rem; color:#94a3b8; }
 
 /* ── Dark mode ──────────────────────────────────────────────── */
-[data-bs-theme="dark"] .rd-mod-card,
-[data-bs-theme="dark"] .rd-empty { background:#1e293b; border-color:#334155; }
-[data-bs-theme="dark"] .rd-mod-name  { color:#f1f5f9; }
-[data-bs-theme="dark"] .rd-mod-title { color:#f1f5f9; }
-[data-bs-theme="dark"] .rd-mod-count { background:#334155; color:#94a3b8; }
+[data-bs-theme="dark"] .rd-mod-card   { background:#1e293b; }
+[data-bs-theme="dark"] .rd-mod-footer { border-color:#334155; }
+[data-bs-theme="dark"] .rd-empty      { background:#1e293b; border-color:#334155; }
+[data-bs-theme="dark"] .rd-mod-name   { color:#f1f5f9; }
+[data-bs-theme="dark"] .rd-mod-title  { color:#f1f5f9; }
+[data-bs-theme="dark"] .rd-mod-count  { background:#334155; color:#94a3b8; }
 </style>
 @endpush
 
@@ -222,8 +263,8 @@
         'procurement'        => 'admin.procurement.index',
         'vendors'            => 'admin.vendors.index',
         'sales'              => 'admin.sales.index',
-        'reports'            => 'admin.reports.index',
-        'report_center'      => 'admin.report-center.index',
+        'reports'            => 'admin.reports.financial-summary',
+        'report_center'      => 'admin.reports.center',
         'documents'          => 'documents.index',
         'questions'          => 'questions.index',
         'queue'              => 'admin.queue.index',
@@ -339,18 +380,28 @@
         $url = ($key && Route::has($key)) ? route($key) : '#';
     @endphp
     <a href="{{ $url }}" class="rd-mod-card">
-        <div class="rd-mod-topbar" style="background:{{ $s['bar'] }};"></div>
-
-        <div class="rd-mod-icon-wrap" style="background:{{ $s['bg'] }};">
-            <i class="bi bi-{{ $svc->icon }}" style="color:{{ $s['color'] }};"></i>
+        {{-- Gradient header --}}
+        <div class="rd-mod-header-section" style="background:{{ $s['bar'] }};">
+            <div class="rd-mod-icon-wrap">
+                <i class="bi bi-{{ $svc->icon }}"></i>
+            </div>
         </div>
 
-        <div class="rd-mod-name">{{ $svc->service_name }}</div>
-        @if($svc->description)
-            <div class="rd-mod-desc">{{ $svc->description }}</div>
-        @endif
+        {{-- Body --}}
+        <div class="rd-mod-body">
+            <div class="rd-mod-name">{{ $svc->service_name }}</div>
+            @if($svc->description)
+                <div class="rd-mod-desc">{{ Str::limit($svc->description, 60) }}</div>
+            @endif
+        </div>
 
-        <i class="bi bi-arrow-up-right rd-mod-arrow" style="color:{{ $s['color'] }};"></i>
+        {{-- Footer --}}
+        <div class="rd-mod-footer">
+            <span class="rd-mod-open" style="color:{{ $s['color'] }};">
+                Open <i class="bi bi-arrow-right"></i>
+            </span>
+            <span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:{{ $s['color'] }};opacity:.35;"></span>
+        </div>
     </a>
     @endforeach
 </div>
@@ -368,12 +419,5 @@
     setTimeout(tick,1000);
 })();
 
-/* Reveal top-bar on card hover */
-document.querySelectorAll('.rd-mod-card').forEach(card=>{
-    const bar=card.querySelector('.rd-mod-topbar');
-    if(!bar) return;
-    card.addEventListener('mouseenter',()=>bar.style.opacity='1');
-    card.addEventListener('mouseleave',()=>bar.style.opacity='0');
-});
 </script>
 @endpush
