@@ -127,13 +127,22 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'manager';
     }
 
+    /**
+     * True for any role that should access the admin area
+     * (everyone except the basic 'employee' role).
+     */
+    public function hasAdminAccess(): bool
+    {
+        return !empty($this->role) && $this->role !== 'employee';
+    }
+
     public function getDashboardRoute(): string
     {
         return match($this->role) {
             'super_admin', 'admin' => route('admin.dashboard'),
             'manager'              => route('admin.manager.dashboard'),
             'employee'             => route('employee.dashboard'),
-            default                => route('admin.dashboard'),
+            default                => route('admin.role-dashboard'),
         };
     }
 }

@@ -840,7 +840,7 @@
         {{-- Nav Items --}}
         <div class="sidebar-nav">
             @php $svcUser = auth()->user(); @endphp
-            @if($svcUser->isAdmin() || $svcUser->isManager())
+            @if($svcUser->hasAdminAccess())
 
                 {{-- Personal workspace for managers and admins who are also employees --}}
                 @if($svcUser->isManager() || $svcUser->employee)
@@ -1272,7 +1272,7 @@
             </div>
 
             {{-- Global Search --}}
-            @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+            @if(auth()->user()->hasAdminAccess())
             <div class="position-relative d-none d-lg-flex ms-2" style="width:260px;" id="globalSearchWrapper">
                 <div class="input-group" style="height:34px;">
                     <span class="input-group-text border-end-0" style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-radius:10px 0 0 10px; padding:0 10px;">
@@ -1637,7 +1637,7 @@
                 }
             });
 
-        @if(auth()->user()->isAdmin() || auth()->user()->isManager())
+        @if(auth()->user()->hasAdminAccess())
         Echo.private('fraud-alerts')
             .listen('FraudAlertCreated', function (e) {
                 loadNotifications();

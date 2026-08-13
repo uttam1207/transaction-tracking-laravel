@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\RoleDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\TransactionController;
@@ -156,6 +157,9 @@ Route::prefix('admin')
 
     // Manager Dashboard
     Route::get('/manager-dashboard', [ManagerDashboardController::class, 'index'])->name('manager.dashboard');
+
+    // Role-specific Dashboard (auditor, viewer, veterinarian, custom roles, etc.)
+    Route::get('/role-dashboard', [RoleDashboardController::class, 'index'])->name('role-dashboard');
 
     // User Management
     Route::resource('users', UserController::class);
