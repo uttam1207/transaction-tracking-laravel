@@ -896,8 +896,13 @@
                     <i class="bi bi-chevron-down nav-group-chevron"></i>
                 </button>
                 <div id="grpErp" class="nav-group-collapse collapse {{ $isErpActive ? 'show' : '' }}">
-                    @if(!$svcUser->isManager())
+                    @if($svcUser->isAdmin())
                     <a href="{{ route('admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
+                        <span class="nav-label">Dashboard</span>
+                    </a>
+                    @elseif(!$svcUser->isManager())
+                    <a href="{{ route('admin.role-dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.role-dashboard') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                         <span class="nav-label">Dashboard</span>
                     </a>

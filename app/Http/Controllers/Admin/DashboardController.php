@@ -23,6 +23,14 @@ class DashboardController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
+
+        // This dashboard is for super_admin and admin only.
+        // All other roles have their own dashboard — redirect them there.
+        if (!$user->isAdmin()) {
+            return redirect($user->getDashboardRoute());
+        }
+
         $stats              = $this->dashboardService->getAdminStats();
         $transactionChart   = $this->dashboardService->getTransactionChartData(30);
         $attendanceChart    = $this->dashboardService->getAttendanceChartData(30);
