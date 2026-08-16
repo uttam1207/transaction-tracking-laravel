@@ -1319,6 +1319,10 @@
 
             {{-- Global Search --}}
             @if(auth()->user()->hasAdminAccess())
+            {{-- Mobile search trigger (icon button, hidden on lg+) --}}
+            <button class="topbar-action-btn d-lg-none" id="mobileSearchBtn" title="Search">
+                <i class="bi bi-search" style="font-size:.9rem;"></i>
+            </button>
             <div class="position-relative d-none d-lg-block ms-2" style="width:280px;" id="globalSearchWrapper">
                 <div class="input-group" style="height:36px;">
                     <span class="input-group-text border-end-0" style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-radius:10px 0 0 10px; padding:0 10px;">
@@ -1417,6 +1421,29 @@
                     </ul>
                 </div>
             </div>
+
+            @if(auth()->user()->hasAdminAccess())
+            {{-- Mobile Search Overlay (covers the topbar on small screens) --}}
+            <div id="mobileSearchOverlay"
+                 style="display:none; position:absolute; inset:0; background:var(--bs-body-bg);
+                        z-index:200; padding:0 14px; align-items:center; gap:10px;
+                        border-bottom:1px solid var(--bs-border-color);">
+                <i class="bi bi-search" style="color:#9ca3af; font-size:.88rem; flex-shrink:0;"></i>
+                <input type="text" id="mobileGlobalSearch" autocomplete="off"
+                       style="flex:1; border:none; background:transparent; outline:none; font-size:.88rem; color:inherit;"
+                       placeholder="Search animals, transactions, documents…">
+                <button id="mobileSearchClose"
+                        style="background:none; border:none; color:#9ca3af; font-size:1rem; cursor:pointer; padding:4px 6px; flex-shrink:0; line-height:1;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+                {{-- Results dropdown (full width, below overlay) --}}
+                <div id="mobileSearchDropdown"
+                     style="display:none; position:absolute; top:100%; left:0; right:0;
+                            background:#fff; border-radius:0 0 14px 14px; border:1px solid #e5e7eb;
+                            border-top:none; box-shadow:0 8px 32px rgba(0,0,0,.13);
+                            max-height:380px; overflow-y:auto; z-index:9999;"></div>
+            </div>
+            @endif
         </header>
 
         <!-- Page Content -->
@@ -1647,49 +1674,73 @@
     loadNotifications();
     setInterval(loadNotifications, 60000);
 
-    // ── Global Search ────────────────────────────────────────────────────────
-    const searchInput = document.getElementById('globalSearch');
-    const searchDropdown = document.getElementById('searchDropdown');
-    let searchTimer;
+    // ── Global Search (shared function for desktop + mobile) ─────────────────
+    const colorVars = { primary:'#4f46e5', success:'#059669', info:'#0891b2', warning:'#d97706', danger:'#dc2626', secondary:'#6b7280' };
 
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            clearTimeout(searchTimer);
+    function buildSearchResults(res) {
+        if (!res.results || !res.results.length) {
+            return '<div style="padding:14px 16px;color:#9ca3af;font-size:.8rem;text-align:center;">No results found</div>';
+        }
+        return res.results.map((r, i) => {
+            const clr = colorVars[r.color] || '#6b7280';
+            const isLast = i === res.results.length - 1;
+            return `<a href="${r.url}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;text-decoration:none;color:#111827;${isLast?'':'border-bottom:1px solid #f3f4f6;'}transition:background .15s;"
+                       onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">`
+                + `<span style="color:${clr};margin-top:2px;flex-shrink:0;"><i class="bi bi-${r.icon}" style="font-size:1.05rem;"></i></span>`
+                + `<div style="min-width:0;">`
+                + `<div style="font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.title}</div>`
+                + `<div style="font-size:.7rem;color:#9ca3af;margin-top:1px;">${r.type} &middot; ${r.subtitle}</div>`
+                + `</div></a>`;
+        }).join('');
+    }
+
+    function wireSearch(inputEl, dropdownEl, wrapperEl) {
+        if (!inputEl || !dropdownEl) return;
+        let timer;
+        inputEl.addEventListener('input', function () {
+            clearTimeout(timer);
             const q = this.value.trim();
-            if (q.length < 2) { searchDropdown.style.display = 'none'; return; }
-
-            searchTimer = setTimeout(() => {
+            if (q.length < 2) { dropdownEl.style.display = 'none'; return; }
+            timer = setTimeout(() => {
                 $.get('/admin/search', { q }, function (res) {
-                    if (!res.results || !res.results.length) {
-                        searchDropdown.innerHTML = '<div style="padding:14px 16px;color:#9ca3af;font-size:.8rem;text-align:center;">No results found</div>';
-                    } else {
-                        const colorVars = { primary:'#4f46e5', success:'#059669', info:'#0891b2', warning:'#d97706', danger:'#dc2626', secondary:'#6b7280' };
-                        searchDropdown.innerHTML = res.results.map((r, i) => {
-                            const clr = colorVars[r.color] || '#6b7280';
-                            const isLast = i === res.results.length - 1;
-                            return `<a href="${r.url}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;text-decoration:none;color:#111827;${isLast?'':'border-bottom:1px solid #f3f4f6;'}transition:background .15s;"
-                                   onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">`
-                                + `<span style="color:${clr};margin-top:2px;flex-shrink:0;"><i class="bi bi-${r.icon}" style="font-size:1.05rem;"></i></span>`
-                                + `<div style="min-width:0;">`
-                                + `<div style="font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.title}</div>`
-                                + `<div style="font-size:.7rem;color:#9ca3af;margin-top:1px;">${r.type} &middot; ${r.subtitle}</div>`
-                                + `</div></a>`;
-                        }).join('');
-                    }
-                    searchDropdown.style.display = 'block';
-                }).fail(() => { searchDropdown.style.display = 'none'; });
+                    dropdownEl.innerHTML = buildSearchResults(res);
+                    dropdownEl.style.display = 'block';
+                }).fail(() => { dropdownEl.style.display = 'none'; });
             }, 300);
         });
-
+        inputEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { dropdownEl.style.display = 'none'; this.value = ''; }
+        });
         document.addEventListener('click', function (e) {
-            if (!document.getElementById('globalSearchWrapper')?.contains(e.target)) {
-                searchDropdown.style.display = 'none';
-            }
+            if (wrapperEl && !wrapperEl.contains(e.target)) dropdownEl.style.display = 'none';
         });
+    }
 
-        searchInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape') { searchDropdown.style.display = 'none'; this.value = ''; }
+    // Desktop search
+    wireSearch(
+        document.getElementById('globalSearch'),
+        document.getElementById('searchDropdown'),
+        document.getElementById('globalSearchWrapper')
+    );
+
+    // Mobile search overlay
+    const mobileSearchBtn     = document.getElementById('mobileSearchBtn');
+    const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+    const mobileSearchClose   = document.getElementById('mobileSearchClose');
+    const mobileSearchInput   = document.getElementById('mobileGlobalSearch');
+    const mobileSearchDrop    = document.getElementById('mobileSearchDropdown');
+
+    if (mobileSearchBtn && mobileSearchOverlay) {
+        mobileSearchBtn.addEventListener('click', () => {
+            mobileSearchOverlay.style.display = 'flex';
+            mobileSearchInput?.focus();
         });
+        mobileSearchClose?.addEventListener('click', () => {
+            mobileSearchOverlay.style.display = 'none';
+            if (mobileSearchDrop) mobileSearchDrop.style.display = 'none';
+            if (mobileSearchInput) mobileSearchInput.value = '';
+        });
+        wireSearch(mobileSearchInput, mobileSearchDrop, mobileSearchOverlay);
     }
     setInterval(loadNotifications, 30000);
 
