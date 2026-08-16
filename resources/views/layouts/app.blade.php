@@ -916,6 +916,15 @@
                     $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
                     $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
+
+                    // Permission flags — used to hide entire groups/sub-titles when no access
+                    $can = fn($k) => \App\Models\ServicePermission::canAccess($k, $svcUser);
+                    $hasPeople       = $can('users') || $can('employees') || $can('salaries');
+                    $hasWorkTracking = $can('attendance') || $can('tasks') || $can('work_reports') || $can('timesheets') || $can('teams') || $can('shifts');
+                    $hasOrganisation = $can('departments') || $can('holidays') || $can('projects');
+                    $hasReportsSystem= $can('reports') || $can('queue') || $can('settings') || $can('wallets') || $svcUser->isSuperAdmin();
+                    $hasHr           = $hasPeople || $hasWorkTracking || $hasOrganisation || $hasReportsSystem;
+                    $hasCrm          = $can('contacts') || $can('crm') || $can('franchise') || $can('procurement') || $can('vendors') || $can('sales');
                 @endphp
 
                 {{-- ══════════════════════════════════════════
@@ -1044,6 +1053,7 @@
                 {{-- ══════════════════════════════════════════
                      GROUP 2 — HR (Employee Management)
                 ══════════════════════════════════════════ --}}
+                @if($hasHr)
                 <button class="nav-group-btn {{ $isHrActive ? '' : 'collapsed' }}"
                         data-bs-toggle="collapse" data-bs-target="#grpHr"
                         aria-expanded="{{ $isHrActive ? 'true' : 'false' }}">
@@ -1056,7 +1066,7 @@
                     <i class="bi bi-chevron-down nav-group-chevron"></i>
                 </button>
                 <div id="grpHr" class="nav-group-collapse collapse {{ $isHrActive ? 'show' : '' }}">
-                    <div class="nav-sub-title">People</div>
+                    @if($hasPeople)<div class="nav-sub-title">People</div>@endif
                     @if(\App\Models\ServicePermission::canAccess('users', $svcUser))
                     <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-people"></i></span>
@@ -1075,7 +1085,7 @@
                         <span class="nav-label">Salary & Payroll</span>
                     </a>
                     @endif
-                    <div class="nav-sub-title">Work Tracking</div>
+                    @if($hasWorkTracking)<div class="nav-sub-title">Work Tracking</div>@endif
                     @if(\App\Models\ServicePermission::canAccess('attendance', $svcUser))
                     <a href="{{ route('admin.attendance.index') }}" class="sidebar-link {{ request()->routeIs('admin.attendance.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-clock-history"></i></span>
@@ -1112,7 +1122,7 @@
                         <span class="nav-label">Shifts</span>
                     </a>
                     @endif
-                    <div class="nav-sub-title">Organisation</div>
+                    @if($hasOrganisation)<div class="nav-sub-title">Organisation</div>@endif
                     @if(\App\Models\ServicePermission::canAccess('departments', $svcUser))
                     <a href="{{ route('admin.departments.index') }}" class="sidebar-link {{ request()->routeIs('admin.departments.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-building"></i></span>
@@ -1131,7 +1141,7 @@
                         <span class="nav-label">Projects</span>
                     </a>
                     @endif
-                    <div class="nav-sub-title">Reports & System</div>
+                    @if($hasReportsSystem)<div class="nav-sub-title">Reports & System</div>@endif
                     @if(\App\Models\ServicePermission::canAccess('reports', $svcUser))
                     <a href="{{ route('admin.reports.transactions') }}" class="sidebar-link {{ request()->routeIs('admin.reports.transactions') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-bar-chart"></i></span>
@@ -1164,11 +1174,13 @@
                         <span class="nav-label">Settings</span>
                     </a>
                     @endif
-                    @if($svcUser->isSuperAdmin())
+                    @if(\App\Models\ServicePermission::canAccess('wallets', $svcUser))
                     <a href="{{ route('admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('admin.wallets.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-wallet2"></i></span>
                         <span class="nav-label">Wallet</span>
                     </a>
+                    @endif
+                    @if($svcUser->isSuperAdmin())
                     <a href="{{ route('admin.roles.index') }}" class="sidebar-link {{ request()->routeIs('admin.roles.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-person-badge"></i></span>
                         <span class="nav-label">Roles</span>
@@ -1180,9 +1192,12 @@
                     @endif
                 </div>
 
+                @endif {{-- hasHr --}}
+
                 {{-- ══════════════════════════════════════════
                      GROUP 3 — CRM (Customer Related)
                 ══════════════════════════════════════════ --}}
+                @if($hasCrm)
                 <button class="nav-group-btn {{ $isCrmActive ? '' : 'collapsed' }}"
                         data-bs-toggle="collapse" data-bs-target="#grpCrm"
                         aria-expanded="{{ $isCrmActive ? 'true' : 'false' }}">
@@ -1232,6 +1247,7 @@
                     </a>
                     @endif
                 </div>
+                @endif {{-- hasCrm --}}
 
             @else
 

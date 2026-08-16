@@ -392,12 +392,18 @@ Route::prefix('admin')
     Route::post('/settings/{group}', [SettingController::class, 'update'])->name('settings.update');
     Route::post('/settings/test-smtp', [SettingController::class, 'testSmtp'])->name('settings.test-smtp');
 
-    // Wallet Management & Service Permissions — Super Admin only
-    Route::middleware('role:super_admin')->group(function () {
+    // Wallet Management — accessible to roles with the 'wallets' service permission
+    Route::middleware('service:wallets')->group(function () {
         Route::get('/wallets', [WalletController::class, 'index'])->name('wallets.index');
+    });
+    // Add/freeze actions restricted to super admin only
+    Route::middleware('role:super_admin')->group(function () {
         Route::post('/wallets/{wallet}/add-money', [WalletController::class, 'addMoney'])->name('wallets.addMoney');
         Route::patch('/wallets/{wallet}/toggle-freeze', [WalletController::class, 'toggleFreeze'])->name('wallets.toggleFreeze');
+    });
 
+    // Service Permissions & Roles — Super Admin only
+    Route::middleware('role:super_admin')->group(function () {
         Route::get('/permissions', [ServicePermissionController::class, 'index'])->name('permissions.index');
         Route::post('/permissions', [ServicePermissionController::class, 'store'])->name('permissions.store');
         Route::put('/permissions/{servicePermission}', [ServicePermissionController::class, 'update'])->name('permissions.update');
