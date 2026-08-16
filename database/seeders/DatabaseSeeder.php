@@ -13,12 +13,15 @@ use Database\Seeders\HolidaySeeder;
 use Database\Seeders\TransactionSeeder;
 use Database\Seeders\ServicePermissionSeeder;
 use Database\Seeders\RoleSeeder;
+use Database\Seeders\OrganizationSeeder;
+use Database\Seeders\HRMSSeeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
         $this->call([
+            OrganizationSeeder::class,
             RolesAndPermissionsSeeder::class,
             DepartmentSeeder::class,
             UserSeeder::class,
@@ -29,6 +32,7 @@ class DatabaseSeeder extends Seeder
             TransactionSeeder::class,
             ServicePermissionSeeder::class,
             RoleSeeder::class,
+            HRMSSeeder::class,
         ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\AnimalGroup;
 use App\Models\AnimalAction;
 use App\Models\MilkEntry;
 use App\Models\BreedingRecord;
@@ -21,6 +22,7 @@ class Animal extends Model
         'animal_type',
         'name',
         'breed',
+        'group_id',       // Phase 1: normalised FK to animal_groups
         'dob',
         'born_in_farm',
         'purchase_from',
@@ -42,6 +44,14 @@ class Animal extends Model
         'current_weight' => 'decimal:2',
         'born_in_farm'   => 'boolean',
     ];
+
+    // ── Relationships ─────────────────────────────────────────────────────────
+
+    /** Phase 1: direct group FK. */
+    public function group()
+    {
+        return $this->belongsTo(AnimalGroup::class, 'group_id');
+    }
 
     public function actions()
     {
@@ -66,5 +76,25 @@ class Animal extends Model
     public function photos()
     {
         return $this->hasMany(AnimalPhoto::class);
+    }
+
+    // ── Scopes ────────────────────────────────────────────────────────────────
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'Active');
+    }
+
+    public function scopeMilking($query)
+    {
+        return $query->where('status', 'Active')
+                     ->where('pregnancy_status', '!=', 'Dry');
+    }
+
+    // ── Accessors ─────────────────────────────────────────────────────────────
+
+    public function getTodayMilkAttribute(): float
+    {
+        return (float) $this->milkEntries()->whereDate('date', today())->sum('quantity_liters');
     }
 }

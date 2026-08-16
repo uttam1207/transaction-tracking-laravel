@@ -21,6 +21,15 @@ use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ShiftController;
 use App\Http\Controllers\Admin\TeamController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\BranchController;
+use App\Http\Controllers\Admin\DesignationController;
+use App\Http\Controllers\Admin\CostCenterController;
+use App\Http\Controllers\Admin\LeaveTypeController;
+use App\Http\Controllers\Admin\LeaveBalanceController;
+use App\Http\Controllers\Admin\SalaryComponentController;
+use App\Http\Controllers\Admin\SalaryStructureController;
+use App\Http\Controllers\Admin\PerformanceReviewController;
 use App\Http\Controllers\Admin\TimesheetController;
 use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController;
 use App\Http\Controllers\Admin\WalletController;
@@ -262,10 +271,62 @@ Route::prefix('admin')
     Route::post('/timesheets/{timesheet}/reject', [TimesheetController::class, 'reject'])->name('timesheets.reject');
     Route::post('/timesheets/bulk-approve', [TimesheetController::class, 'bulkApprove'])->name('timesheets.bulk-approve');
 
-    // Team Management
-    Route::get('/teams', [TeamController::class, 'index'])->name('teams.index');
-    Route::post('/teams/assign', [TeamController::class, 'assignTeam'])->name('teams.assign');
-    Route::delete('/teams/{employee}/remove', [TeamController::class, 'removeFromTeam'])->name('teams.remove');
+    // ─── Organization (Phase 1) ────────────────────────────────────────────────
+
+    // Company — singleton profile page
+    Route::get('/company',      [CompanyController::class, 'index'])->name('company.index');
+    Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
+    Route::put('/company',      [CompanyController::class, 'update'])->name('company.update');
+
+    // Branches
+    Route::resource('branches', BranchController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    // Team Management (Phase 1 — full CRUD + member management)
+    Route::get('/teams',                               [TeamController::class, 'index'])->name('teams.index');
+    Route::post('/teams',                              [TeamController::class, 'store'])->name('teams.store');
+    Route::put('/teams/{team}',                        [TeamController::class, 'update'])->name('teams.update');
+    Route::delete('/teams/{team}',                     [TeamController::class, 'destroy'])->name('teams.destroy');
+    Route::post('/teams/{team}/members',               [TeamController::class, 'addMembers'])->name('teams.members.add');
+    Route::delete('/teams/{team}/members/{employee}',  [TeamController::class, 'removeMember'])->name('teams.members.remove');
+
+    // Designations
+    Route::resource('designations', DesignationController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
+
+    // Cost Centers
+    Route::resource('cost-centers', CostCenterController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['cost-centers' => 'costCenter']);
+
+    // ─── HRMS V2 (Phase 2) ────────────────────────────────────────────────
+
+    // Leave Types
+    Route::resource('leave-types', LeaveTypeController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['leave-types' => 'leaveType']);
+
+    // Leave Balances
+    Route::get('/leave-balances',                    [LeaveBalanceController::class, 'index'])->name('leave-balances.index');
+    Route::post('/leave-balances/bulk-allocate',     [LeaveBalanceController::class, 'store'])->name('leave-balances.bulk-allocate');
+    Route::patch('/leave-balances/{leaveBalance}',   [LeaveBalanceController::class, 'adjust'])->name('leave-balances.adjust');
+
+    // Salary Components
+    Route::resource('salary-components', SalaryComponentController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['salary-components' => 'salaryComponent']);
+
+    // Salary Structures
+    Route::resource('salary-structures', SalaryStructureController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['salary-structures' => 'salaryStructure']);
+
+    // Performance Reviews
+    Route::resource('performance-reviews', PerformanceReviewController::class)
+        ->only(['index', 'store', 'show', 'update', 'destroy'])
+        ->parameters(['performance-reviews' => 'performanceReview']);
+    Route::patch('/performance-reviews/{performanceReview}/submit',      [PerformanceReviewController::class, 'submit'])->name('performance-reviews.submit');
+    Route::patch('/performance-reviews/{performanceReview}/acknowledge', [PerformanceReviewController::class, 'acknowledge'])->name('performance-reviews.acknowledge');
 
     // Shift Management
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');

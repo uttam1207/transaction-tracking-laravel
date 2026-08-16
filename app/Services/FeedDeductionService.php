@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\AnimalGroup;
+use App\Models\FeedPlan;
 use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use Carbon\Carbon;
@@ -24,21 +25,26 @@ class FeedDeductionService
         $recordedBy = $recordedBy ?? 1; // fallback to system user
 
         // --- Aggregate daily feed need from all groups ---
+        // Key: inventory_item_id (int) when FK available, else "name:{feedItemName}" (string)
+        // Value: ['item' => InventoryItem|null, 'need' => float, 'label' => string]
         $feedTotals = [];
 
-        $groups = AnimalGroup::with('feedPlans')->get();
+        $groups = AnimalGroup::with(['feedPlans.inventoryItem'])->get();
         foreach ($groups as $group) {
             if ($group->head_count <= 0) {
                 continue;
             }
             foreach ($group->feedPlans as $plan) {
                 $dailyNeed = (float) $group->head_count * (float) $plan->quantity_per_animal_kg;
-                $name      = $plan->feed_item_name;
 
-                if (!isset($feedTotals[$name])) {
-                    $feedTotals[$name] = 0;
+                // Prefer inventory_item_id FK; fall back to name-based key
+                $item = $plan->resolveInventoryItem();
+                $key  = $item ? "id:{$item->id}" : "name:{$plan->feed_item_name}";
+
+                if (!isset($feedTotals[$key])) {
+                    $feedTotals[$key] = ['item' => $item, 'need' => 0, 'label' => $plan->effective_feed_name];
                 }
-                $feedTotals[$name] += $dailyNeed;
+                $feedTotals[$key]['need'] += $dailyNeed;
             }
         }
 
@@ -47,16 +53,16 @@ class FeedDeductionService
         $notFound  = [];
         $noStock   = [];
 
-        foreach ($feedTotals as $feedName => $dailyNeed) {
+        foreach ($feedTotals as $entry) {
+            $dailyNeed = $entry['need'];
+            $feedName  = $entry['label'];
+            $item      = $entry['item'];
+
             if ($dailyNeed <= 0) {
                 continue;
             }
 
-            // Resolve inventory item (exact → partial → first-word)
-            $item = InventoryItem::where('name', $feedName)->first()
-                ?? InventoryItem::where('name', 'like', "%{$feedName}%")->first()
-                ?? InventoryItem::where('name', 'like', '%' . strtok($feedName, ' ') . '%')->first();
-
+            // Item not resolved by FK or name matching
             if (!$item) {
                 $notFound[] = [
                     'feed_name'  => $feedName,
@@ -88,15 +94,15 @@ class FeedDeductionService
             $deductQty = min($dailyNeed, $available);
 
             StockMovement::create([
-                'inventory_item_id'  => $item->id,
-                'type'               => 'out',
-                'quantity'           => $deductQty,
-                'date'               => $today,
-                'source_purpose'     => 'Feed',
-                'issued_to_or_vendor'=> 'Feed Yard',
-                'reason'             => 'Daily Feed Deduction',
-                'remarks'            => "Auto-deducted for " . now()->format('d M Y') . ". Required: {$dailyNeed} {$item->unit}, Deducted: {$deductQty} {$item->unit}.",
-                'recorded_by'        => $recordedBy,
+                'inventory_item_id'   => $item->id,
+                'type'                => 'out',
+                'quantity'            => $deductQty,
+                'date'                => $today,
+                'source_purpose'      => 'Feed',
+                'issued_to_or_vendor' => 'Feed Yard',
+                'reason'              => 'Daily Feed Deduction',
+                'remarks'             => "Auto-deducted for " . now()->format('d M Y') . ". Required: {$dailyNeed} {$item->unit}, Deducted: {$deductQty} {$item->unit}.",
+                'recorded_by'         => $recordedBy,
             ]);
 
             if ($available < $dailyNeed) {
@@ -133,24 +139,25 @@ class FeedDeductionService
     public function getTodayDeductionStatus(): array
     {
         $today  = Carbon::today()->toDateString();
-        $groups = AnimalGroup::with('feedPlans')->get();
+        $groups = AnimalGroup::with(['feedPlans.inventoryItem'])->get();
 
         $feedTotals = [];
         foreach ($groups as $group) {
             foreach ($group->feedPlans as $plan) {
-                $name = $plan->feed_item_name;
-                if (!isset($feedTotals[$name])) {
-                    $feedTotals[$name] = 0;
+                $item = $plan->resolveInventoryItem();
+                $key  = $item ? "id:{$item->id}" : "name:{$plan->feed_item_name}";
+                if (!isset($feedTotals[$key])) {
+                    $feedTotals[$key] = ['item' => $item, 'need' => 0, 'label' => $plan->effective_feed_name];
                 }
-                $feedTotals[$name] += (float) $group->head_count * (float) $plan->quantity_per_animal_kg;
+                $feedTotals[$key]['need'] += (float) $group->head_count * (float) $plan->quantity_per_animal_kg;
             }
         }
 
         $status = [];
-        foreach ($feedTotals as $feedName => $dailyNeed) {
-            $item = InventoryItem::where('name', $feedName)->first()
-                ?? InventoryItem::where('name', 'like', "%{$feedName}%")->first()
-                ?? InventoryItem::where('name', 'like', '%' . strtok($feedName, ' ') . '%')->first();
+        foreach ($feedTotals as $entry) {
+            $feedName  = $entry['label'];
+            $dailyNeed = $entry['need'];
+            $item      = $entry['item'];
 
             $movement = $item
                 ? StockMovement::where('inventory_item_id', $item->id)
@@ -161,11 +168,11 @@ class FeedDeductionService
                 : null;
 
             $status[$feedName] = [
-                'daily_need'  => $dailyNeed,
-                'deducted'    => $movement !== null,
-                'deducted_qty'=> $movement ? (float) $movement->quantity : 0,
-                'unit'        => $item ? $item->unit : 'kg',
-                'item_found'  => $item !== null,
+                'daily_need'   => $dailyNeed,
+                'deducted'     => $movement !== null,
+                'deducted_qty' => $movement ? (float) $movement->quantity : 0,
+                'unit'         => $item ? $item->unit : 'kg',
+                'item_found'   => $item !== null,
             ];
         }
 

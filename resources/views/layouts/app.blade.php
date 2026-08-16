@@ -913,7 +913,7 @@
 
                 @php
                     $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
-                    $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*');
+                    $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.company.*') || request()->routeIs('admin.branches.*') || request()->routeIs('admin.designations.*') || request()->routeIs('admin.cost-centers.*') || request()->routeIs('admin.leave-types.*') || request()->routeIs('admin.leave-balances.*') || request()->routeIs('admin.salary-components.*') || request()->routeIs('admin.salary-structures.*') || request()->routeIs('admin.performance-reviews.*');
                     $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
 
@@ -921,7 +921,7 @@
                     $can = fn($k) => \App\Models\ServicePermission::canAccess($k, $svcUser);
                     $hasPeople       = $can('users') || $can('employees') || $can('salaries');
                     $hasWorkTracking = $can('attendance') || $can('tasks') || $can('work_reports') || $can('timesheets') || $can('teams') || $can('shifts');
-                    $hasOrganisation = $can('departments') || $can('holidays') || $can('projects');
+                    $hasOrganisation = $can('departments') || $can('holidays') || $can('projects') || in_array($svcUser->role, ['super_admin', 'admin']);
                     $hasReportsSystem= $can('reports') || $can('queue') || $can('settings') || $can('wallets') || $svcUser->isSuperAdmin();
                     $hasHr           = $hasPeople || $hasWorkTracking || $hasOrganisation || $hasReportsSystem;
                     $hasCrm          = $can('contacts') || $can('crm') || $can('franchise') || $can('procurement') || $can('vendors') || $can('sales');
@@ -1139,6 +1139,49 @@
                     <a href="{{ route('admin.projects.index') }}" class="sidebar-link {{ request()->routeIs('admin.projects.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-diagram-3"></i></span>
                         <span class="nav-label">Projects</span>
+                    </a>
+                    @endif
+                    {{-- Phase 1 Org links — admin & super_admin only --}}
+                    @if(in_array($svcUser->role, ['super_admin', 'admin']))
+                    <a href="{{ route('admin.company.index') }}" class="sidebar-link {{ request()->routeIs('admin.company.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-building-fill-gear"></i></span>
+                        <span class="nav-label">Company</span>
+                    </a>
+                    <a href="{{ route('admin.branches.index') }}" class="sidebar-link {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-diagram-2-fill"></i></span>
+                        <span class="nav-label">Branches</span>
+                    </a>
+                    <a href="{{ route('admin.designations.index') }}" class="sidebar-link {{ request()->routeIs('admin.designations.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-briefcase-fill"></i></span>
+                        <span class="nav-label">Designations</span>
+                    </a>
+                    <a href="{{ route('admin.cost-centers.index') }}" class="sidebar-link {{ request()->routeIs('admin.cost-centers.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cash-stack"></i></span>
+                        <span class="nav-label">Cost Centers</span>
+                    </a>
+                    @endif
+                    {{-- HRMS V2 links — admin, super_admin, hr --}}
+                    @if(in_array($svcUser->role, ['super_admin', 'admin', 'hr']))
+                    <div class="nav-sub-title">HRMS V2</div>
+                    <a href="{{ route('admin.leave-types.index') }}" class="sidebar-link {{ request()->routeIs('admin.leave-types.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-calendar-check"></i></span>
+                        <span class="nav-label">Leave Types</span>
+                    </a>
+                    <a href="{{ route('admin.leave-balances.index') }}" class="sidebar-link {{ request()->routeIs('admin.leave-balances.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-calendar2-week"></i></span>
+                        <span class="nav-label">Leave Balances</span>
+                    </a>
+                    <a href="{{ route('admin.salary-components.index') }}" class="sidebar-link {{ request()->routeIs('admin.salary-components.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-cash-coin"></i></span>
+                        <span class="nav-label">Salary Components</span>
+                    </a>
+                    <a href="{{ route('admin.salary-structures.index') }}" class="sidebar-link {{ request()->routeIs('admin.salary-structures.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-layers"></i></span>
+                        <span class="nav-label">Salary Structures</span>
+                    </a>
+                    <a href="{{ route('admin.performance-reviews.index') }}" class="sidebar-link {{ request()->routeIs('admin.performance-reviews.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-star-half"></i></span>
+                        <span class="nav-label">Performance Reviews</span>
                     </a>
                     @endif
                     @if($hasReportsSystem)<div class="nav-sub-title">Reports & System</div>@endif

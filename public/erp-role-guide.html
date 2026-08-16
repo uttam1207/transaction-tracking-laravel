@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASDairy ERP — Full System Analysis</title>
+<style>
+:root{--primary:#4f46e5;--primary-light:#eef2ff;--success:#059669;--success-light:#d1fae5;--danger:#dc2626;--danger-light:#fee2e2;--warning:#d97706;--warning-light:#fef3c7;--info:#0ea5e9;--info-light:#e0f2fe;--gray:#6b7280;--gray-light:#f9fafb;--border:#e5e7eb;--text:#111827;--text-muted:#6b7280;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f3f4f6;color:var(--text);font-size:14px;line-height:1.6;}
+a{color:var(--primary);text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+/* Header */
+.site-header{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#1e293b 100%);color:#fff;padding:40px 48px;position:relative;overflow:hidden;}
+.site-header::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.25) 0%,transparent 70%);top:-150px;right:-100px;pointer-events:none;}
+.site-header::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.15) 0%,transparent 70%);bottom:-80px;left:100px;pointer-events:none;}
+.site-header h1{font-size:2.2rem;font-weight:800;margin-bottom:8px;position:relative;}
+.site-header p{font-size:.95rem;color:rgba(255,255,255,.65);position:relative;max-width:700px;}
+.header-meta{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;position:relative;}
+.badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;font-size:.73rem;font-weight:600;}
+
+/* Nav */
+.toc{background:#fff;border-bottom:1px solid var(--border);padding:0 48px;display:flex;gap:0;overflow-x:auto;position:sticky;top:0;z-index:100;scrollbar-width:none;}
+.toc::-webkit-scrollbar{display:none;}
+.toc a{display:block;padding:14px 16px;font-size:.78rem;font-weight:600;color:var(--text-muted);white-space:nowrap;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;}
+.toc a:hover{color:var(--primary);border-color:var(--primary);text-decoration:none;}
+
+/* Layout */
+.container{max-width:1300px;margin:0 auto;padding:32px 48px;}
+@media(max-width:768px){.container{padding:20px 16px;}.site-header{padding:28px 20px;}}
+
+/* Sections */
+.section{margin-bottom:48px;}
+.section-title{font-size:1.35rem;font-weight:800;color:var(--text);margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid var(--border);display:flex;align-items:center;gap:10px;}
+.section-title .icon{width:32px;height:32px;border-radius:8px;background:var(--primary);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.9rem;flex-shrink:0;}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+.card-header{padding:14px 20px;background:var(--gray-light);border-bottom:1px solid var(--border);font-weight:700;font-size:.85rem;display:flex;align-items:center;gap:8px;}
+.card-body{padding:16px 20px;}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+@media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+
+/* Stat cards */
+.stat-card{background:#fff;border-radius:12px;border:1px solid var(--border);padding:20px;text-align:center;}
+.stat-card .num{font-size:2rem;font-weight:800;color:var(--primary);}
+.stat-card .lbl{font-size:.75rem;color:var(--text-muted);margin-top:4px;font-weight:600;}
+
+/* Module cards */
+.module-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+.module-card .mc-head{padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.module-card .mc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.module-card .mc-title{font-weight:700;font-size:.9rem;}
+.module-card .mc-sub{font-size:.72rem;color:var(--text-muted);}
+.module-card .mc-body{padding:14px 18px;font-size:.8rem;color:var(--text-muted);line-height:1.7;}
+.module-card .mc-tags{padding:0 18px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:600;}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{background:var(--gray-light);padding:10px 14px;text-align:left;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.tbl td{padding:9px 14px;border-bottom:1px solid #f3f4f6;vertical-align:top;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:#fafafa;}
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;}
+.pill-green{background:var(--success-light);color:var(--success);}
+.pill-red{background:var(--danger-light);color:var(--danger);}
+.pill-blue{background:var(--info-light);color:#0284c7;}
+.pill-yellow{background:var(--warning-light);color:var(--warning);}
+.pill-purple{background:#f3e8ff;color:#7c3aed;}
+.pill-gray{background:#f3f4f6;color:#374151;}
+
+/* Flow diagram */
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:0;margin:12px 0;}
+.flow-step{background:var(--primary-light);border:1px solid #c7d2fe;border-radius:8px;padding:8px 14px;font-size:.75rem;font-weight:600;color:#4338ca;}
+.flow-arrow{padding:0 8px;color:var(--text-muted);font-size:.9rem;}
+
+/* Role colors */
+.role-super{background:#1e1b4b;color:#fff;}
+.role-admin{background:#4f46e5;color:#fff;}
+.role-manager{background:#0284c7;color:#fff;}
+.role-hr{background:#059669;color:#fff;}
+.role-finance{background:#d97706;color:#fff;}
+.role-auditor{background:#7c3aed;color:#fff;}
+.role-employee{background:#6b7280;color:#fff;}
+.role-crm{background:#db2777;color:#fff;}
+.role-farm{background:#16a34a;color:#fff;}
+.role-viewer{background:#374151;color:#fff;}
+
+/* Permission check/x */
+.chk{color:var(--success);font-weight:700;}
+.nochk{color:#e5e7eb;font-weight:700;}
+.part{color:var(--warning);font-weight:700;}
+
+/* Code */
+code{background:#f3f4f6;border-radius:4px;padding:2px 6px;font-family:'SF Mono','Fira Code',monospace;font-size:.78rem;color:#7c3aed;}
+pre{background:#1e293b;color:#e2e8f0;border-radius:10px;padding:16px 20px;font-size:.78rem;overflow-x:auto;line-height:1.7;margin:10px 0;}
+pre code{background:none;color:inherit;padding:0;}
+
+/* Info box */
+.info-box{border-radius:10px;padding:14px 18px;margin:12px 0;font-size:.82rem;line-height:1.7;}
+.info-box.blue{background:var(--info-light);border-left:4px solid var(--info);}
+.info-box.green{background:var(--success-light);border-left:4px solid var(--success);}
+.info-box.yellow{background:var(--warning-light);border-left:4px solid var(--warning);}
+
+ul.feat{list-style:none;padding:0;margin:0;}
+ul.feat li{padding:4px 0;padding-left:20px;position:relative;font-size:.82rem;color:var(--text-muted);}
+ul.feat li::before{content:'›';position:absolute;left:0;color:var(--primary);font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<div class="site-header">
+  <h1>🏭 ASDairy ERP — Full System Analysis</h1>
+  <p>Complete technical documentation covering every module, model, service, role, and data flow in the ASDairy Enterprise Resource Planning system.</p>
+  <div class="header-meta">
+    <span class="badge">⚙️ Laravel 12</span>
+    <span class="badge">📦 56 Models</span>
+    <span class="badge">🎛 48 Controllers</span>
+    <span class="badge">🔧 7 Services</span>
+    <span class="badge">⏰ 8 Cron Jobs</span>
+    <span class="badge">🛡 10 Roles</span>
+    <span class="badge">🗄 80 Migrations</span>
+    <span class="badge">📅 Updated Aug 2026</span>
+  </div>
+</div>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<nav class="toc">
+  <a href="#overview">Overview</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#auth">Auth & Access</a>
+  <a href="#modules">All Modules</a>
+  <a href="#dairy">Dairy Farm</a>
+  <a href="#hr">HR & People</a>
+  <a href="#finance">Finance</a>
+  <a href="#crm">CRM & Sales</a>
+  <a href="#inventory">Inventory</a>
+  <a href="#models">Models</a>
+  <a href="#services">Services</a>
+  <a href="#cron">Scheduled Jobs</a>
+  <a href="#roles">Roles & Permissions</a>
+  <a href="#flows">Key Data Flows</a>
+</nav>
+
+<div class="container">
+
+<!-- ══════════════════ OVERVIEW ══════════════════ -->
+<div class="section" id="overview">
+  <div class="section-title"><span class="icon">📊</span> System Overview</div>
+
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="stat-card"><div class="num">56</div><div class="lbl">Database Models</div></div>
+    <div class="stat-card"><div class="num">48</div><div class="lbl">Admin Controllers</div></div>
+    <div class="stat-card"><div class="num">7</div><div class="lbl">Business Services</div></div>
+    <div class="stat-card"><div class="num">8</div><div class="lbl">Scheduled Commands</div></div>
+    <div class="stat-card"><div class="num">80</div><div class="lbl">DB Migrations</div></div>
+    <div class="stat-card"><div class="num">10</div><div class="lbl">User Roles</div></div>
+    <div class="stat-card"><div class="num">40+</div><div class="lbl">Permission Keys</div></div>
+    <div class="stat-card"><div class="num">5</div><div class="lbl">Middleware Layers</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">🧩 What is ASDairy ERP?</div>
+      <div class="card-body">
+        <p style="margin-bottom:10px;">ASDairy ERP is a full-featured web-based Enterprise Resource Planning system built for dairy farm businesses. It combines:</p>
+        <ul class="feat">
+          <li><strong>Dairy Farm Management</strong> — Animals, milk production, breeding, health records, feed plans</li>
+          <li><strong>HR & People Management</strong> — Employees, attendance, leaves, salaries, shifts, timesheets</li>
+          <li><strong>Financial Control</strong> — Transactions, expenses, wallets, fraud detection, audit logs</li>
+          <li><strong>Inventory Control</strong> — Items, categories, stock movements, auto-deduction</li>
+          <li><strong>CRM & Sales</strong> — Contacts, customers, franchise network, procurement, vendors, sales orders</li>
+          <li><strong>Work Tracking</strong> — Tasks, projects, work reports, team management</li>
+          <li><strong>Compliance & Maintenance</strong> — Documents, machine maintenance, compliance records</li>
+          <li><strong>Role-based Access Control</strong> — Granular per-module permissions per role</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🛠 Tech Stack</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Framework:</strong> Laravel 12 (PHP 8.3+)</li>
+          <li><strong>Frontend:</strong> Blade templates + Bootstrap 5 + Bootstrap Icons</li>
+          <li><strong>Database:</strong> MySQL (XAMPP locally, production server)</li>
+          <li><strong>Auth:</strong> Laravel built-in + 2FA (TOTP/email OTP)</li>
+          <li><strong>Queue:</strong> Laravel Queue (database driver) for background jobs</li>
+          <li><strong>Scheduler:</strong> Laravel Scheduler via cron (Linux) / Task Scheduler (Windows)</li>
+          <li><strong>Session:</strong> File-based sessions</li>
+          <li><strong>Cache:</strong> File/database cache (5-min permission cache)</li>
+          <li><strong>Storage:</strong> Local disk (documents, photos, reports)</li>
+          <li><strong>Notifications:</strong> In-app (AppNotification model) + email</li>
+          <li><strong>Deployment:</strong> Apache (XAMPP dev) / Linux production server</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ARCHITECTURE ══════════════════ -->
+<div class="section" id="architecture">
+  <div class="section-title"><span class="icon">🏗</span> System Architecture</div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-header">HTTP Request Lifecycle</div>
+    <div class="card-body">
+      <div class="flow">
+        <div class="flow-step">Browser Request</div><div class="flow-arrow">→</div>
+        <div class="flow-step">web.php Route</div><div class="flow-arrow">→</div>
+        <div class="flow-step">Middleware Stack</div><div class="flow-arrow">→</div>
+        <div class="flow-step">Controller Action</div><div class="flow-arrow">→</div>
+        <div class="flow-step">Service / Model</div><div class="flow-arrow">→</div>
+        <div class="flow-step">Blade View</div><div class="flow-arrow">→</div>
+        <div class="flow-step">HTTP Response</div>
+      </div>
+      <div style="margin-top:14px;">
+        <strong>Middleware Stack (in order):</strong>
+        <div class="flow" style="margin-top:8px;">
+          <div class="flow-step" style="background:#fee2e2;border-color:#fca5a5;color:#dc2626;">auth</div><div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:#fef3c7;border-color:#fcd34d;color:#d97706;">check.status</div><div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:#d1fae5;border-color:#6ee7b7;color:#059669;">role:{name}</div><div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:#e0f2fe;border-color:#7dd3fc;color:#0284c7;">service:{key}</div><div class="flow-arrow">→</div>
+          <div class="flow-step" style="background:#f3e8ff;border-color:#d8b4fe;color:#7c3aed;">TrackActivity</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">🗂 Directory Structure</div>
+      <div class="card-body">
+        <pre><code>app/
+├── Console/Commands/     ← 8 scheduled commands
+├── Http/
+│   ├── Controllers/
+│   │   ├── Admin/        ← 48 admin controllers
+│   │   ├── Auth/         ← Login, 2FA, Register
+│   │   ├── Employee/     ← Employee self-service
+│   │   ├── Manager/      ← Manager-specific views
+│   │   └── API/          ← REST API endpoints
+│   └── Middleware/       ← 5 custom middleware
+├── Models/               ← 56 Eloquent models
+└── Services/             ← 7 business logic services
+
+resources/views/
+├── admin/                ← 40+ module view folders
+├── auth/                 ← Login, 2FA, change-password
+├── employee/             ← Employee portal views
+├── layouts/              ← app.blade.php (main layout)
+└── emails/               ← Email templates
+
+routes/
+├── web.php               ← All web routes
+└── console.php           ← Scheduler definitions</code></pre>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🔑 Access Control System</div>
+      <div class="card-body">
+        <div class="info-box blue">
+          ASDairy uses a <strong>two-layer permission system</strong>: Role-based middleware + per-module Service Permissions stored in the database.
+        </div>
+        <ul class="feat" style="margin-top:10px;">
+          <li><strong>Layer 1 — Role Middleware:</strong> <code>middleware('role:super_admin')</code> — blocks entire route groups by role name</li>
+          <li><strong>Layer 2 — Service Permissions:</strong> <code>middleware('service:wallets')</code> — checks <code>ServicePermission</code> model for the user's role + service key</li>
+          <li><strong>Sidebar Visibility:</strong> PHP flags computed in <code>app.blade.php</code> — sections hidden when role has no access to any item in that section</li>
+          <li><strong>Cache:</strong> Permission lookups are cached for 5 minutes per key (<code>svc_perm_{key}</code>)</li>
+          <li><strong>Super Admin:</strong> Bypasses all permission checks — always returns <code>true</code></li>
+        </ul>
+        <pre style="margin-top:10px;"><code>// ServicePermission::canAccess()
+Cache::remember("svc_perm_{$key}_{$user->id}", 300,
+  fn() => DB::table('service_permissions')
+    ->where('role', $user->role)
+    ->where('service_key', $key)
+    ->where('is_enabled', 1)
+    ->exists()
+);</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ AUTH ══════════════════ -->
+<div class="section" id="auth">
+  <div class="section-title"><span class="icon">🔐</span> Authentication & Security</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">Login Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:6px;">
+          <div class="flow-step">1. POST /login → Auth\LoginController@login</div>
+          <div class="flow-step">2. Validate credentials (email + password)</div>
+          <div class="flow-step">3. Check user status (active/suspended/blacklisted)</div>
+          <div class="flow-step">4. If 2FA enabled → redirect to /2fa page</div>
+          <div class="flow-step">5. Verify OTP/TOTP code</div>
+          <div class="flow-step">6. Create session + LoginHistory record</div>
+          <div class="flow-step">7. Redirect to role dashboard</div>
+        </div>
+        <div class="info-box yellow" style="margin-top:12px;">
+          <strong>Blacklist check:</strong> Users in <code>Blacklist</code> table are denied login regardless of credentials.
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">Security Features</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>2FA:</strong> Time-based OTP or email verification code on every login</li>
+          <li><strong>Login History:</strong> Every login recorded in <code>login_histories</code> (IP, user-agent, timestamp)</li>
+          <li><strong>Activity Tracking:</strong> <code>TrackActivity</code> middleware logs page visits to <code>activity_logs</code></li>
+          <li><strong>Audit Log:</strong> CRUD operations recorded in <code>audit_logs</code></li>
+          <li><strong>Fraud Detection:</strong> <code>FraudDetectionService</code> checks transactions against rules in real-time</li>
+          <li><strong>Fraud Alerts:</strong> Suspicious transactions trigger <code>FraudAlert</code> records + admin notifications</li>
+          <li><strong>User Blacklist:</strong> Admin can blacklist users, blocking future logins</li>
+          <li><strong>Password Change:</strong> All users can change their password via <code>/change-password</code></li>
+          <li><strong>Check Status:</strong> <code>CheckUserStatus</code> middleware blocks suspended accounts on every request</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MODULES ══════════════════ -->
+<div class="section" id="modules">
+  <div class="section-title"><span class="icon">🧩</span> All Modules at a Glance</div>
+  <div class="grid-3">
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#dbeafe;color:#1d4ed8;">🐄</div>
+        <div><div class="mc-title">Dairy Farm</div><div class="mc-sub">Animals, Milk, Breeding, Health</div></div>
+      </div>
+      <div class="mc-body">Core dairy operations: animal registry, milk production tracking, breeding management, health monitoring, and daily feed deduction.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#dbeafe;color:#1d4ed8;">Animals</span>
+        <span class="tag" style="background:#dbeafe;color:#1d4ed8;">Milk Entries</span>
+        <span class="tag" style="background:#dbeafe;color:#1d4ed8;">Breeding</span>
+        <span class="tag" style="background:#dbeafe;color:#1d4ed8;">Health</span>
+        <span class="tag" style="background:#dbeafe;color:#1d4ed8;">Feed Plans</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#d1fae5;color:#065f46;">👥</div>
+        <div><div class="mc-title">HR & People</div><div class="mc-sub">Employees, Attendance, Salaries</div></div>
+      </div>
+      <div class="mc-body">Full human resource management: employee profiles, attendance tracking, leave management, salary processing, and shift scheduling.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#d1fae5;color:#065f46;">Employees</span>
+        <span class="tag" style="background:#d1fae5;color:#065f46;">Attendance</span>
+        <span class="tag" style="background:#d1fae5;color:#065f46;">Leaves</span>
+        <span class="tag" style="background:#d1fae5;color:#065f46;">Salaries</span>
+        <span class="tag" style="background:#d1fae5;color:#065f46;">Shifts</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#fef3c7;color:#92400e;">💰</div>
+        <div><div class="mc-title">Finance</div><div class="mc-sub">Transactions, Wallets, Expenses</div></div>
+      </div>
+      <div class="mc-body">Financial operations: money transactions, employee wallets, expense tracking, fraud detection, and financial audit trails.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#fef3c7;color:#92400e;">Transactions</span>
+        <span class="tag" style="background:#fef3c7;color:#92400e;">Wallets</span>
+        <span class="tag" style="background:#fef3c7;color:#92400e;">Expenses</span>
+        <span class="tag" style="background:#fef3c7;color:#92400e;">Fraud Alerts</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#f3e8ff;color:#6b21a8;">📦</div>
+        <div><div class="mc-title">Inventory</div><div class="mc-sub">Items, Stock, Movements</div></div>
+      </div>
+      <div class="mc-body">Inventory control: categorised items with type tagging, stock movement ledger (in/out), auto-deduction for feed plans, expiry tracking.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#f3e8ff;color:#6b21a8;">Items</span>
+        <span class="tag" style="background:#f3e8ff;color:#6b21a8;">Categories</span>
+        <span class="tag" style="background:#f3e8ff;color:#6b21a8;">Stock Movements</span>
+        <span class="tag" style="background:#f3e8ff;color:#6b21a8;">Auto-Deduction</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#fce7f3;color:#9d174d;">🤝</div>
+        <div><div class="mc-title">CRM & Sales</div><div class="mc-sub">Contacts, Orders, Franchise</div></div>
+      </div>
+      <div class="mc-body">Customer relationship and sales management: contacts, CRM customers, franchise network, purchase/sales orders, vendor management.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#fce7f3;color:#9d174d;">Contacts</span>
+        <span class="tag" style="background:#fce7f3;color:#9d174d;">CRM</span>
+        <span class="tag" style="background:#fce7f3;color:#9d174d;">Franchise</span>
+        <span class="tag" style="background:#fce7f3;color:#9d174d;">Sales Orders</span>
+        <span class="tag" style="background:#fce7f3;color:#9d174d;">Vendors</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#e0f2fe;color:#075985;">📋</div>
+        <div><div class="mc-title">Work Tracking</div><div class="mc-sub">Tasks, Projects, Reports</div></div>
+      </div>
+      <div class="mc-body">Productivity tracking: task assignment with comments, project management, daily work reports, timesheet submissions, and team organisation.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#e0f2fe;color:#075985;">Tasks</span>
+        <span class="tag" style="background:#e0f2fe;color:#075985;">Projects</span>
+        <span class="tag" style="background:#e0f2fe;color:#075985;">Work Reports</span>
+        <span class="tag" style="background:#e0f2fe;color:#075985;">Timesheets</span>
+        <span class="tag" style="background:#e0f2fe;color:#075985;">Teams</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#fee2e2;color:#991b1b;">🔧</div>
+        <div><div class="mc-title">Maintenance</div><div class="mc-sub">Machine Upkeep & Compliance</div></div>
+      </div>
+      <div class="mc-body">Asset management: machine maintenance schedules and records, compliance documents (certificates, licenses), expiry tracking and alerts.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#fee2e2;color:#991b1b;">Maintenance</span>
+        <span class="tag" style="background:#fee2e2;color:#991b1b;">Compliance</span>
+        <span class="tag" style="background:#fee2e2;color:#991b1b;">Documents</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#f0fdf4;color:#166534;">📊</div>
+        <div><div class="mc-title">Reports & Analytics</div><div class="mc-sub">Report Center, Exports</div></div>
+      </div>
+      <div class="mc-body">Centralised reporting: monthly report generation, export to PDF/Excel, report center for cross-module analytics and audit trail views.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#f0fdf4;color:#166534;">Report Center</span>
+        <span class="tag" style="background:#f0fdf4;color:#166534;">Monthly Reports</span>
+        <span class="tag" style="background:#f0fdf4;color:#166534;">Exports</span>
+      </div>
+    </div>
+
+    <div class="module-card">
+      <div class="mc-head">
+        <div class="mc-icon" style="background:#f5f3ff;color:#4c1d95;">⚙️</div>
+        <div><div class="mc-title">System & Settings</div><div class="mc-sub">Users, Roles, Permissions</div></div>
+      </div>
+      <div class="mc-body">System administration: user management, role assignment, per-module service permissions, application settings, queue monitoring, notifications.</div>
+      <div class="mc-tags">
+        <span class="tag" style="background:#f5f3ff;color:#4c1d95;">Users</span>
+        <span class="tag" style="background:#f5f3ff;color:#4c1d95;">Roles</span>
+        <span class="tag" style="background:#f5f3ff;color:#4c1d95;">Permissions</span>
+        <span class="tag" style="background:#f5f3ff;color:#4c1d95;">Settings</span>
+        <span class="tag" style="background:#f5f3ff;color:#4c1d95;">Queue Monitor</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ DAIRY FARM MODULE ══════════════════ -->
+<div class="section" id="dairy">
+  <div class="section-title"><span class="icon">🐄</span> Dairy Farm Module</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">🐄 Animals</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Animal</code> — tag_no, name, animal_id, rfid, animal_type, breed_id, group_id, dob, source, status, notes</li>
+          <li><strong>Animal Types:</strong> Cow, Buffalo, Calf, Bull, Heifer (configurable)</li>
+          <li><strong>Grouping:</strong> Assigned to <code>AnimalGroup</code> (used in feed plans)</li>
+          <li><strong>Breeds:</strong> <code>Breed</code> model with name + description</li>
+          <li><strong>Photos:</strong> Multiple photos per animal via <code>AnimalPhoto</code></li>
+          <li><strong>Actions:</strong> Logged events (vaccination, treatment, etc.) via <code>AnimalAction</code> + <code>ActionType</code></li>
+          <li><strong>Sources:</strong> Born on farm, purchased, transferred — tracked with source fields</li>
+          <li><strong>RFID:</strong> Optional RFID tag field for physical tagging</li>
+        </ul>
+        <div class="info-box blue">Controller: <code>Admin\AnimalController</code> — full CRUD + photo upload + action log</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🥛 Milk Production</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>MilkEntry</code> — animal_id, date, session (morning/evening), quantity_litres, clr_value, entry_type, shed</li>
+          <li><strong>Sessions:</strong> Morning and Evening entries per animal per day</li>
+          <li><strong>CLR Value:</strong> Corrected Lactation Record — milk quality metric</li>
+          <li><strong>Entry Types:</strong> Individual animal entry or shed-level batch entry</li>
+          <li><strong>Reports:</strong> Daily/monthly production summaries, per-animal trends</li>
+          <li><strong>Controller:</strong> <code>Admin\MilkController</code></li>
+        </ul>
+        <div class="info-box green">Milk data feeds into Farm Records for overall dairy performance tracking.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🧬 Breeding</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>BreedingRecord</code> — animal_id, date, method (AI/natural), bull_breed, expected_calving, status (pregnant/not_pregnant/calved/aborted), certificate_path</li>
+          <li><strong>Status Tracking:</strong> Tracks pregnancy status and outcome</li>
+          <li><strong>Documents:</strong> Certificate file upload per record</li>
+          <li><strong>Controller:</strong> <code>Admin\BreedingController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🏥 Health Records</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>HealthRecord</code> — animal_id, date, type (vaccination/treatment/checkup/deworming), description, vet_name, cost, report_path, next_due</li>
+          <li><strong>Report Upload:</strong> PDF/image reports per health event</li>
+          <li><strong>Next Due:</strong> Tracks when next treatment/vaccination is due</li>
+          <li><strong>Alerts:</strong> <code>SendDairyAlerts</code> cron sends reminders for upcoming due dates</li>
+          <li><strong>Controller:</strong> <code>Admin\HealthController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🌾 Feed Plans & Auto-Deduction</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Models:</strong> <code>FeedPlan</code>, <code>AnimalGroup</code>, <code>InventoryItem</code></li>
+          <li><strong>Feed Plan:</strong> Defines daily quantity of an inventory item per animal in a group</li>
+          <li><strong>Service:</strong> <code>FeedDeductionService::runDeduction()</code></li>
+          <li><strong>Logic:</strong> AnimalGroup × active FeedPlans → daily need per item → check stock → create StockMovement (type=out)</li>
+          <li><strong>Duplicate Guard:</strong> Skips items already deducted today (checks existing StockMovement)</li>
+          <li><strong>Partial Stock:</strong> Deducts available amount if stock &lt; required, flags as partial</li>
+          <li><strong>Cron:</strong> <code>dairy:feed-deduction</code> runs daily at 06:00</li>
+          <li><strong>Manual Run:</strong> "Run Daily Deduction" button in Feed Calculator UI</li>
+          <li><strong>History:</strong> <code>/admin/feed/deductions</code> — filterable log grouped by date</li>
+        </ul>
+        <pre><code>FeedDeductionService::runDeduction()
+  └─ foreach AnimalGroup
+      └─ foreach FeedPlan (item + qty/animal/day)
+          ├─ dailyNeed = qty × group.animal_count
+          ├─ check StockMovement for today (skip if exists)
+          ├─ deductQty = min(dailyNeed, available_stock)
+          └─ create StockMovement (type=out, source_purpose=Feed)</code></pre>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🌾 Farm Records</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>FarmRecord</code> — date, total_milk, total_animals, notes, recorded_by</li>
+          <li><strong>Purpose:</strong> Daily farm-level summary record linking milk production and animal count</li>
+          <li><strong>Controller:</strong> <code>Admin\FarmController</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ HR MODULE ══════════════════ -->
+<div class="section" id="hr">
+  <div class="section-title"><span class="icon">👥</span> HR & People Module</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">👤 Employees</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Employee</code> — user_id, employee_code, department_id, designation, joining_date, shift_id, status</li>
+          <li><strong>Link to User:</strong> Each employee is linked to a <code>User</code> account for portal access</li>
+          <li><strong>Departments:</strong> <code>Department</code> model — name, head, description</li>
+          <li><strong>Designations:</strong> Free-text designation field on employee</li>
+          <li><strong>Controller:</strong> <code>Admin\EmployeeController</code></li>
+          <li><strong>Employee Portal:</strong> <code>Employee\</code> controllers for self-service (own attendance, tasks, profile)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">⏰ Attendance</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Attendance</code> — employee_id, date, status (present/absent/late/half-day), check_in, check_out, hours_worked</li>
+          <li><strong>Leaves:</strong> <code>Leave</code> model — employee_id, from_date, to_date, type, reason, status (pending/approved/rejected)</li>
+          <li><strong>Leave Approval:</strong> Manager/HR approves via <code>Admin\AttendanceController@approveLeave</code></li>
+          <li><strong>Report:</strong> Attendance report with date range filter</li>
+          <li><strong>Reminder:</strong> <code>SendAttendanceReminders</code> cron sends daily reminders</li>
+          <li><strong>Service:</strong> <code>AttendanceService</code> — handles mark/unmark logic</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">💵 Salaries</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>EmployeeSalary</code> — employee_id, month, year, basic_salary, allowances, deductions, net_salary, payment_date, status, notes</li>
+          <li><strong>Monthly Processing:</strong> Salary records created per employee per month</li>
+          <li><strong>Deductions:</strong> Manual deduction fields (late days, leaves, etc.)</li>
+          <li><strong>Allowances:</strong> Additional pay components</li>
+          <li><strong>Controller:</strong> <code>Admin\SalaryController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🕐 Shifts & Timesheets</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Shift Model:</strong> <code>Shift</code> — name, start_time, end_time, days (JSON array of weekdays)</li>
+          <li><strong>Employees are assigned a shift</strong> — used for attendance validation and reminders</li>
+          <li><strong>Timesheet Model:</strong> <code>Timesheet</code> — employee_id, date, project_id, task_id, hours, description</li>
+          <li><strong>Purpose:</strong> Detailed hour logging per project/task per day</li>
+          <li><strong>Controllers:</strong> <code>Admin\ShiftController</code>, <code>Admin\TimesheetController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📅 Holidays</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Holiday</code> — name, date, type (national/optional/company)</li>
+          <li><strong>Used for:</strong> Attendance calculations, leave deduction rules</li>
+          <li><strong>Controller:</strong> <code>Admin\HolidayController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🏢 Departments</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Department</code> — name, head_employee_id, description</li>
+          <li><strong>Employees</strong> are assigned to departments (many employees → one department)</li>
+          <li><strong>Controller:</strong> <code>Admin\DepartmentController</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ FINANCE MODULE ══════════════════ -->
+<div class="section" id="finance">
+  <div class="section-title"><span class="icon">💰</span> Finance Module</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">💳 Transactions</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Transaction</code> — amount, type (credit/debit), category, sender_id, receiver_id, receiver_name, receiver_account, status, reference_no, notes</li>
+          <li><strong>Transaction Log:</strong> <code>TransactionLog</code> — immutable audit trail per transaction (action, old_status, new_status, by_user)</li>
+          <li><strong>Fraud Check:</strong> Every new transaction is passed through <code>FraudDetectionService</code></li>
+          <li><strong>Controller:</strong> <code>Admin\TransactionController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔍 Fraud Detection</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Service:</strong> <code>FraudDetectionService</code></li>
+          <li><strong>Rules:</strong> <code>FraudRule</code> model — rule_type, threshold, action (flag/block/alert)</li>
+          <li><strong>Alerts:</strong> <code>FraudAlert</code> — transaction_id, rule_id, severity, status (open/investigated/resolved), notes</li>
+          <li><strong>Cron:</strong> <code>CheckHighRiskTransactions</code> — periodic re-scan of flagged transactions</li>
+          <li><strong>Cron:</strong> <code>ProcessPendingFraud</code> — auto-processes fraud queue</li>
+          <li><strong>Controller:</strong> <code>Admin\FraudAlertController</code></li>
+        </ul>
+        <div class="info-box yellow">Only Finance Manager and Super Admin can resolve fraud alerts.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">👝 Wallets</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Wallet</code> — user_id/employee_id, balance, is_frozen, type (company/employee)</li>
+          <li><strong>WalletTransaction:</strong> Records every credit/debit to a wallet with running balance</li>
+          <li><strong>Add Money:</strong> Super Admin can add funds to any wallet</li>
+          <li><strong>Freeze/Unfreeze:</strong> Super Admin can freeze wallets</li>
+          <li><strong>View:</strong> Auditor, Finance Manager, Super Admin can view wallet list</li>
+          <li><strong>Employee Wallets:</strong> <code>Admin\EmployeeWalletController</code> for employee-specific wallet ops</li>
+          <li><strong>Route:</strong> View = <code>service:wallets</code> middleware; Add/Freeze = <code>role:super_admin</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">💸 Expenses</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Expense</code> — category_id, amount, date, description, receipt_path, recorded_by, status</li>
+          <li><strong>Categories:</strong> <code>ExpenseCategory</code> — name, description (configurable by admin)</li>
+          <li><strong>Approval Flow:</strong> Expenses can be submitted and approved by managers</li>
+          <li><strong>Receipt Upload:</strong> File attachment per expense record</li>
+          <li><strong>Controllers:</strong> <code>Admin\ExpenseController</code>, <code>Admin\ExpenseCategoryController</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ CRM MODULE ══════════════════ -->
+<div class="section" id="crm">
+  <div class="section-title"><span class="icon">🤝</span> CRM & Sales Module</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">📞 Contacts & CRM</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Contact Model:</strong> <code>Contact</code> — name, phone, email, category_id, address, notes</li>
+          <li><strong>ContactCategory:</strong> Organise contacts by type (supplier, customer, partner, etc.)</li>
+          <li><strong>CRM Customer Model:</strong> <code>CrmCustomer</code> — extended profile for active customers with deal history</li>
+          <li><strong>Controllers:</strong> <code>Admin\ContactController</code>, <code>Admin\CrmController</code>, <code>Admin\ContactCategoryController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🏪 Franchise</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>Franchise</code> — name, owner_name, location, contact, commission_rate, status, joined_date</li>
+          <li><strong>Purpose:</strong> Manage the network of franchise outlets/distributors</li>
+          <li><strong>Controller:</strong> <code>Admin\FranchiseController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📦 Purchase Orders & Procurement</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>PurchaseOrder</code> — vendor_id, order_date, items (JSON), total_amount, status, invoice_path, notes</li>
+          <li><strong>Vendor Model:</strong> <code>Vendor</code> — company_name, contact_person, phone, email, address, gst, category</li>
+          <li><strong>Invoice Upload:</strong> PDF invoice per purchase order</li>
+          <li><strong>Controllers:</strong> <code>Admin\ProcurementController</code>, <code>Admin\VendorController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🛒 Sales Orders</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>SalesOrder</code> — customer_id/name, date, items (JSON), total_amount, status, notes</li>
+          <li><strong>Sales flow:</strong> Create → approve → fulfill → invoice</li>
+          <li><strong>Controller:</strong> <code>Admin\SalesModuleController</code></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ INVENTORY MODULE ══════════════════ -->
+<div class="section" id="inventory">
+  <div class="section-title"><span class="icon">📦</span> Inventory Module</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">📋 Items & Categories</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>InventoryItem:</strong> name, category_id, type_id, unit, current_stock, min_stock, cost_per_unit, expiry_date, description</li>
+          <li><strong>InventoryCategory:</strong> Groups items (Feed, Medicine, Equipment, etc.)</li>
+          <li><strong>InventoryItemType:</strong> Further sub-classification of items within a category</li>
+          <li><strong>Expiry Tracking:</strong> Items with expiry dates — alerts via cron/dairy alerts</li>
+          <li><strong>Min Stock Alert:</strong> Items below <code>min_stock</code> highlighted in UI</li>
+          <li><strong>Controllers:</strong> <code>Admin\InventoryItemController</code>, <code>Admin\InventoryCategoryController</code>, <code>Admin\InventoryItemTypeController</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📉 Stock Movements</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Model:</strong> <code>StockMovement</code> — inventory_item_id, date, type (in/out), quantity, source_purpose, reason, remarks, recorded_by</li>
+          <li><strong>Source Purposes:</strong> Feed (auto-deduction), Purchase, Sale, Manual Adjustment, Wastage</li>
+          <li><strong>Ledger:</strong> Every movement recorded — running stock calculated from sum of movements</li>
+          <li><strong>Feed Deduction History:</strong> <code>/admin/feed/deductions</code> — filtered view of feed-type movements</li>
+          <li><strong>Controller:</strong> <code>Admin\StockController</code></li>
+        </ul>
+        <div class="info-box blue">Stock is updated on the <code>InventoryItem.current_stock</code> field + ledger movement is appended to <code>stock_movements</code>.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ MODELS TABLE ══════════════════ -->
+<div class="section" id="models">
+  <div class="section-title"><span class="icon">🗄</span> All 56 Models</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>#</th><th>Model</th><th>Table</th><th>Module</th><th>Key Fields</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td><code>ActionType</code></td><td>action_types</td><td>Dairy Farm</td><td>name, description, icon</td></tr>
+        <tr><td>2</td><td><code>ActivityLog</code></td><td>activity_logs</td><td>System</td><td>user_id, action, url, ip, created_at</td></tr>
+        <tr><td>3</td><td><code>Animal</code></td><td>animals</td><td>Dairy Farm</td><td>tag_no, name, rfid, animal_id, animal_type, breed_id, group_id, dob, status</td></tr>
+        <tr><td>4</td><td><code>AnimalAction</code></td><td>animal_actions</td><td>Dairy Farm</td><td>animal_id, action_type_id, date, notes, document_path, performed_by</td></tr>
+        <tr><td>5</td><td><code>AnimalGroup</code></td><td>animal_groups</td><td>Dairy Farm</td><td>name, animal_count, description</td></tr>
+        <tr><td>6</td><td><code>AnimalPhoto</code></td><td>animal_photos</td><td>Dairy Farm</td><td>animal_id, path, caption</td></tr>
+        <tr><td>7</td><td><code>Answer</code></td><td>answers</td><td>System/FAQ</td><td>question_id, user_id, body, is_accepted</td></tr>
+        <tr><td>8</td><td><code>AppNotification</code></td><td>app_notifications</td><td>System</td><td>user_id, title, message, type, is_read, link</td></tr>
+        <tr><td>9</td><td><code>Attendance</code></td><td>attendance</td><td>HR</td><td>employee_id, date, status, check_in, check_out, hours_worked</td></tr>
+        <tr><td>10</td><td><code>AuditLog</code></td><td>audit_logs</td><td>System</td><td>user_id, model, model_id, action, old_values, new_values</td></tr>
+        <tr><td>11</td><td><code>Blacklist</code></td><td>blacklists</td><td>Security</td><td>user_id, reason, blacklisted_by, blacklisted_at</td></tr>
+        <tr><td>12</td><td><code>Breed</code></td><td>breeds</td><td>Dairy Farm</td><td>name, description</td></tr>
+        <tr><td>13</td><td><code>BreedingRecord</code></td><td>breeding_records</td><td>Dairy Farm</td><td>animal_id, date, method, bull_breed, expected_calving, status, certificate_path</td></tr>
+        <tr><td>14</td><td><code>ComplianceDocument</code></td><td>compliance_documents</td><td>Compliance</td><td>name, type, issue_date, expiry_date, file_path, status</td></tr>
+        <tr><td>15</td><td><code>Contact</code></td><td>contacts</td><td>CRM</td><td>name, phone, email, category_id, address, notes</td></tr>
+        <tr><td>16</td><td><code>ContactCategory</code></td><td>contact_categories</td><td>CRM</td><td>name, description, color</td></tr>
+        <tr><td>17</td><td><code>CrmCustomer</code></td><td>crm_customers</td><td>CRM</td><td>name, email, phone, company, deal_value, status, assigned_to</td></tr>
+        <tr><td>18</td><td><code>Department</code></td><td>departments</td><td>HR</td><td>name, head_employee_id, description</td></tr>
+        <tr><td>19</td><td><code>Document</code></td><td>documents</td><td>System</td><td>user_id, title, type, file_path, is_public</td></tr>
+        <tr><td>20</td><td><code>Employee</code></td><td>employees</td><td>HR</td><td>user_id, employee_code, department_id, designation, joining_date, shift_id, status</td></tr>
+        <tr><td>21</td><td><code>EmployeeSalary</code></td><td>employee_salaries</td><td>HR</td><td>employee_id, month, year, basic, allowances, deductions, net, payment_date, status</td></tr>
+        <tr><td>22</td><td><code>Expense</code></td><td>expenses</td><td>Finance</td><td>category_id, amount, date, description, receipt_path, recorded_by, status</td></tr>
+        <tr><td>23</td><td><code>ExpenseCategory</code></td><td>expense_categories</td><td>Finance</td><td>name, description</td></tr>
+        <tr><td>24</td><td><code>FarmRecord</code></td><td>farm_records</td><td>Dairy Farm</td><td>date, total_milk, total_animals, notes, recorded_by</td></tr>
+        <tr><td>25</td><td><code>FeedPlan</code></td><td>feed_plans</td><td>Dairy Farm</td><td>animal_group_id, inventory_item_id, qty_per_animal_per_day, unit, is_active</td></tr>
+        <tr><td>26</td><td><code>Franchise</code></td><td>franchises</td><td>CRM</td><td>name, owner_name, location, contact, commission_rate, status</td></tr>
+        <tr><td>27</td><td><code>FraudAlert</code></td><td>fraud_alerts</td><td>Finance</td><td>transaction_id, rule_id, severity, status, notes, investigated_by</td></tr>
+        <tr><td>28</td><td><code>FraudRule</code></td><td>fraud_rules</td><td>Finance</td><td>rule_type, threshold, action, is_active, description</td></tr>
+        <tr><td>29</td><td><code>HealthRecord</code></td><td>health_records</td><td>Dairy Farm</td><td>animal_id, date, type, description, vet_name, cost, report_path, next_due</td></tr>
+        <tr><td>30</td><td><code>Holiday</code></td><td>holidays</td><td>HR</td><td>name, date, type (national/optional/company)</td></tr>
+        <tr><td>31</td><td><code>InventoryCategory</code></td><td>inventory_categories</td><td>Inventory</td><td>name, description</td></tr>
+        <tr><td>32</td><td><code>InventoryItem</code></td><td>inventory_items</td><td>Inventory</td><td>name, category_id, type_id, unit, current_stock, min_stock, cost_per_unit, expiry_date</td></tr>
+        <tr><td>33</td><td><code>InventoryItemType</code></td><td>inventory_item_types</td><td>Inventory</td><td>name, category_id, description</td></tr>
+        <tr><td>34</td><td><code>Leave</code></td><td>leaves</td><td>HR</td><td>employee_id, from_date, to_date, type, reason, status, approved_by</td></tr>
+        <tr><td>35</td><td><code>LoginHistory</code></td><td>login_histories</td><td>Security</td><td>user_id, ip_address, user_agent, logged_in_at</td></tr>
+        <tr><td>36</td><td><code>MachineMaintenance</code></td><td>machine_maintenance</td><td>Maintenance</td><td>machine_name, maintenance_type, date, cost, performed_by, next_due, notes</td></tr>
+        <tr><td>37</td><td><code>MilkEntry</code></td><td>milk_entries</td><td>Dairy Farm</td><td>animal_id, date, session, quantity_litres, clr_value, entry_type, shed</td></tr>
+        <tr><td>38</td><td><code>Project</code></td><td>projects</td><td>Work Tracking</td><td>name, description, start_date, end_date, status, manager_id, team (JSON)</td></tr>
+        <tr><td>39</td><td><code>PurchaseOrder</code></td><td>purchase_orders</td><td>CRM</td><td>vendor_id, order_date, items, total_amount, status, invoice_path</td></tr>
+        <tr><td>40</td><td><code>Question</code></td><td>questions</td><td>System/FAQ</td><td>title, slug, body, user_id, is_answered</td></tr>
+        <tr><td>41</td><td><code>Role</code></td><td>roles</td><td>System</td><td>name, display_name, description</td></tr>
+        <tr><td>42</td><td><code>SalesOrder</code></td><td>sales_orders</td><td>CRM</td><td>customer_id, date, items, total_amount, status, notes</td></tr>
+        <tr><td>43</td><td><code>ServicePermission</code></td><td>service_permissions</td><td>System</td><td>role, service_key, is_enabled</td></tr>
+        <tr><td>44</td><td><code>Setting</code></td><td>settings</td><td>System</td><td>key, value, type (text/boolean/json)</td></tr>
+        <tr><td>45</td><td><code>Shift</code></td><td>shifts</td><td>HR</td><td>name, start_time, end_time, days (JSON)</td></tr>
+        <tr><td>46</td><td><code>StockMovement</code></td><td>stock_movements</td><td>Inventory</td><td>inventory_item_id, date, type, quantity, source_purpose, reason, remarks, recorded_by</td></tr>
+        <tr><td>47</td><td><code>Task</code></td><td>tasks</td><td>Work Tracking</td><td>title, description, project_id, assigned_to, due_date, priority, status, is_recurring, recurrence_type</td></tr>
+        <tr><td>48</td><td><code>TaskComment</code></td><td>task_comments</td><td>Work Tracking</td><td>task_id, user_id, comment</td></tr>
+        <tr><td>49</td><td><code>Timesheet</code></td><td>timesheets</td><td>Work Tracking</td><td>employee_id, date, project_id, task_id, hours, description</td></tr>
+        <tr><td>50</td><td><code>Transaction</code></td><td>transactions</td><td>Finance</td><td>amount, type, category, sender_id, receiver_id, status, reference_no</td></tr>
+        <tr><td>51</td><td><code>TransactionLog</code></td><td>transaction_logs</td><td>Finance</td><td>transaction_id, action, old_status, new_status, by_user, note</td></tr>
+        <tr><td>52</td><td><code>User</code></td><td>users</td><td>System</td><td>name, email, password, role, status, two_factor_enabled, two_factor_secret</td></tr>
+        <tr><td>53</td><td><code>Vendor</code></td><td>vendors</td><td>CRM</td><td>company_name, contact_person, phone, email, address, gst, category</td></tr>
+        <tr><td>54</td><td><code>Wallet</code></td><td>wallets</td><td>Finance</td><td>user_id, balance, is_frozen, type</td></tr>
+        <tr><td>55</td><td><code>WalletTransaction</code></td><td>wallet_transactions</td><td>Finance</td><td>wallet_id, type, amount, balance_after, description, by_user</td></tr>
+        <tr><td>56</td><td><code>WorkReport</code></td><td>work_reports</td><td>Work Tracking</td><td>employee_id, date, project_id, description, hours, status</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════ SERVICES ══════════════════ -->
+<div class="section" id="services">
+  <div class="section-title"><span class="icon">⚙️</span> Business Services</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">🌾 FeedDeductionService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>runDeduction(recordedBy):</strong> Main deduction loop — processes all active groups and feed plans, creates StockMovement records</li>
+          <li><strong>getTodayDeductionStatus():</strong> Returns per-feed-item deduction status for today (used in calculator UI)</li>
+          <li><strong>Duplicate Guard:</strong> Checks for existing StockMovement with same item + today + Feed source</li>
+          <li><strong>Returns:</strong> <code>['deducted', 'skipped', 'not_found', 'no_stock']</code> arrays</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🧮 FeedCalculationService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Calculates required feed quantities based on animal groups and feed plans (read-only calculation, no DB writes)</li>
+          <li><strong>Used in:</strong> Feed Calculator UI to show daily requirements before deduction</li>
+          <li><strong>Considers:</strong> Group animal count × qty_per_animal_per_day = daily need per item</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔍 FraudDetectionService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Evaluates transactions against configured <code>FraudRule</code> records</li>
+          <li><strong>Rule Types:</strong> Velocity checks (too many transactions), amount threshold, unusual hours, duplicate detection</li>
+          <li><strong>On Match:</strong> Creates <code>FraudAlert</code>, optionally blocks transaction, notifies admins via <code>NotificationService</code></li>
+          <li><strong>Called By:</strong> <code>TransactionController</code> on every new transaction + cron jobs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📊 DashboardService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Aggregates stats for admin dashboard — counts, totals, recent activity</li>
+          <li><strong>Provides:</strong> Total employees, animals, milk today, pending tasks, open fraud alerts, recent transactions</li>
+          <li><strong>Used in:</strong> <code>Admin\DashboardController@index</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">⏰ AttendanceService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Handles attendance mark/unmark logic, late detection, half-day rules</li>
+          <li><strong>Considers:</strong> Employee's shift timings, holiday calendar</li>
+          <li><strong>Used in:</strong> <code>Admin\AttendanceController</code> and automated reminder cron</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔔 NotificationService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Creates <code>AppNotification</code> records and optionally sends emails</li>
+          <li><strong>Used by:</strong> Fraud alerts, leave approvals, task assignments, dairy alerts, attendance reminders</li>
+          <li><strong>In-App:</strong> Notifications appear in topbar bell icon with unread count</li>
+          <li><strong>History:</strong> <code>/notifications/history</code> — paginated notification log with "mark all read" button</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🏭 ASDairyErpService</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li><strong>Purpose:</strong> Top-level ERP service for cross-module operations and system-wide utilities</li>
+          <li><strong>Provides:</strong> System settings lookup, global configuration, shared utility methods used across multiple modules</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ CRON JOBS ══════════════════ -->
+<div class="section" id="cron">
+  <div class="section-title"><span class="icon">⏰</span> Scheduled Commands (Cron Jobs)</div>
+  <div class="info-box blue" style="margin-bottom:16px;">
+    All commands are defined in <code>routes/console.php</code> and run via Laravel Scheduler. The cron entry on production runs <code>php artisan schedule:run</code> every minute.
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr><th>Command</th><th>Artisan Signature</th><th>Schedule</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>DailyFeedDeduction</code></td>
+          <td><code>dairy:feed-deduction</code></td>
+          <td><span class="pill pill-green">Daily 06:00</span></td>
+          <td>Deducts feed quantities from inventory stock based on all active animal group feed plans. Creates StockMovement records. Supports <code>--force</code> flag.</td>
+        </tr>
+        <tr>
+          <td><code>CheckHighRiskTransactions</code></td>
+          <td><code>fraud:check-high-risk</code></td>
+          <td><span class="pill pill-yellow">Periodic</span></td>
+          <td>Re-scans open FraudAlerts and high-risk transactions. Updates severity, re-triggers notifications if needed.</td>
+        </tr>
+        <tr>
+          <td><code>CleanupOldLogs</code></td>
+          <td><code>logs:cleanup</code></td>
+          <td><span class="pill pill-gray">Weekly/Monthly</span></td>
+          <td>Removes old activity logs, audit logs, and login history beyond configured retention period.</td>
+        </tr>
+        <tr>
+          <td><code>CreateRecurringTasks</code></td>
+          <td><code>tasks:create-recurring</code></td>
+          <td><span class="pill pill-green">Daily</span></td>
+          <td>Creates new task instances from recurring task templates (tasks with <code>is_recurring=true</code> and <code>recurrence_type</code>).</td>
+        </tr>
+        <tr>
+          <td><code>GenerateMonthlyReports</code></td>
+          <td><code>reports:monthly</code></td>
+          <td><span class="pill pill-blue">1st of Month</span></td>
+          <td>Generates monthly summary reports for finance, milk production, attendance, and HR — saves to storage.</td>
+        </tr>
+        <tr>
+          <td><code>ProcessPendingFraud</code></td>
+          <td><code>fraud:process-pending</code></td>
+          <td><span class="pill pill-yellow">Hourly</span></td>
+          <td>Processes queued fraud detection jobs. Auto-resolves low-severity alerts after review window.</td>
+        </tr>
+        <tr>
+          <td><code>SendAttendanceReminders</code></td>
+          <td><code>attendance:reminders</code></td>
+          <td><span class="pill pill-green">Daily Morning</span></td>
+          <td>Sends attendance check-in reminders to employees who haven't marked attendance by shift start time.</td>
+        </tr>
+        <tr>
+          <td><code>SendDairyAlerts</code></td>
+          <td><code>dairy:alerts</code></td>
+          <td><span class="pill pill-green">Daily</span></td>
+          <td>Checks for upcoming health record due dates, expiring compliance documents, low inventory stock. Sends notifications to relevant roles.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-header">Cron Setup</div>
+    <div class="card-body">
+      <div class="grid-2">
+        <div>
+          <strong>Linux (Production):</strong>
+          <pre><code># Added via:
+(crontab -l 2>/dev/null; echo "* * * * * /usr/bin/php \
+  /var/www/transaction-tracking-laravel/artisan \
+  schedule:run >> /dev/null 2>&1") | crontab -</code></pre>
+        </div>
+        <div>
+          <strong>Windows (Development):</strong>
+          <pre><code># scheduler.bat runs every minute via
+# Windows Task Scheduler (PowerShell):
+Register-ScheduledTask -TaskName "ASDairyScheduler" `
+  -Action (New-ScheduledTaskAction -Execute "scheduler.bat") `
+  -Trigger (New-ScheduledTaskTrigger -RepetitionInterval 00:01) `
+  -RunLevel Highest</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ ROLES & PERMISSIONS ══════════════════ -->
+<div class="section" id="roles">
+  <div class="section-title"><span class="icon">🛡</span> Roles & Permissions</div>
+
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">10 System Roles</div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#1e1b4b;color:#fff;">super_admin</span><span style="font-size:.8rem;color:var(--text-muted);">Unrestricted access to everything. Bypasses all permission checks. Can add/freeze wallets, manage all users.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#4f46e5;color:#fff;">admin</span><span style="font-size:.8rem;color:var(--text-muted);">Full administrative access except super-admin-only actions. Manages users, roles, permissions.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#0284c7;color:#fff;">manager</span><span style="font-size:.8rem;color:var(--text-muted);">Operational management — approves leaves, oversees tasks, manages team productivity.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#059669;color:#fff;">hr_manager</span><span style="font-size:.8rem;color:var(--text-muted);">HR-focused access — employees, attendance, salaries, leaves, shifts, departments.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#d97706;color:#fff;">finance_manager</span><span style="font-size:.8rem;color:var(--text-muted);">Finance operations — transactions, expenses, wallets view, fraud alert resolution.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#7c3aed;color:#fff;">auditor</span><span style="font-size:.8rem;color:var(--text-muted);">Read-only financial oversight — transactions, wallets, audit logs, fraud alerts view.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#16a34a;color:#fff;">farm_manager</span><span style="font-size:.8rem;color:var(--text-muted);">Full dairy farm module — animals, milk, breeding, health, feed plans, inventory.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#db2777;color:#fff;">crm_agent</span><span style="font-size:.8rem;color:var(--text-muted);">CRM & sales access — contacts, customers, franchise, sales orders, vendors.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#6b7280;color:#fff;">employee</span><span style="font-size:.8rem;color:var(--text-muted);">Self-service portal — own attendance, tasks assigned, work reports, timesheet.</span></div>
+          <div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="min-width:120px;justify-content:center;background:#374151;color:#fff;">viewer</span><span style="font-size:.8rem;color:var(--text-muted);">Read-only dashboard access. Can view reports and summaries, cannot modify data.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">How Role Assignment Works</div>
+      <div class="card-body">
+        <ul class="feat">
+          <li>Each <code>User</code> has a <code>role</code> varchar field (e.g. "admin", "hr_manager")</li>
+          <li>Roles are defined in the <code>roles</code> table with display_name and description</li>
+          <li>Super Admin assigns roles via <code>Admin\UserController</code> or <code>Admin\RoleController</code></li>
+          <li>The <code>CheckRole</code> middleware reads <code>auth()->user()->role</code> and compares to required role(s)</li>
+          <li>Service permissions are assigned per role via <code>Admin\ServicePermissionController</code></li>
+          <li>Changing a role's permissions clears the 5-min cache immediately for fresh enforcement</li>
+          <li>Users land on <code>role-dashboard.blade.php</code> showing their accessible modules with gradient cards</li>
+        </ul>
+        <div class="info-box green" style="margin-top:10px;">
+          <strong>Role Dashboard:</strong> After login, each user is redirected to <code>/admin/role-dashboard</code> which shows only the modules their role can access, with animated stat cards and module navigation cards.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="font-weight:700;font-size:.85rem;margin-bottom:10px;">Permission Matrix (✓ = full access, ~ = view only, — = no access)</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Module / Service Key</th>
+          <th>super_admin</th>
+          <th>admin</th>
+          <th>manager</th>
+          <th>hr_manager</th>
+          <th>finance_manager</th>
+          <th>auditor</th>
+          <th>farm_manager</th>
+          <th>crm_agent</th>
+          <th>employee</th>
+          <th>viewer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Users</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Employees</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Attendance</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">own</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Salaries</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Transactions</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Wallets</strong></td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">~</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Expenses</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Fraud Alerts</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Animals</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Milk</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Breeding</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Health</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Inventory</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Tasks</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">~</td><td class="nochk">—</td><td class="part">own</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Projects</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">own</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Work Reports</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">own</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Contacts / CRM</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Franchise</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Procurement / Vendors</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Sales</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Reports</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="part">~</td><td class="part">~</td><td class="part">~</td><td class="chk">✓</td><td class="part">~</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">~</td></tr>
+        <tr><td><strong>Settings</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Permissions</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+        <tr><td><strong>Maintenance / Compliance</strong></td><td class="chk">✓</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td><td class="part">~</td><td class="chk">✓</td><td class="nochk">—</td><td class="nochk">—</td><td class="nochk">—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════ KEY FLOWS ══════════════════ -->
+<div class="section" id="flows">
+  <div class="section-title"><span class="icon">🔄</span> Key Data Flows</div>
+  <div class="grid-2">
+
+    <div class="card">
+      <div class="card-header">🌾 Feed Auto-Deduction Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">Cron 06:00 → <code>dairy:feed-deduction</code></div>
+          <div class="flow-step">FeedDeductionService::runDeduction(recordedBy=1)</div>
+          <div class="flow-step">Loop: foreach AnimalGroup (active)</div>
+          <div class="flow-step">Loop: foreach FeedPlan for group (is_active=true)</div>
+          <div class="flow-step">dailyNeed = plan.qty_per_animal × group.animal_count</div>
+          <div class="flow-step">Check: StockMovement exists today for this item? → skip</div>
+          <div class="flow-step">Check: InventoryItem.current_stock &gt; 0</div>
+          <div class="flow-step">deductQty = min(dailyNeed, current_stock)</div>
+          <div class="flow-step">Create StockMovement (type=out, source_purpose=Feed)</div>
+          <div class="flow-step">Update InventoryItem.current_stock -= deductQty</div>
+          <div class="flow-step">Return summary: deducted / skipped / not_found / no_stock</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔍 Transaction Fraud Check Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">User submits new Transaction</div>
+          <div class="flow-step">TransactionController@store validates input</div>
+          <div class="flow-step">Transaction record created (status=pending)</div>
+          <div class="flow-step">FraudDetectionService::check($transaction)</div>
+          <div class="flow-step">Load active FraudRules from DB</div>
+          <div class="flow-step">Evaluate each rule (velocity, amount, time, duplicates)</div>
+          <div class="flow-step">Rule matched? → Create FraudAlert (severity: low/med/high)</div>
+          <div class="flow-step">Action=block? → Transaction status=blocked</div>
+          <div class="flow-step">NotificationService → alert Finance Manager + Admin</div>
+          <div class="flow-step">TransactionLog records status change</div>
+          <div class="flow-step">Response returned to user (success or blocked)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🔑 Permission Check Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">Request hits route with <code>middleware('service:wallets')</code></div>
+          <div class="flow-step">CheckServicePermission middleware fires</div>
+          <div class="flow-step">Get authenticated user's role</div>
+          <div class="flow-step">isSuperAdmin()? → pass through immediately</div>
+          <div class="flow-step">Cache::get("svc_perm_wallets_{user_id}")</div>
+          <div class="flow-step">Cache miss → query service_permissions table</div>
+          <div class="flow-step">WHERE role=? AND service_key='wallets' AND is_enabled=1</div>
+          <div class="flow-step">Store result in cache for 300s</div>
+          <div class="flow-step">is_enabled=true → continue to controller</div>
+          <div class="flow-step">is_enabled=false → abort(403)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🥛 Milk Entry Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">Farm Manager opens Milk Entry page</div>
+          <div class="flow-step">Select Animal + Session (morning/evening)</div>
+          <div class="flow-step">Enter quantity_litres + CLR value</div>
+          <div class="flow-step">Select entry_type (individual animal / shed batch)</div>
+          <div class="flow-step">MilkController@store saves MilkEntry</div>
+          <div class="flow-step">FarmRecord for today updated with aggregate totals</div>
+          <div class="flow-step">Dashboard stats refresh (total milk today)</div>
+          <div class="flow-step">Monthly cron aggregates into GenerateMonthlyReports</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">👤 Login & 2FA Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">POST /login → LoginController@login</div>
+          <div class="flow-step">Validate email + password</div>
+          <div class="flow-step">Check Blacklist table → deny if found</div>
+          <div class="flow-step">Auth::attempt() → verify credentials</div>
+          <div class="flow-step">Check user.status (active/suspended) → deny if suspended</div>
+          <div class="flow-step">2FA enabled? → generate OTP → redirect /2fa</div>
+          <div class="flow-step">POST /2fa → verifyTwoFactor → check OTP validity</div>
+          <div class="flow-step">OTP valid → complete login → create session</div>
+          <div class="flow-step">Create LoginHistory record (IP, user-agent, timestamp)</div>
+          <div class="flow-step">Redirect → /admin/role-dashboard</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📋 Task Assignment Flow</div>
+      <div class="card-body">
+        <div class="flow" style="flex-direction:column;align-items:flex-start;gap:5px;">
+          <div class="flow-step">Manager/Admin creates Task (title, assignee, due_date, priority)</div>
+          <div class="flow-step">TaskController@store saves task with status=pending</div>
+          <div class="flow-step">NotificationService creates AppNotification for assignee</div>
+          <div class="flow-step">Assignee sees task in their Employee Portal</div>
+          <div class="flow-step">Assignee updates status (in_progress / completed)</div>
+          <div class="flow-step">TaskComment added for discussion/updates</div>
+          <div class="flow-step">Recurring Task? → CreateRecurringTasks cron creates next instance</div>
+          <div class="flow-step">Timesheet entry linked to task for hour tracking</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ MIDDLEWARE TABLE ══════════════════ -->
+<div class="section">
+  <div class="section-title"><span class="icon">🛡</span> Middleware Reference</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr><th>Alias</th><th>Class</th><th>Purpose</th><th>Usage</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>auth</code></td><td>Laravel built-in</td>
+          <td>Requires authenticated session</td>
+          <td>All protected routes</td>
+        </tr>
+        <tr>
+          <td><code>check.status</code></td><td><code>CheckUserStatus</code></td>
+          <td>Blocks suspended/inactive users on every request — redirects to login with message</td>
+          <td>All post-login routes</td>
+        </tr>
+        <tr>
+          <td><code>role:{name}</code></td><td><code>CheckRole</code></td>
+          <td>Compares <code>auth()->user()->role</code> to required role. Supports comma-separated list. Aborts 403 on mismatch.</td>
+          <td>Admin-only and super_admin route groups</td>
+        </tr>
+        <tr>
+          <td><code>service:{key}</code></td><td><code>CheckServicePermission</code></td>
+          <td>Checks <code>ServicePermission</code> DB record for user's role + service key. Cached 5 minutes. Super Admin bypasses.</td>
+          <td>Module-level routes (wallets, reports, etc.)</td>
+        </tr>
+        <tr>
+          <td><code>track.activity</code></td><td><code>TrackActivity</code></td>
+          <td>Records every page request to <code>activity_logs</code> (user_id, URL, method, IP, timestamp)</td>
+          <td>All authenticated routes</td>
+        </tr>
+        <tr>
+          <td><code>set.locale</code></td><td><code>SetLocale</code></td>
+          <td>Sets application locale based on user preference or session variable</td>
+          <td>Global / all routes</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div style="background:#1e293b;color:rgba(255,255,255,.5);text-align:center;padding:20px;font-size:.75rem;margin-top:40px;">
+  ASDairy ERP — Full System Analysis &nbsp;·&nbsp; Generated August 2026 &nbsp;·&nbsp; Laravel 12 / PHP 8.3
+</div>
+
+</body>
+</html>

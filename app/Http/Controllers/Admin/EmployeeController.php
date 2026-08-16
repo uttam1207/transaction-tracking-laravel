@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\EmployeesExport;
 use App\Http\Controllers\Controller;
 use App\Imports\EmployeesImport;
+use App\Models\Branch;
 use App\Models\Department;
+use App\Models\Designation;
 use App\Models\Employee;
 use App\Models\Role;
+use App\Models\Shift;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -51,27 +54,35 @@ class EmployeeController extends Controller
 
     public function create()
     {
-        $departments = Department::active()->get();
-        $managers = Employee::with('user')->active()->get();
-        return view('admin.employees.create', compact('departments', 'managers'));
+        $departments  = Department::active()->get();
+        $managers     = Employee::with('user')->active()->get();
+        $branches     = Branch::where('is_active', true)->orderBy('name')->get();
+        $designations = Designation::where('is_active', true)->orderBy('level')->orderBy('name')->get();
+        $shifts       = Shift::where('is_active', true)->orderBy('name')->get();
+        return view('admin.employees.create', compact('departments', 'managers', 'branches', 'designations', 'shifts'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'nullable|string|max:255',
-            'email'           => 'required|email|unique:users',
-            'phone'           => 'nullable|string|max:20',
-            'password'        => 'required|min:8',
-            'department_id'   => 'required|exists:departments,id',
-            'designation'     => 'required|string|max:255',
-            'joining_date'    => 'nullable|date',
-            'employment_type' => 'required|in:full_time,part_time,contract,intern',
-            'work_location'   => 'required|in:office,remote,hybrid',
-            'salary'          => 'nullable|numeric|min:0',
-            'manager_id'      => 'nullable|exists:employees,id',
-            'role'            => ['nullable', 'string', Rule::in(Role::pluck('name')->toArray())],
+            'first_name'          => 'required|string|max:255',
+            'last_name'           => 'nullable|string|max:255',
+            'email'               => 'required|email|unique:users',
+            'phone'               => 'nullable|string|max:20',
+            'password'            => 'required|min:8',
+            'department_id'       => 'required|exists:departments,id',
+            'branch_id'           => 'nullable|exists:branches,id',
+            'designation_id'      => 'nullable|exists:designations,id',
+            'designation'         => 'nullable|string|max:255',
+            'shift_id'            => 'nullable|exists:shifts,id',
+            'joining_date'        => 'nullable|date',
+            'probation_end_date'  => 'nullable|date|after_or_equal:joining_date',
+            'notice_period_days'  => 'nullable|integer|min:0|max:365',
+            'employment_type'     => 'required|in:full_time,part_time,contract,intern',
+            'work_location'       => 'required|in:office,remote,hybrid',
+            'salary'              => 'nullable|numeric|min:0',
+            'manager_id'          => 'nullable|exists:employees,id',
+            'role'                => ['nullable', 'string', Rule::in(Role::pluck('name')->toArray())],
         ]);
 
         $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
@@ -95,17 +106,22 @@ class EmployeeController extends Controller
         $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
 
         Employee::create([
-            'user_id'         => $user->id,
-            'employee_id'     => $employeeId,
-            'department_id'   => $request->department_id,
-            'manager_id'      => $request->manager_id,
-            'designation'     => $request->designation,
-            'team'            => $request->team,
-            'joining_date'    => $request->joining_date ?? now()->toDateString(),
-            'employment_type' => $request->employment_type,
-            'work_location'   => $request->work_location,
-            'salary'          => $request->salary,
-            'status'          => 'active',
+            'user_id'            => $user->id,
+            'employee_id'        => $employeeId,
+            'department_id'      => $request->department_id,
+            'branch_id'          => $request->branch_id,
+            'manager_id'         => $request->manager_id,
+            'designation_id'     => $request->designation_id,
+            'designation'        => $request->designation,
+            'shift_id'           => $request->shift_id,
+            'team'               => $request->team,
+            'joining_date'       => $request->joining_date ?? now()->toDateString(),
+            'probation_end_date' => $request->probation_end_date,
+            'notice_period_days' => $request->notice_period_days ?? 30,
+            'employment_type'    => $request->employment_type,
+            'work_location'      => $request->work_location,
+            'salary'             => $request->salary,
+            'status'             => 'active',
         ]);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -127,28 +143,36 @@ class EmployeeController extends Controller
     public function edit(Employee $employee)
     {
         $employee->load('user');
-        $departments = Department::active()->get();
-        $managers = Employee::with('user')->active()->where('id', '!=', $employee->id)->get();
-        return view('admin.employees.edit', compact('employee', 'departments', 'managers'));
+        $departments  = Department::active()->get();
+        $managers     = Employee::with('user')->active()->where('id', '!=', $employee->id)->get();
+        $branches     = Branch::where('is_active', true)->orderBy('name')->get();
+        $designations = Designation::where('is_active', true)->orderBy('level')->orderBy('name')->get();
+        $shifts       = Shift::where('is_active', true)->orderBy('name')->get();
+        return view('admin.employees.edit', compact('employee', 'departments', 'managers', 'branches', 'designations', 'shifts'));
     }
 
     public function update(Request $request, Employee $employee)
     {
         $request->validate([
-            'first_name'      => 'required|string|max:255',
-            'last_name'       => 'nullable|string|max:255',
-            'email'           => 'required|email|unique:users,email,' . $employee->user_id,
-            'phone'           => 'nullable|string|max:20',
-            'department_id'   => 'required|exists:departments,id',
-            'designation'     => 'nullable|string|max:255',
-            'employment_type' => 'required|in:full_time,part_time,contract,intern',
-            'work_location'   => 'required|in:office,remote,hybrid',
-            'status'          => 'required|in:active,inactive,on_leave,terminated',
-            'salary'          => 'nullable|numeric|min:0',
-            'performance_score'      => 'nullable|numeric|min:0|max:100',
-            'annual_leave_balance'   => 'nullable|integer|min:0',
-            'sick_leave_balance'     => 'nullable|integer|min:0',
-            'password'        => 'nullable|min:8',
+            'first_name'          => 'required|string|max:255',
+            'last_name'           => 'nullable|string|max:255',
+            'email'               => 'required|email|unique:users,email,' . $employee->user_id,
+            'phone'               => 'nullable|string|max:20',
+            'department_id'       => 'required|exists:departments,id',
+            'branch_id'           => 'nullable|exists:branches,id',
+            'designation_id'      => 'nullable|exists:designations,id',
+            'designation'         => 'nullable|string|max:255',
+            'shift_id'            => 'nullable|exists:shifts,id',
+            'employment_type'     => 'required|in:full_time,part_time,contract,intern',
+            'work_location'       => 'required|in:office,remote,hybrid',
+            'status'              => 'required|in:active,inactive,on_leave,terminated',
+            'salary'              => 'nullable|numeric|min:0',
+            'probation_end_date'  => 'nullable|date',
+            'notice_period_days'  => 'nullable|integer|min:0|max:365',
+            'performance_score'   => 'nullable|numeric|min:0|max:100',
+            'annual_leave_balance'=> 'nullable|integer|min:0',
+            'sick_leave_balance'  => 'nullable|integer|min:0',
+            'password'            => 'nullable|min:8',
         ]);
 
         $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
@@ -195,9 +219,10 @@ class EmployeeController extends Controller
         $employee->user->update($userUpdate);
 
         $employee->update($request->only([
-            'department_id', 'designation', 'team', 'employment_type',
-            'work_location', 'salary', 'status', 'manager_id', 'address',
-            'city', 'state', 'country', 'joining_date',
+            'department_id', 'branch_id', 'designation_id', 'designation',
+            'shift_id', 'team', 'employment_type', 'work_location', 'salary',
+            'status', 'manager_id', 'address', 'city', 'state', 'country',
+            'joining_date', 'probation_end_date', 'notice_period_days',
             'performance_score', 'annual_leave_balance', 'sick_leave_balance',
         ]));
 

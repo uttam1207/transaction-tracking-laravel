@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeSalary;
+use App\Models\SalaryStructure;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -134,10 +135,44 @@ class SalaryController extends Controller
             $basic = (float)($emp->salary ?? 0);
             if ($basic <= 0) continue;
 
-            $hra   = round($basic * 0.20, 2);
-            $gross = $basic + $hra;
-            $pf    = round($basic * 0.12, 2);
-            $net   = $gross - $pf;
+            $structure = $emp->salaryStructure();
+
+            if ($structure) {
+                // Use configured salary structure components
+                $breakdown       = $structure->calculateNet($basic);
+                $hra             = 0;
+                $otherAllowances = 0;
+                $pfDeduction     = 0;
+                $otherDeductions = 0;
+
+                foreach ($breakdown['breakdown'] as $item) {
+                    $compCode = strtoupper($item['code'] ?? '');
+                    if ($item['type'] === 'earning') {
+                        if ($compCode === 'HRA') {
+                            $hra += $item['amount'];
+                        } else {
+                            $otherAllowances += $item['amount'];
+                        }
+                    } else {
+                        if ($compCode === 'PF') {
+                            $pfDeduction += $item['amount'];
+                        } else {
+                            $otherDeductions += $item['amount'];
+                        }
+                    }
+                }
+
+                $gross = $breakdown['gross'];
+                $net   = $breakdown['net'];
+            } else {
+                // Fallback: hardcoded HRA 20%, PF 12%
+                $hra             = round($basic * 0.20, 2);
+                $gross           = $basic + $hra;
+                $pfDeduction     = round($basic * 0.12, 2);
+                $otherAllowances = 0;
+                $otherDeductions = 0;
+                $net             = $gross - $pfDeduction;
+            }
 
             EmployeeSalary::firstOrCreate(
                 ['employee_id' => $emp->id, 'year' => $year, 'month_number' => $month],
@@ -145,11 +180,11 @@ class SalaryController extends Controller
                     'month_label'      => $label,
                     'basic_salary'     => $basic,
                     'hra'              => $hra,
-                    'other_allowances' => 0,
+                    'other_allowances' => $otherAllowances,
                     'gross_salary'     => $gross,
-                    'pf_deduction'     => $pf,
+                    'pf_deduction'     => $pfDeduction,
                     'tax_deduction'    => 0,
-                    'other_deductions' => 0,
+                    'other_deductions' => $otherDeductions,
                     'net_salary'       => $net,
                     'days_worked'      => 0,
                     'days_absent'      => 0,
