@@ -1298,12 +1298,17 @@
                     <div class="user-name">{{ auth()->user()->name }}</div>
                     <div class="user-role">{{ ucwords(str_replace('_', ' ', auth()->user()->role)) }}</div>
                 </div>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="logout-btn" title="Logout">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </button>
-                </form>
+                <div class="d-flex gap-1">
+                    <a href="{{ route('change-password.show') }}" class="logout-btn" title="Change Password" style="color:rgba(255,255,255,.55);">
+                        <i class="bi bi-key"></i>
+                    </a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="logout-btn" title="Logout">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -1425,6 +1430,8 @@
                         <li><a class="dropdown-item rounded-2 mt-1" href="{{ route('employee.profile') }}">
                             <i class="bi bi-person me-2 text-indigo-600"></i>My Profile</a></li>
                         @endif
+                        <li><a class="dropdown-item rounded-2 mt-1" href="{{ route('change-password.show') }}">
+                            <i class="bi bi-key me-2" style="color:#6366f1;"></i>Change Password</a></li>
                         <li><hr class="dropdown-divider my-1"></li>
                         <li>
                             <form method="POST" action="{{ route('logout') }}">

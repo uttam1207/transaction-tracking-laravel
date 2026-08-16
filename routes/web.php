@@ -151,6 +151,12 @@ Route::middleware(['auth', 'check.status'])->group(function () {
     })->name('notifications.all.read-all');
 });
 
+// Change Password — available to all authenticated users
+Route::middleware(['auth', 'check.status'])->group(function () {
+    Route::get('/change-password', [\App\Http\Controllers\ChangePasswordController::class, 'show'])->name('change-password.show');
+    Route::post('/change-password', [\App\Http\Controllers\ChangePasswordController::class, 'update'])->name('change-password.update');
+});
+
 // Root redirect
 Route::get('/', function () {
     return auth()->check() ? redirect(auth()->user()->getDashboardRoute()) : redirect()->route('login');
