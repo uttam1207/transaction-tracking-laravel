@@ -77,6 +77,7 @@ class FeedDeductionService
                     'feed_name'  => $feedName,
                     'item_name'  => $item->name,
                     'daily_need' => $dailyNeed,
+                    'unit'       => $item->unit,
                 ];
                 continue;
             }
