@@ -69,3 +69,10 @@ Schedule::command('tasks:create-recurring')
     ->dailyAt('00:05')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/scheduler.log'));
+
+// ── Feed Auto-Deduction ──
+// Deduct daily feed quantities from inventory at 6 AM every day
+Schedule::command('dairy:feed-deduction')
+    ->dailyAt('06:00')
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/feed-deduction.log'));

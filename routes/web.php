@@ -325,6 +325,7 @@ Route::prefix('admin')
     Route::post('/feed/plans', [FeedController::class, 'updateFeedPlan'])->name('feed.plans.update');
     Route::post('/feed/plans/item', [FeedController::class, 'storePlan'])->name('feed.plans.item.store');
     Route::delete('/feed/plans/{plan}', [FeedController::class, 'destroyPlan'])->name('feed.plans.item.destroy');
+    Route::post('/feed/deduct', [FeedController::class, 'deductFeedStock'])->name('feed.deduct');
 
     // Module 2 — Animal Management
     Route::resource('animals', AnimalController::class);

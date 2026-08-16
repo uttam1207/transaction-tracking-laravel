@@ -13,7 +13,7 @@
             <h4>Feed Calculator &amp; Alerts</h4>
             <p>Daily feed requirement auto-calculation, stock depletion forecast &amp; proactive shortage alerts</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <form action="{{ route('admin.feed.groups.sync') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-sm btn-outline-primary px-4" title="Sync animal group counts from actual animal records">
@@ -23,6 +23,21 @@
             <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-outline-secondary px-4">
                 <i class="bi bi-boxes me-1"></i>View Stock
             </a>
+            @php
+                $allDeductedToday = count($todayDeductionStatus) > 0
+                    && collect($todayDeductionStatus)->every(fn($s) => $s['deducted']);
+            @endphp
+            <form action="{{ route('admin.feed.deduct') }}" method="POST">
+                @csrf
+                <button type="submit"
+                    class="btn btn-sm px-4"
+                    style="background:{{ $allDeductedToday ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.25)' }};border:1px solid rgba(255,255,255,.4);color:#fff;font-weight:600;border-radius:8px;"
+                    onmouseover="this.style.background='rgba(255,255,255,.35)'" onmouseout="this.style.background='{{ $allDeductedToday ? 'rgba(255,255,255,.15)' : 'rgba(255,255,255,.25)' }}'"
+                    title="{{ $allDeductedToday ? 'Already deducted today — click to re-run' : 'Deduct today\'s feed from inventory stock' }}">
+                    <i class="bi bi-{{ $allDeductedToday ? 'check2-all' : 'arrow-down-circle' }} me-1"></i>
+                    {{ $allDeductedToday ? 'Deducted Today' : 'Run Daily Deduction' }}
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -48,13 +63,73 @@
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-3" style="border-radius:12px;">
-        {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show mb-3" style="border-radius:12px;">
-        {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-exclamation-triangle me-2"></i>{{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
+@endif
+@if(session('info'))
+    <div class="alert alert-info alert-dismissible fade show mb-3" style="border-radius:12px;">
+        <i class="bi bi-info-circle me-2"></i>{{ session('info') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
+{{-- Today's Deduction Status --}}
+@if(count($todayDeductionStatus) > 0)
+<div class="card-glass mb-4">
+    <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-calendar-check me-2 text-success"></i>Today's Feed Deduction — {{ now()->format('d M Y') }}</h6>
+        @php $anyDeducted = collect($todayDeductionStatus)->some(fn($s) => $s['deducted']); @endphp
+        @if($anyDeducted)
+            <span class="badge" style="background:#d1fae5;color:#059669;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:20px;">
+                <i class="bi bi-check2-all me-1"></i>Run Today
+            </span>
+        @else
+            <span class="badge" style="background:#fef3c7;color:#d97706;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:20px;">
+                <i class="bi bi-clock me-1"></i>Pending
+            </span>
+        @endif
+    </div>
+    <div class="table-responsive">
+        <table class="table modern-table mb-0">
+            <thead>
+                <tr>
+                    <th>Feed Item</th>
+                    <th class="text-end">Daily Need</th>
+                    <th class="text-end">Deducted</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($todayDeductionStatus as $feedName => $status)
+                <tr>
+                    <td class="fw-semibold" style="font-size:.86rem;">{{ $feedName }}</td>
+                    <td class="text-end" style="font-size:.85rem;">{{ number_format($status['daily_need'], 1) }} {{ $status['unit'] }}</td>
+                    <td class="text-end" style="font-size:.85rem;">
+                        @if($status['deducted'])
+                            <span style="color:#059669;font-weight:700;">{{ number_format($status['deducted_qty'], 1) }} {{ $status['unit'] }}</span>
+                        @else
+                            <span style="color:#9ca3af;">—</span>
+                        @endif
+                    </td>
+                    <td class="text-center">
+                        @if(!$status['item_found'])
+                            <span class="spill spill-danger" style="font-size:.72rem;">No Inventory Item</span>
+                        @elseif($status['deducted'])
+                            <span class="spill spill-success" style="font-size:.72rem;"><i class="bi bi-check2"></i> Done</span>
+                        @else
+                            <span class="spill spill-warning" style="font-size:.72rem;">Pending</span>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
 @endif
 
 {{-- KPI Cards --}}

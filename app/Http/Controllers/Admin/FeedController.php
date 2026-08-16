@@ -8,15 +8,40 @@ use App\Models\FeedPlan;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\FeedCalculationService;
+use App\Services\FeedDeductionService;
 
 class FeedController extends Controller
 {
-    public function calculator(FeedCalculationService $feedService)
+    public function calculator(FeedCalculationService $feedService, FeedDeductionService $deductService)
     {
         $data = $feedService->getFeedCalculationSummary();
         $animalGroups = AnimalGroup::with('feedPlans')->orderBy('name')->get();
+        $todayDeductionStatus = $deductService->getTodayDeductionStatus();
 
-        return view('admin.feed.calculator', compact('data', 'animalGroups'));
+        return view('admin.feed.calculator', compact('data', 'animalGroups', 'todayDeductionStatus'));
+    }
+
+    public function deductFeedStock(FeedDeductionService $deductService)
+    {
+        $result = $deductService->runDeduction(recordedBy: auth()->id());
+
+        $deductedCount = count($result['deducted']);
+        $skippedCount  = count($result['skipped']);
+        $notFoundCount = count($result['not_found']);
+        $noStockCount  = count($result['no_stock']);
+
+        if ($deductedCount === 0 && $skippedCount > 0) {
+            return back()->with('info', "Today's feed deduction was already run ({$skippedCount} item(s) already deducted).");
+        }
+
+        $msg = "Feed deduction complete: {$deductedCount} item(s) deducted.";
+        if ($skippedCount)  $msg .= " {$skippedCount} already done.";
+        if ($notFoundCount) $msg .= " {$notFoundCount} feed item(s) not found in inventory.";
+        if ($noStockCount)  $msg .= " {$noStockCount} item(s) had insufficient stock.";
+
+        $sessionKey = ($notFoundCount > 0 || $noStockCount > 0) ? 'error' : 'success';
+
+        return back()->with($sessionKey, $msg);
     }
 
     // Update head count for a group
