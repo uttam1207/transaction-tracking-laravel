@@ -26,6 +26,14 @@ class TransactionController extends Controller
 
     public function index(Request $request)
     {
+        // Range sanity checks — redirect back with a flash error
+        if ($request->date_from && $request->date_to && $request->date_from > $request->date_to) {
+            return back()->withInput()->with('filter_error', '"From Date" cannot be later than "To Date".');
+        }
+        if ($request->amount_min && $request->amount_max && (float)$request->amount_min > (float)$request->amount_max) {
+            return back()->withInput()->with('filter_error', '"Min Amount" cannot be greater than "Max Amount".');
+        }
+
         $query = Transaction::with('user', 'fraudAlerts');
 
         if ($request->search) {

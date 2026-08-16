@@ -212,7 +212,19 @@
 
 {{-- Filters --}}
 <div class="filter-card">
-    <form method="GET">
+    @if(session('filter_error'))
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;color:#dc2626;font-size:.82rem;display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ session('filter_error') }}</span>
+    </div>
+    @endif
+    <div id="filterRangeError" style="display:none;margin-bottom:12px;">
+        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;color:#dc2626;font-size:.82rem;display:flex;align-items:center;gap:8px;">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span id="filterRangeErrorMsg"></span>
+        </div>
+    </div>
+    <form method="GET" id="txnFilterForm">
         {{-- Row 1: main filters --}}
         <div class="row g-2 align-items-end mb-2">
             <div class="col-md-3">
@@ -512,6 +524,32 @@ function clearBatch() {
     document.getElementById('selectAll').checked = false;
     updateBatchBar();
 }
+
+// ── Filter range validation ──────────────────────────────────────────────────
+document.getElementById('txnFilterForm')?.addEventListener('submit', function (e) {
+    const errBox = document.getElementById('filterRangeError');
+    const errMsg = document.getElementById('filterRangeErrorMsg');
+    const dateFrom  = this.querySelector('[name="date_from"]').value;
+    const dateTo    = this.querySelector('[name="date_to"]').value;
+    const amountMin = parseFloat(this.querySelector('[name="amount_min"]').value) || 0;
+    const amountMax = parseFloat(this.querySelector('[name="amount_max"]').value) || 0;
+
+    let error = null;
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+        error = '"From Date" cannot be later than "To Date".';
+    } else if (amountMin && amountMax && amountMin > amountMax) {
+        error = '"Min Amount" cannot be greater than "Max Amount".';
+    }
+
+    if (error) {
+        e.preventDefault();
+        errMsg.textContent = error;
+        errBox.style.display = 'block';
+        errBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } else {
+        errBox.style.display = 'none';
+    }
+});
 
 function applyBatch() {
     const ids    = [...document.querySelectorAll('.tx-check:checked')].map(c => parseInt(c.value));

@@ -300,6 +300,40 @@
             .main-wrapper { margin-left: 0; }
         }
 
+        /* ── Desktop Sidebar Collapse (icon-only mode) ── */
+        .sidebar.sidebar-collapsed {
+            width: 64px;
+        }
+        .sidebar.sidebar-collapsed .brand-name,
+        .sidebar.sidebar-collapsed .brand-badge { display: none !important; }
+        .sidebar.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 0; }
+        .sidebar.sidebar-collapsed .nav-section-title { display: none !important; }
+        .sidebar.sidebar-collapsed .nav-group-btn { display: none !important; }
+        .sidebar.sidebar-collapsed .nav-group-collapse {
+            display: block !important; height: auto !important; overflow: visible !important;
+        }
+        .sidebar.sidebar-collapsed .sidebar-link {
+            justify-content: center; margin: 1px 4px; padding: 9px 4px;
+        }
+        .sidebar.sidebar-collapsed .sidebar-link .nav-label,
+        .sidebar.sidebar-collapsed .sidebar-link .badge { display: none !important; }
+        .sidebar.sidebar-collapsed .sidebar-link .nav-icon { margin: 0; }
+        .sidebar.sidebar-collapsed .sidebar-footer { padding: 8px 6px; }
+        .sidebar.sidebar-collapsed .sidebar-user-card {
+            justify-content: center; padding: 8px 4px;
+        }
+        .sidebar.sidebar-collapsed .sidebar-user-card .user-name,
+        .sidebar.sidebar-collapsed .sidebar-user-card .user-role { display: none !important; }
+        .sidebar.sidebar-collapsed .sidebar-user-card .logout-btn { margin-left: 0; }
+        .main-wrapper.sidebar-collapsed {
+            margin-left: 64px;
+            transition: margin-left 0.3s;
+        }
+        @media (max-width: 768px) {
+            .sidebar.sidebar-collapsed { width: var(--sidebar-width); }
+            .main-wrapper.sidebar-collapsed { margin-left: 0; }
+        }
+
         /* Scrollbar */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -1264,6 +1298,11 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
 
+            {{-- Desktop sidebar collapse toggle --}}
+            <button class="topbar-action-btn d-none d-md-flex me-1" id="sidebarCollapseBtn" title="Toggle Sidebar">
+                <i class="bi bi-layout-sidebar" id="sidebarCollapseIcon"></i>
+            </button>
+
             <div class="d-none d-md-flex align-items-center topbar-breadcrumb-wrap">
                 <a href="{{ auth()->user()->getDashboardRoute() }}"
                    class="bc-home-btn" title="Dashboard">
@@ -1278,18 +1317,22 @@
 
             {{-- Global Search --}}
             @if(auth()->user()->hasAdminAccess())
-            <div class="position-relative d-none d-lg-flex ms-2" style="width:260px;" id="globalSearchWrapper">
-                <div class="input-group" style="height:34px;">
+            <div class="position-relative d-none d-lg-block ms-2" style="width:280px;" id="globalSearchWrapper">
+                <div class="input-group" style="height:36px;">
                     <span class="input-group-text border-end-0" style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-radius:10px 0 0 10px; padding:0 10px;">
                         <i class="bi bi-search" style="color:#9ca3af; font-size:.8rem;"></i>
                     </span>
                     <input type="text" id="globalSearch"
                            class="form-control border-start-0 ps-0"
-                           style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-left:none; border-radius:0 10px 10px 0; font-size:.8rem; height:34px;"
-                           placeholder="Search..." autocomplete="off">
+                           style="background:var(--bs-tertiary-bg,#f3f4f6); border:1px solid var(--bs-border-color); border-left:none; border-radius:0 10px 10px 0; font-size:.8rem; height:36px;"
+                           placeholder="Search animals, expenses, users..." autocomplete="off">
                 </div>
-                <div id="searchDropdown" class="dropdown-menu w-100 shadow-sm p-0 mt-1"
-                     style="display:none; max-height:400px; overflow-y:auto; border-radius:12px; border:1px solid #e5e7eb;"></div>
+                {{-- Explicit absolute positioning — no Popper dependency --}}
+                <div id="searchDropdown"
+                     style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0;
+                            background:#fff; border-radius:14px; border:1px solid #e5e7eb;
+                            box-shadow:0 8px 32px rgba(0,0,0,.13); max-height:420px;
+                            overflow-y:auto; z-index:9999;"></div>
             </div>
             @endif
 
@@ -1325,6 +1368,13 @@
                         </div>
                         <div id="notifList">
                             <div class="text-muted text-center py-4" style="font-size:.82rem;">Loading...</div>
+                        </div>
+                        <div style="border-top:1px solid #f3f4f6; padding:8px 12px;">
+                            <a href="{{ route('notifications.all') }}"
+                               style="display:block; text-align:center; font-size:.78rem; font-weight:600; color:#4f46e5; text-decoration:none; padding:6px; border-radius:8px; transition:background .15s;"
+                               onmouseover="this.style.background='#f0f0ff'" onmouseout="this.style.background=''">
+                                <i class="bi bi-clock-history me-1"></i>View All Notifications
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -1430,10 +1480,63 @@
         },
     };
 
-    // Sidebar Toggle
+    // Mobile Sidebar Toggle
     document.getElementById('sidebarToggle')?.addEventListener('click', () => {
         document.getElementById('sidebar').classList.toggle('show');
     });
+
+    // Desktop Sidebar Collapse (icon-only mode)
+    (function () {
+        const sidebar     = document.getElementById('sidebar');
+        const mainWrapper = document.querySelector('.main-wrapper');
+        const btn         = document.getElementById('sidebarCollapseBtn');
+        const icon        = document.getElementById('sidebarCollapseIcon');
+
+        function applyCollapsed(collapsed) {
+            sidebar.classList.toggle('sidebar-collapsed', collapsed);
+            mainWrapper.classList.toggle('sidebar-collapsed', collapsed);
+            if (icon) {
+                icon.className = collapsed ? 'bi bi-layout-sidebar-reverse' : 'bi bi-layout-sidebar';
+            }
+            // When expanding, also enable Bootstrap tooltips on links (removed on collapse)
+            document.querySelectorAll('.sidebar-link[data-bs-toggle="tooltip"]').forEach(el => {
+                bootstrap.Tooltip.getInstance(el)?.[collapsed ? 'enable' : 'disable']();
+            });
+        }
+
+        // On collapse: add tooltips to each nav link using the nav-label text
+        function enableTooltips() {
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                const label = link.querySelector('.nav-label')?.textContent?.trim();
+                if (label) {
+                    link.setAttribute('data-bs-toggle', 'tooltip');
+                    link.setAttribute('data-bs-placement', 'right');
+                    link.setAttribute('title', label);
+                    new bootstrap.Tooltip(link, { trigger: 'hover' });
+                }
+            });
+        }
+
+        function disableTooltips() {
+            document.querySelectorAll('.sidebar-link[data-bs-toggle="tooltip"]').forEach(link => {
+                bootstrap.Tooltip.getInstance(link)?.dispose();
+                link.removeAttribute('data-bs-toggle');
+                link.removeAttribute('title');
+            });
+        }
+
+        // Restore persisted state
+        const saved = localStorage.getItem('sidebarCollapsed') === '1';
+        applyCollapsed(saved);
+        if (saved) enableTooltips();
+
+        btn?.addEventListener('click', function () {
+            const nowCollapsed = !sidebar.classList.contains('sidebar-collapsed');
+            localStorage.setItem('sidebarCollapsed', nowCollapsed ? '1' : '0');
+            applyCollapsed(nowCollapsed);
+            if (nowCollapsed) enableTooltips(); else disableTooltips();
+        });
+    })();
 
     // Theme Toggle
     const savedTheme = localStorage.getItem('theme') || 'light';
@@ -1522,18 +1625,20 @@
             searchTimer = setTimeout(() => {
                 $.get('/admin/search', { q }, function (res) {
                     if (!res.results || !res.results.length) {
-                        searchDropdown.innerHTML = '<div class="p-3 text-muted small text-center">No results found</div>';
+                        searchDropdown.innerHTML = '<div style="padding:14px 16px;color:#9ca3af;font-size:.8rem;text-align:center;">No results found</div>';
                     } else {
-                        const colorMap = { primary:'primary', success:'success', info:'info', warning:'warning', danger:'danger' };
-                        searchDropdown.innerHTML = res.results.map(r => `
-                            <a class="dropdown-item d-flex align-items-start gap-2 py-2 border-bottom" href="${r.url}">
-                                <span class="text-${r.color} mt-1"><i class="bi bi-${r.icon} fs-5"></i></span>
-                                <div>
-                                    <div class="small fw-semibold">${r.title}</div>
-                                    <div class="text-muted" style="font-size:.7rem">${r.type} · ${r.subtitle}</div>
-                                </div>
-                            </a>
-                        `).join('');
+                        const colorVars = { primary:'#4f46e5', success:'#059669', info:'#0891b2', warning:'#d97706', danger:'#dc2626', secondary:'#6b7280' };
+                        searchDropdown.innerHTML = res.results.map((r, i) => {
+                            const clr = colorVars[r.color] || '#6b7280';
+                            const isLast = i === res.results.length - 1;
+                            return `<a href="${r.url}" style="display:flex;align-items:flex-start;gap:10px;padding:10px 16px;text-decoration:none;color:#111827;${isLast?'':'border-bottom:1px solid #f3f4f6;'}transition:background .15s;"
+                                   onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">`
+                                + `<span style="color:${clr};margin-top:2px;flex-shrink:0;"><i class="bi bi-${r.icon}" style="font-size:1.05rem;"></i></span>`
+                                + `<div style="min-width:0;">`
+                                + `<div style="font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.title}</div>`
+                                + `<div style="font-size:.7rem;color:#9ca3af;margin-top:1px;">${r.type} &middot; ${r.subtitle}</div>`
+                                + `</div></a>`;
+                        }).join('');
                     }
                     searchDropdown.style.display = 'block';
                 }).fail(() => { searchDropdown.style.display = 'none'; });

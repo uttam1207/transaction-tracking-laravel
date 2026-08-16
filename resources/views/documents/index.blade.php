@@ -488,6 +488,17 @@ dropZone.addEventListener('drop', e => {
     showFileInfo(dt.files[0]);
 });
 
+// Reset the upload form (including file input) whenever the modal is dismissed
+document.getElementById('uploadModal').addEventListener('hidden.bs.modal', function () {
+    const form = this.querySelector('form');
+    if (form) form.reset();
+    fileInfo.innerHTML = '';
+    // Reset category pill selection back to the default (general)
+    document.querySelectorAll('.cat-tab-pick').forEach(l => l.classList.remove('selected'));
+    const defaultCat = document.querySelector('.cat-tab-pick input[value="general"]');
+    if (defaultCat) { defaultCat.checked = true; defaultCat.closest('.cat-tab-pick').classList.add('selected'); }
+});
+
 // Delete
 function deleteDoc(id) {
     APP.confirm('Delete Document', 'This cannot be undone.', () => {

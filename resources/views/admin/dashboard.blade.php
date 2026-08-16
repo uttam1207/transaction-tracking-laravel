@@ -872,8 +872,14 @@ if (milkEl) milkEl.innerHTML = '<div style="height:220px;display:flex;align-item
 
 function updateChart(type, days) {
     $.get('/admin/dashboard/chart', { type, days }, function (data) {
-        txChart.updateSeries([{ name: 'Volume ($)', data: data.amounts }]);
-        txChart.updateOptions({ xaxis: { categories: data.labels } });
+        // Update txData in-place so tooltip + click-drill use fresh counts/dates
+        txData.labels  = data.labels  || [];
+        txData.dates   = data.dates   || [];
+        txData.counts  = data.counts  || [];
+        txData.amounts = data.amounts || [];
+
+        txChart.updateOptions({ xaxis: { categories: txData.labels } }, false, false);
+        txChart.updateSeries([{ name: 'Volume (₹)', data: txData.amounts }]);
     });
 }
 </script>

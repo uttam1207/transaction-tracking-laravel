@@ -136,6 +136,19 @@ Route::middleware(['auth', 'check.status'])->group(function () {
               ->update(['is_read' => true, 'read_at' => now()]);
         return response()->json(['success' => true]);
     })->name('notifications.read-all');
+
+    Route::get('/notifications/all', function () {
+        $user          = auth()->user();
+        $notifications = $user->appNotifications()->latest()->paginate(30)->withQueryString();
+        $unreadCount   = $user->appNotifications()->where('is_read', false)->count();
+        return view('notifications.all', compact('notifications', 'unreadCount'));
+    })->name('notifications.all');
+
+    Route::post('/notifications/all/read-all', function () {
+        auth()->user()->appNotifications()->where('is_read', false)
+              ->update(['is_read' => true, 'read_at' => now()]);
+        return back()->with('success', 'All notifications marked as read.');
+    })->name('notifications.all.read-all');
 });
 
 // Root redirect
