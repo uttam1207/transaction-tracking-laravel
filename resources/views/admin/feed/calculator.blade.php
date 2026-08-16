@@ -23,6 +23,9 @@
             <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-outline-secondary px-4">
                 <i class="bi bi-boxes me-1"></i>View Stock
             </a>
+            <a href="{{ route('admin.feed.deductions') }}" class="btn btn-sm btn-outline-secondary px-4">
+                <i class="bi bi-clock-history me-1"></i>Deduction Log
+            </a>
             @php
                 $allDeductedToday = count($todayDeductionStatus) > 0
                     && collect($todayDeductionStatus)->every(fn($s) => $s['deducted']);

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Animal;
 use App\Models\AnimalGroup;
 use App\Models\FeedPlan;
+use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Services\FeedCalculationService;
@@ -42,6 +43,38 @@ class FeedController extends Controller
         $sessionKey = ($notFoundCount > 0 || $noStockCount > 0) ? 'error' : 'success';
 
         return back()->with($sessionKey, $msg);
+    }
+
+    public function deductionHistory(Request $request)
+    {
+        $query = StockMovement::with(['inventoryItem', 'recorder'])
+            ->where('source_purpose', 'Feed')
+            ->where('reason', 'Daily Feed Deduction')
+            ->orderByDesc('date')
+            ->orderByDesc('created_at');
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+        if ($request->filled('item')) {
+            $query->whereHas('inventoryItem', fn($q) => $q->where('name', 'like', '%' . $request->item . '%'));
+        }
+
+        $movements = $query->paginate(30)->withQueryString();
+
+        // Group by date for summary
+        $dailySummary = StockMovement::where('source_purpose', 'Feed')
+            ->where('reason', 'Daily Feed Deduction')
+            ->selectRaw('date, COUNT(*) as item_count, SUM(quantity) as total_qty')
+            ->groupBy('date')
+            ->orderByDesc('date')
+            ->limit(30)
+            ->get();
+
+        return view('admin.feed.deduction-history', compact('movements', 'dailySummary'));
     }
 
     // Update head count for a group
