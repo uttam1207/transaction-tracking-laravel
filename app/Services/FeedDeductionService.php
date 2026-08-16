@@ -119,7 +119,12 @@ class FeedDeductionService
             ];
         }
 
-        return compact('deducted', 'skipped', 'notFound', 'noStock');
+        return [
+            'deducted'  => $deducted,
+            'skipped'   => $skipped,
+            'not_found' => $notFound,
+            'no_stock'  => $noStock,
+        ];
     }
 
     /**
