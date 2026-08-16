@@ -300,38 +300,41 @@
             .main-wrapper { margin-left: 0; }
         }
 
-        /* ── Desktop Sidebar Collapse (icon-only mode) ── */
-        .sidebar.sidebar-collapsed {
-            width: 64px;
+        /* ── Desktop Sidebar Collapse (icon-only mode — desktop only) ── */
+        @media (min-width: 769px) {
+            .sidebar.sidebar-collapsed { width: 64px; }
+            .sidebar.sidebar-collapsed .brand-name,
+            .sidebar.sidebar-collapsed .brand-badge { display: none !important; }
+            .sidebar.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 0; }
+            .sidebar.sidebar-collapsed .nav-section-title { display: none !important; }
+            .sidebar.sidebar-collapsed .nav-group-btn { display: none !important; }
+            .sidebar.sidebar-collapsed .nav-group-collapse {
+                display: block !important; height: auto !important; overflow: visible !important;
+            }
+            .sidebar.sidebar-collapsed .sidebar-link {
+                justify-content: center; margin: 1px 4px; padding: 9px 4px;
+            }
+            .sidebar.sidebar-collapsed .sidebar-link .nav-label,
+            .sidebar.sidebar-collapsed .sidebar-link .badge { display: none !important; }
+            .sidebar.sidebar-collapsed .sidebar-link .nav-icon { margin: 0; }
+            .sidebar.sidebar-collapsed .sidebar-footer { padding: 8px 6px; }
+            .sidebar.sidebar-collapsed .sidebar-user-card { justify-content: center; padding: 8px 4px; }
+            .sidebar.sidebar-collapsed .sidebar-user-card .user-name,
+            .sidebar.sidebar-collapsed .sidebar-user-card .user-role { display: none !important; }
+            .sidebar.sidebar-collapsed .sidebar-user-card .logout-btn { margin-left: 0; }
+            .main-wrapper.sidebar-collapsed { margin-left: 64px; }
         }
-        .sidebar.sidebar-collapsed .brand-name,
-        .sidebar.sidebar-collapsed .brand-badge { display: none !important; }
-        .sidebar.sidebar-collapsed .sidebar-brand { justify-content: center; padding: 0; }
-        .sidebar.sidebar-collapsed .nav-section-title { display: none !important; }
-        .sidebar.sidebar-collapsed .nav-group-btn { display: none !important; }
-        .sidebar.sidebar-collapsed .nav-group-collapse {
-            display: block !important; height: auto !important; overflow: visible !important;
-        }
-        .sidebar.sidebar-collapsed .sidebar-link {
-            justify-content: center; margin: 1px 4px; padding: 9px 4px;
-        }
-        .sidebar.sidebar-collapsed .sidebar-link .nav-label,
-        .sidebar.sidebar-collapsed .sidebar-link .badge { display: none !important; }
-        .sidebar.sidebar-collapsed .sidebar-link .nav-icon { margin: 0; }
-        .sidebar.sidebar-collapsed .sidebar-footer { padding: 8px 6px; }
-        .sidebar.sidebar-collapsed .sidebar-user-card {
-            justify-content: center; padding: 8px 4px;
-        }
-        .sidebar.sidebar-collapsed .sidebar-user-card .user-name,
-        .sidebar.sidebar-collapsed .sidebar-user-card .user-role { display: none !important; }
-        .sidebar.sidebar-collapsed .sidebar-user-card .logout-btn { margin-left: 0; }
-        .main-wrapper.sidebar-collapsed {
-            margin-left: 64px;
-            transition: margin-left 0.3s;
+
+        /* ── Mobile overlay backdrop ── */
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 999;
         }
         @media (max-width: 768px) {
-            .sidebar.sidebar-collapsed { width: var(--sidebar-width); }
-            .main-wrapper.sidebar-collapsed { margin-left: 0; }
+            .sidebar-backdrop.show { display: block; }
         }
 
         /* Scrollbar */
@@ -1290,16 +1293,15 @@
 
     </nav>
 
+    <!-- Mobile sidebar backdrop -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
     <!-- Main Wrapper -->
     <div class="main-wrapper">
         <!-- Topbar -->
         <header class="topbar">
-            <button class="btn btn-sm d-md-none me-2" id="sidebarToggle">
-                <i class="bi bi-list fs-5"></i>
-            </button>
-
-            {{-- Desktop sidebar collapse toggle --}}
-            <button class="topbar-action-btn d-none d-md-flex me-1" id="sidebarCollapseBtn" title="Toggle Sidebar">
+            {{-- Sidebar toggle — works on all screen sizes --}}
+            <button class="topbar-action-btn me-1" id="sidebarCollapseBtn" title="Toggle Sidebar">
                 <i class="bi bi-layout-sidebar" id="sidebarCollapseIcon"></i>
             </button>
 
@@ -1480,31 +1482,23 @@
         },
     };
 
-    // Mobile Sidebar Toggle
-    document.getElementById('sidebarToggle')?.addEventListener('click', () => {
-        document.getElementById('sidebar').classList.toggle('show');
-    });
-
-    // Desktop Sidebar Collapse (icon-only mode)
+    // ── Unified Sidebar Toggle (mobile slide + desktop icon-only) ────────────
     (function () {
         const sidebar     = document.getElementById('sidebar');
         const mainWrapper = document.querySelector('.main-wrapper');
+        const backdrop    = document.getElementById('sidebarBackdrop');
         const btn         = document.getElementById('sidebarCollapseBtn');
         const icon        = document.getElementById('sidebarCollapseIcon');
 
-        function applyCollapsed(collapsed) {
+        const isMobile = () => window.innerWidth <= 768;
+
+        // ── Desktop: icon-only collapse ──────────────────────────────────────
+        function applyDesktopCollapsed(collapsed) {
             sidebar.classList.toggle('sidebar-collapsed', collapsed);
             mainWrapper.classList.toggle('sidebar-collapsed', collapsed);
-            if (icon) {
-                icon.className = collapsed ? 'bi bi-layout-sidebar-reverse' : 'bi bi-layout-sidebar';
-            }
-            // When expanding, also enable Bootstrap tooltips on links (removed on collapse)
-            document.querySelectorAll('.sidebar-link[data-bs-toggle="tooltip"]').forEach(el => {
-                bootstrap.Tooltip.getInstance(el)?.[collapsed ? 'enable' : 'disable']();
-            });
+            if (icon) icon.className = collapsed ? 'bi bi-layout-sidebar-reverse' : 'bi bi-layout-sidebar';
         }
 
-        // On collapse: add tooltips to each nav link using the nav-label text
         function enableTooltips() {
             document.querySelectorAll('.sidebar-link').forEach(link => {
                 const label = link.querySelector('.nav-label')?.textContent?.trim();
@@ -1516,7 +1510,6 @@
                 }
             });
         }
-
         function disableTooltips() {
             document.querySelectorAll('.sidebar-link[data-bs-toggle="tooltip"]').forEach(link => {
                 bootstrap.Tooltip.getInstance(link)?.dispose();
@@ -1525,16 +1518,59 @@
             });
         }
 
-        // Restore persisted state
-        const saved = localStorage.getItem('sidebarCollapsed') === '1';
-        applyCollapsed(saved);
-        if (saved) enableTooltips();
+        // ── Mobile: slide in/out with backdrop ───────────────────────────────
+        function openMobileSidebar() {
+            sidebar.classList.add('show');
+            backdrop?.classList.add('show');
+            if (icon) icon.className = 'bi bi-x-lg';
+        }
+        function closeMobileSidebar() {
+            sidebar.classList.remove('show');
+            backdrop?.classList.remove('show');
+            if (icon) icon.className = 'bi bi-layout-sidebar';
+        }
 
+        // Restore desktop collapsed state on load (never on mobile)
+        if (!isMobile()) {
+            const saved = localStorage.getItem('sidebarCollapsed') === '1';
+            applyDesktopCollapsed(saved);
+            if (saved) enableTooltips();
+        }
+
+        // Button click
         btn?.addEventListener('click', function () {
-            const nowCollapsed = !sidebar.classList.contains('sidebar-collapsed');
-            localStorage.setItem('sidebarCollapsed', nowCollapsed ? '1' : '0');
-            applyCollapsed(nowCollapsed);
-            if (nowCollapsed) enableTooltips(); else disableTooltips();
+            if (isMobile()) {
+                sidebar.classList.contains('show') ? closeMobileSidebar() : openMobileSidebar();
+            } else {
+                const nowCollapsed = !sidebar.classList.contains('sidebar-collapsed');
+                localStorage.setItem('sidebarCollapsed', nowCollapsed ? '1' : '0');
+                applyDesktopCollapsed(nowCollapsed);
+                if (nowCollapsed) enableTooltips(); else disableTooltips();
+            }
+        });
+
+        // Close mobile sidebar when backdrop is tapped
+        backdrop?.addEventListener('click', closeMobileSidebar);
+
+        // Close mobile sidebar when a nav link is tapped
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.addEventListener('click', () => { if (isMobile()) closeMobileSidebar(); });
+        });
+
+        // On resize: clean up mobile state when switching to desktop
+        window.addEventListener('resize', () => {
+            if (!isMobile()) {
+                sidebar.classList.remove('show');
+                backdrop?.classList.remove('show');
+                if (icon && !sidebar.classList.contains('sidebar-collapsed')) {
+                    icon.className = 'bi bi-layout-sidebar';
+                }
+            } else {
+                // Remove desktop collapsed on mobile
+                sidebar.classList.remove('sidebar-collapsed');
+                mainWrapper.classList.remove('sidebar-collapsed');
+                disableTooltips();
+            }
         });
     })();
 
