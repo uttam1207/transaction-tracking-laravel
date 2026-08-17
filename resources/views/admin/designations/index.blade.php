@@ -72,12 +72,17 @@
                     <td>
                         @if($desig->level)
                         @php
-                            $colors = [1=>'danger',2=>'warning',3=>'info',4=>'secondary'];
+                            $badges = [
+                                1 => ['bg'=>'#7c3aed','color'=>'#fff'],   // Executive  — Purple
+                                2 => ['bg'=>'#0ea5e9','color'=>'#fff'],   // Senior     — Sky Blue
+                                3 => ['bg'=>'#10b981','color'=>'#fff'],   // Mid-Level  — Emerald
+                                4 => ['bg'=>'#64748b','color'=>'#fff'],   // Junior     — Slate
+                            ];
                             $labels = [1=>'Executive',2=>'Senior',3=>'Mid-Level',4=>'Junior'];
-                            $c = $colors[$desig->level] ?? 'secondary';
+                            $b = $badges[$desig->level] ?? ['bg'=>'#64748b','color'=>'#fff'];
                             $l = $labels[$desig->level] ?? "L{$desig->level}";
                         @endphp
-                        <span class="badge bg-{{ $c }} bg-opacity-15 text-{{ $c }}" style="font-size:.72rem;font-weight:700;border-radius:20px;">{{ $l }}</span>
+                        <span style="background:{{ $b['bg'] }};color:{{ $b['color'] }};font-size:.72rem;font-weight:700;border-radius:20px;padding:3px 12px;display:inline-block;letter-spacing:.3px;">{{ $l }}</span>
                         @else<span style="color:#9ca3af;">—</span>@endif
                     </td>
                     <td>

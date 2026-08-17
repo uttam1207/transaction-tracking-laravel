@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Branch;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -11,8 +12,9 @@ class CompanyController extends Controller
 {
     public function index()
     {
-        $company = Company::with('activeBranches')->first();
-        return view('admin.company.index', compact('company'));
+        $company  = Company::with('activeBranches')->first();
+        $branches = Branch::with('manager')->orderBy('is_headquarters', 'desc')->orderBy('name')->get();
+        return view('admin.company.index', compact('company', 'branches'));
     }
 
     public function edit(Company $company)
