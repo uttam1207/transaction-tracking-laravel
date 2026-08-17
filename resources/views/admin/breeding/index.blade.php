@@ -129,9 +129,9 @@
                             <div style="font-size:.73rem;color:#9ca3af;">{{ $r->animal?->name }}</div>
                         </td>
                         <td style="font-size:.82rem;">{{ $r->heat_date?->format('d M Y') }}</td>
-                        <td style="font-size:.82rem;">{{ $r->ai_date ? $r->ai_date->format('d M Y') : '&#8212;' }}</td>
-                        <td><code style="font-size:.78rem;background:#f5f7fa;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;">{{ $r->bull_semen_code ?? '&#8212;' }}</code></td>
-                        <td style="font-size:.82rem;">{{ $r->expected_calving_date ? $r->expected_calving_date->format('d M Y') : '&#8212;' }}</td>
+                        <td style="font-size:.82rem;">{{ $r->ai_date ? $r->ai_date->format('d M Y') : '—' }}</td>
+                        <td><code style="font-size:.78rem;background:#f5f7fa;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;">{{ $r->bull_semen_code ?? '—' }}</code></td>
+                        <td style="font-size:.82rem;">{{ $r->expected_calving_date ? $r->expected_calving_date->format('d M Y') : '—' }}</td>
                         <td><span class="spill {{ $statusColor }}">{{ $r->status }}</span></td>
                         <td style="text-align:center;">
                             <a href="{{ route('admin.breeding.show',$r) }}" class="act-btn act-view"><i class="bi bi-eye"></i></a>
