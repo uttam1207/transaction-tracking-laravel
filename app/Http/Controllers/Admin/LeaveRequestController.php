@@ -8,12 +8,15 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Services\NotificationService;
+use App\Traits\ScopesByDepartment;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
 class LeaveRequestController extends Controller implements HasMiddleware
 {
+    use ScopesByDepartment;
+
     public function __construct(private NotificationService $notificationService) {}
 
     public static function middleware(): array
@@ -21,8 +24,9 @@ class LeaveRequestController extends Controller implements HasMiddleware
         return [
             new Middleware(function ($request, $next) {
                 $user = auth()->user();
-                if (!$user || !in_array($user->role, ['super_admin', 'admin'])) {
-                    abort(403, 'Access restricted to administrators.');
+                // super_admin, admin, manager, and team_lead may manage leave requests
+                if (!$user || !in_array($user->role, ['super_admin', 'admin', 'manager', 'team_lead'])) {
+                    abort(403, 'Access restricted to administrators and managers.');
                 }
                 return $next($request);
             }),
@@ -33,7 +37,10 @@ class LeaveRequestController extends Controller implements HasMiddleware
     {
         $query = Leave::with('employee.user', 'employee.department', 'approver');
 
-        // Filters
+        // Restrict to managed dept/team for managers and team leads
+        $this->applyRelatedDeptScope($query);
+
+        // Additional filters
         if ($request->status) {
             $query->where('status', $request->status);
         }
@@ -55,18 +62,21 @@ class LeaveRequestController extends Controller implements HasMiddleware
 
         $leaves = $query->latest()->paginate(20)->withQueryString();
 
-        // Stats (all time, no scope)
+        // Stats scoped to the same restriction
+        $statsBase = Leave::query();
+        $this->applyRelatedDeptScope($statsBase);
         $stats = [
-            'pending'  => Leave::where('status', 'pending')->count(),
-            'approved' => Leave::where('status', 'approved')->count(),
-            'rejected' => Leave::where('status', 'rejected')->count(),
-            'this_month' => Leave::whereMonth('created_at', now()->month)
-                                 ->whereYear('created_at', now()->year)
-                                 ->count(),
+            'pending'    => (clone $statsBase)->where('status', 'pending')->count(),
+            'approved'   => (clone $statsBase)->where('status', 'approved')->count(),
+            'rejected'   => (clone $statsBase)->where('status', 'rejected')->count(),
+            'this_month' => (clone $statsBase)
+                ->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
         ];
 
         $departments = Department::active()->orderBy('name')->get();
-        $employees   = Employee::with('user')->active()->orderBy('id')->get();
+        $employees   = $this->deptEmployeeQuery()->orderBy('id')->get();
 
         $leaveTypes = ['annual', 'sick', 'casual', 'maternity', 'paternity', 'unpaid', 'other'];
 
@@ -83,6 +93,10 @@ class LeaveRequestController extends Controller implements HasMiddleware
         if ($leave->status !== 'pending') {
             return response()->json(['success' => false, 'message' => 'Only pending leaves can be actioned.'], 422);
         }
+
+        // Enforce dept/team restriction — manager cannot action other dept's employees
+        $leave->load('employee');
+        $this->authorizeEmployee($leave->employee);
 
         $status = $request->action === 'approve' ? 'approved' : 'rejected';
 
@@ -157,6 +171,9 @@ class LeaveRequestController extends Controller implements HasMiddleware
             $leave = Leave::where('id', $id)->where('status', 'pending')->first();
             if (!$leave) continue;
 
+            // Skip leaves the current user is not allowed to manage
+            if (!$this->canManageEmployee($leave->employee_id)) continue;
+
             $leave->update([
                 'status'      => $status,
                 'approved_by' => auth()->id(),
@@ -185,7 +202,7 @@ class LeaveRequestController extends Controller implements HasMiddleware
                 if ($leave->from_date->ne($leave->to_date)) {
                     $dateRange .= ' – ' . $leave->to_date->format('d M Y');
                 }
-                $notifType = $status === 'approved' ? 'success' : 'danger';
+                $notifType  = $status === 'approved' ? 'success' : 'danger';
                 $notifTitle = $status === 'approved' ? 'Leave Request Approved' : 'Leave Request Rejected';
                 $notifMsg   = "Your {$leaveType} leave request ({$dateRange}) has been {$status}.";
                 $this->notificationService->send($employeeUser, $notifTitle, $notifMsg, $notifType, [], route('employee.attendance.leaves'));

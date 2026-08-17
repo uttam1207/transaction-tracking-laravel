@@ -879,10 +879,10 @@
             @php $svcUser = auth()->user(); @endphp
             @if($svcUser->hasAdminAccess())
 
-                {{-- Personal workspace for managers and admins who are also employees --}}
-                @if($svcUser->isManager() || $svcUser->employee)
+                {{-- Personal workspace for managers, team leads and admins who are also employees --}}
+                @if($svcUser->isManager() || $svcUser->isTeamLead() || $svcUser->employee)
                 <div class="nav-section-title">My Workspace</div>
-                @if($svcUser->isManager())
+                @if($svcUser->isManager() || $svcUser->isTeamLead())
                 <a href="{{ route('admin.manager.dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.manager.dashboard') ? 'active' : '' }}">
                     <span class="nav-icon"><i class="bi bi-person-circle"></i></span>
                     <span class="nav-label">My Dashboard</span>
@@ -914,7 +914,7 @@
                 @php
                     $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
                     $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.company.*') || request()->routeIs('admin.branches.*') || request()->routeIs('admin.designations.*') || request()->routeIs('admin.cost-centers.*') || request()->routeIs('admin.leave-types.*') || request()->routeIs('admin.leave-balances.*') || request()->routeIs('admin.salary-components.*') || request()->routeIs('admin.salary-structures.*') || request()->routeIs('admin.performance-reviews.*') || request()->routeIs('admin.approvals.*') || request()->routeIs('admin.recruitment.*') || request()->routeIs('admin.training.*') || request()->routeIs('admin.employee-assets.*') || request()->routeIs('admin.employee-lifecycle.*') || request()->routeIs('admin.transfers.*') || request()->routeIs('admin.leave-requests.*');
-                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*');
+                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.crm-leads.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.purchase-requests.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
 
                     // Permission flags — used to hide entire groups/sub-titles when no access
@@ -947,7 +947,9 @@
                         <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                         <span class="nav-label">Dashboard</span>
                     </a>
-                    @elseif(!$svcUser->isManager())
+                    @elseif($svcUser->isManager() || $svcUser->isTeamLead())
+                    {{-- Manager / Team Lead dashboard --}}
+                    @else
                     <a href="{{ route('admin.role-dashboard') }}" class="sidebar-link {{ request()->routeIs('admin.role-dashboard') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-speedometer2"></i></span>
                         <span class="nav-label">Dashboard</span>
@@ -1029,6 +1031,23 @@
                         <span class="nav-label">Stock</span>
                     </a>
                     @endif
+                    <a href="{{ route('admin.warehouses.index') }}" class="sidebar-link {{ request()->routeIs('admin.warehouses.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-building-fill"></i></span>
+                        <span class="nav-label">Warehouses</span>
+                    </a>
+                    <div class="nav-sub-title">Finance V2</div>
+                    <a href="{{ route('admin.finance.coa.index') }}" class="sidebar-link {{ request()->routeIs('admin.finance.coa.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-list-columns-reverse"></i></span>
+                        <span class="nav-label">Chart of Accounts</span>
+                    </a>
+                    <a href="{{ route('admin.finance.journal.index') }}" class="sidebar-link {{ request()->routeIs('admin.finance.journal.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-journal-text"></i></span>
+                        <span class="nav-label">Journal Entries</span>
+                    </a>
+                    <a href="{{ route('admin.finance.periods.index') }}" class="sidebar-link {{ request()->routeIs('admin.finance.periods.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
+                        <span class="nav-label">Financial Periods</span>
+                    </a>
                     <div class="nav-sub-title">Operations</div>
                     @if(\App\Models\ServicePermission::canAccess('maintenance', $svcUser))
                     <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
@@ -1160,8 +1179,8 @@
                         <span class="nav-label">Cost Centers</span>
                     </a>
                     @endif
-                    {{-- Leave Requests — super_admin / admin only --}}
-                    @if(in_array($svcUser->role, ['super_admin', 'admin']))
+                    {{-- Leave Requests — super_admin, admin, manager, team_lead --}}
+                    @if(in_array($svcUser->role, ['super_admin', 'admin', 'manager', 'team_lead']))
                     <a href="{{ route('admin.leave-requests.index') }}" class="sidebar-link {{ request()->routeIs('admin.leave-requests.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-calendar2-minus"></i></span>
                         <span class="nav-label">Leave Requests</span>
@@ -1311,12 +1330,20 @@
                         <span class="nav-label">Franchise</span>
                     </a>
                     @endif
+                    <a href="{{ route('admin.crm-leads.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm-leads.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-funnel-fill"></i></span>
+                        <span class="nav-label">Leads Pipeline</span>
+                    </a>
                     @if(\App\Models\ServicePermission::canAccess('procurement', $svcUser))
                     <a href="{{ route('admin.procurement.index') }}" class="sidebar-link {{ request()->routeIs('admin.procurement.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-cart-check"></i></span>
                         <span class="nav-label">Procurement</span>
                     </a>
                     @endif
+                    <a href="{{ route('admin.purchase-requests.index') }}" class="sidebar-link {{ request()->routeIs('admin.purchase-requests.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-clipboard-plus"></i></span>
+                        <span class="nav-label">Purchase Requests</span>
+                    </a>
                     @if(\App\Models\ServicePermission::canAccess('vendors', $svcUser))
                     <a href="{{ route('admin.vendors.index') }}" class="sidebar-link {{ request()->routeIs('admin.vendors.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-building"></i></span>

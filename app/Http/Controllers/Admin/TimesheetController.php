@@ -7,13 +7,19 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Timesheet;
+use App\Traits\ScopesByDepartment;
 use Illuminate\Http\Request;
 
 class TimesheetController extends Controller
 {
+    use ScopesByDepartment;
+
     public function index(Request $request)
     {
         $query = Timesheet::with(['employee.user', 'task', 'project']);
+
+        // Restrict managers / team leads to their dept / team employees
+        $this->applyRelatedDeptScope($query, 'employee');
 
         if ($request->employee_id) {
             $query->where('employee_id', $request->employee_id);
@@ -41,7 +47,7 @@ class TimesheetController extends Controller
 
         $totalHours = (clone $query)->sum('hours');
 
-        $employees   = Employee::with('user')->where('status', 'active')->get();
+        $employees   = $this->deptEmployeeQuery()->get();
         $projects    = Project::where('status', 'active')->get();
         $departments = Department::orderBy('name')->get();
 
@@ -52,12 +58,18 @@ class TimesheetController extends Controller
 
     public function approve(Timesheet $timesheet)
     {
+        $timesheet->load('employee');
+        $this->authorizeEmployee($timesheet->employee);
+
         $timesheet->update(['status' => 'approved']);
         return back()->with('success', 'Timesheet entry approved.');
     }
 
     public function reject(Request $request, Timesheet $timesheet)
     {
+        $timesheet->load('employee');
+        $this->authorizeEmployee($timesheet->employee);
+
         $timesheet->update(['status' => 'rejected']);
         return back()->with('success', 'Timesheet entry rejected.');
     }
@@ -65,7 +77,13 @@ class TimesheetController extends Controller
     public function bulkApprove(Request $request)
     {
         $request->validate(['ids' => 'required|array', 'ids.*' => 'integer']);
-        Timesheet::whereIn('id', $request->ids)->where('status', 'pending')->update(['status' => 'approved']);
-        return back()->with('success', count($request->ids) . ' entries approved.');
+
+        // Filter to only IDs the current user is allowed to manage
+        $allowedIds = array_filter($request->ids, fn($id) => $this->canManageEmployee(
+            Timesheet::find($id)?->employee_id ?? 0
+        ));
+
+        Timesheet::whereIn('id', $allowedIds)->where('status', 'pending')->update(['status' => 'approved']);
+        return back()->with('success', count($allowedIds) . ' entries approved.');
     }
 }

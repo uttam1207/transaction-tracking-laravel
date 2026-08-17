@@ -127,20 +127,42 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'manager';
     }
 
+    public function isTeamLead(): bool
+    {
+        return $this->role === 'team_lead';
+    }
+
+    public function isHr(): bool
+    {
+        return $this->role === 'hr';
+    }
+
+    /** The team this user leads (team_lead role only). */
+    public function ledTeam()
+    {
+        return $this->hasOne(\App\Models\Team::class, 'team_lead_id');
+    }
+
+    /** The department this user manages (manager role only). */
+    public function managedDepartment()
+    {
+        return $this->hasOne(\App\Models\Department::class, 'manager_id');
+    }
+
     /**
      * True for any role that should access the admin area
      * (everyone except the basic 'employee' role).
      */
     public function hasAdminAccess(): bool
     {
-        return !empty($this->role) && $this->role !== 'employee';
+        return !empty($this->role) && !in_array($this->role, ['employee']);
     }
 
     public function getDashboardRoute(): string
     {
         return match($this->role) {
             'super_admin', 'admin' => route('admin.dashboard'),
-            'manager'              => route('admin.manager.dashboard'),
+            'manager', 'team_lead' => route('admin.manager.dashboard'),
             'employee'             => route('employee.dashboard'),
             default                => route('admin.role-dashboard'),
         };

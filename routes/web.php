@@ -75,6 +75,10 @@ use App\Http\Controllers\Employee\TaskController as EmployeeTaskController;
 use App\Http\Controllers\Employee\WorkReportController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\PurchaseRequestController;
+use App\Http\Controllers\Admin\WarehouseController;
+use App\Http\Controllers\Admin\CrmLeadController;
 
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
@@ -482,6 +486,65 @@ Route::prefix('admin')
 
     // Module 12 — Franchise Management
     Route::resource('franchise', FranchiseController::class)->parameters(['franchise' => 'franchise']);
+
+    // Finance V2 — Chart of Accounts, Journal Entries, Periods
+    Route::prefix('finance')->name('finance.')->group(function () {
+        // Chart of Accounts
+        Route::get('/coa',             [FinanceController::class, 'coaIndex'])->name('coa.index');
+        Route::post('/coa',            [FinanceController::class, 'coaStore'])->name('coa.store');
+        Route::put('/coa/{account}',   [FinanceController::class, 'coaUpdate'])->name('coa.update');
+        Route::delete('/coa/{account}',[FinanceController::class, 'coaDestroy'])->name('coa.destroy');
+
+        // Financial Periods
+        Route::get('/periods',           [FinanceController::class, 'periodsIndex'])->name('periods.index');
+        Route::post('/periods',          [FinanceController::class, 'periodsStore'])->name('periods.store');
+        Route::patch('/periods/{period}',[FinanceController::class, 'periodsUpdate'])->name('periods.update');
+
+        // Journal Entries
+        Route::get('/journal',                       [FinanceController::class, 'journalIndex'])->name('journal.index');
+        Route::get('/journal/create',                [FinanceController::class, 'journalCreate'])->name('journal.create');
+        Route::post('/journal',                      [FinanceController::class, 'journalStore'])->name('journal.store');
+        Route::get('/journal/{entry}',               [FinanceController::class, 'journalShow'])->name('journal.show');
+        Route::post('/journal/{entry}/post',         [FinanceController::class, 'journalPost'])->name('journal.post');
+        Route::post('/journal/{entry}/reverse',      [FinanceController::class, 'journalReverse'])->name('journal.reverse');
+    });
+
+    // Procurement V2 — Purchase Requests
+    Route::prefix('purchase-requests')->name('purchase-requests.')->group(function () {
+        Route::get('/',              [PurchaseRequestController::class, 'index'])->name('index');
+        Route::get('/create',        [PurchaseRequestController::class, 'create'])->name('create');
+        Route::post('/',             [PurchaseRequestController::class, 'store'])->name('store');
+        Route::get('/{pr}',          [PurchaseRequestController::class, 'show'])->name('show');
+        Route::post('/{pr}/submit',  [PurchaseRequestController::class, 'submit'])->name('submit');
+        Route::post('/{pr}/approve', [PurchaseRequestController::class, 'approve'])->name('approve');
+        Route::post('/{pr}/reject',  [PurchaseRequestController::class, 'reject'])->name('reject');
+    });
+
+    // Inventory V2 — Multi-Warehouse
+    Route::prefix('warehouses')->name('warehouses.')->group(function () {
+        Route::get('/',                          [WarehouseController::class, 'index'])->name('index');
+        Route::post('/',                         [WarehouseController::class, 'store'])->name('store');
+        Route::get('/{warehouse}',               [WarehouseController::class, 'show'])->name('show');
+        Route::put('/{warehouse}',               [WarehouseController::class, 'update'])->name('update');
+        Route::post('/{warehouse}/locations',    [WarehouseController::class, 'storeLocation'])->name('locations.store');
+
+        // Stock Transfers
+        Route::get('/transfers',                 [WarehouseController::class, 'transferIndex'])->name('transfers')->middleware('web');
+        Route::get('/transfers/create',          [WarehouseController::class, 'transferCreate'])->name('transfer.create');
+        Route::post('/transfers',                [WarehouseController::class, 'transferStore'])->name('transfer.store');
+        Route::post('/transfers/{transfer}/complete', [WarehouseController::class, 'transferComplete'])->name('transfer.complete');
+    });
+
+    // CRM V2 — Leads Pipeline
+    Route::prefix('crm-leads')->name('crm-leads.')->group(function () {
+        Route::get('/',                   [CrmLeadController::class, 'index'])->name('index');
+        Route::post('/',                  [CrmLeadController::class, 'store'])->name('store');
+        Route::get('/{lead}',             [CrmLeadController::class, 'show'])->name('show');
+        Route::put('/{lead}',             [CrmLeadController::class, 'update'])->name('update');
+        Route::delete('/{lead}',          [CrmLeadController::class, 'destroy'])->name('destroy');
+        Route::post('/{lead}/activities', [CrmLeadController::class, 'addActivity'])->name('activities.store');
+        Route::post('/{lead}/convert',    [CrmLeadController::class, 'convert'])->name('convert');
+    });
 
     // Module 13 — Procurement
     Route::resource('procurement', ProcurementController::class)->parameters(['procurement' => 'purchaseOrder']);

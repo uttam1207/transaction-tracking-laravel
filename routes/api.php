@@ -7,6 +7,9 @@ use App\Http\Controllers\API\V1\DashboardApiController;
 use App\Http\Controllers\API\V1\TaskApiController;
 use App\Http\Controllers\API\V1\WorkReportApiController;
 use App\Http\Controllers\API\V1\FraudAlertApiController;
+use App\Http\Controllers\API\V1\EmployeeApiController;
+use App\Http\Controllers\API\V1\LeaveApiController;
+use App\Http\Controllers\API\V1\SalaryApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -69,10 +72,25 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(functi
     Route::post('/attendance/check-in', [AttendanceApiController::class, 'checkIn']);
     Route::post('/attendance/check-out', [AttendanceApiController::class, 'checkOut']);
 
+    // Employees V2
+    Route::get('/employees/me', [EmployeeApiController::class, 'me']);
+    Route::get('/employees', [EmployeeApiController::class, 'index']);
+    Route::get('/employees/{employee}', [EmployeeApiController::class, 'show']);
+
+    // Leave Requests V2
+    Route::get('/leaves', [LeaveApiController::class, 'index']);
+    Route::post('/leaves', [LeaveApiController::class, 'store']);
+    Route::get('/leaves/{leave}', [LeaveApiController::class, 'show']);
+    Route::delete('/leaves/{leave}', [LeaveApiController::class, 'destroy']);
+
+    // Salaries / Payroll V2
+    Route::get('/salaries/summary', [SalaryApiController::class, 'summary'])->middleware('role:super_admin,admin,hr');
+    Route::get('/salaries', [SalaryApiController::class, 'index']);
+    Route::get('/salaries/{salary}', [SalaryApiController::class, 'show']);
+
     // Users (Admin only)
     Route::middleware('role:super_admin,admin')->group(function () {
         Route::apiResource('users', \App\Http\Controllers\Admin\UserController::class)->only(['index', 'store', 'show', 'update', 'destroy']);
-        Route::apiResource('employees', \App\Http\Controllers\Admin\EmployeeController::class)->only(['index', 'show']);
         Route::get('/audit-logs', [\App\Http\Controllers\Admin\ReportController::class, 'auditLogs']);
 
         // Fraud Alerts (Admin API)
