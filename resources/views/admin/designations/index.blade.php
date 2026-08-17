@@ -63,7 +63,7 @@
             <tbody>
                 @forelse($designations as $desig)
                 <tr>
-                    <td style="font-weight:700;font-size:.88rem;color:#111827;">{{ $desig->name }}</td>
+                    <td style="font-weight:600;font-size:.88rem;">{{ $desig->name }}</td>
                     <td>
                         @if($desig->code)
                         <span style="background:#f0f4ff;color:#4f46e5;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:700;font-family:monospace;">{{ $desig->code }}</span>
