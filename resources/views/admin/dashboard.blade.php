@@ -689,9 +689,9 @@
                     <div class="performer-rank {{ $i === 0 ? 'rank-1' : ($i === 1 ? 'rank-2' : ($i === 2 ? 'rank-3' : 'rank-n')) }}">
                         {{ $i + 1 }}
                     </div>
-                    <img src="{{ $emp->user->avatar_url }}" class="rounded-circle border" width="34" height="34" alt="">
+                    <img src="{{ $emp->user?->avatar_url ?? asset('images/default-avatar.png') }}" class="rounded-circle border" width="34" height="34" alt="">
                     <div class="flex-grow-1 overflow-hidden">
-                        <div class="small fw-semibold text-truncate">{{ $emp->user->name }}</div>
+                        <div class="small fw-semibold text-truncate">{{ $emp->user?->name ?? 'Unknown' }}</div>
                         <div class="perf-bar-bg">
                             <div class="perf-bar-fill" style="width:{{ $emp->performance_score }}%;"></div>
                         </div>
