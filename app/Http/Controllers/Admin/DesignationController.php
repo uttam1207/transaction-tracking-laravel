@@ -30,7 +30,7 @@ class DesignationController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:designations,name',
             'code'        => 'required|string|max:50|unique:designations,code',
             'level'       => 'required|integer|between:1,4',
             'description' => 'nullable|string',
@@ -46,7 +46,7 @@ class DesignationController extends Controller
     public function update(Request $request, Designation $designation)
     {
         $data = $request->validate([
-            'name'        => 'required|string|max:255',
+            'name'        => 'required|string|max:255|unique:designations,name,' . $designation->id,
             'code'        => 'required|string|max:50|unique:designations,code,' . $designation->id,
             'level'       => 'required|integer|between:1,4',
             'description' => 'nullable|string',

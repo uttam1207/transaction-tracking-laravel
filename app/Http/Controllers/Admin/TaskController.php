@@ -7,10 +7,13 @@ use App\Models\Task;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Services\NotificationService;
+use App\Traits\ScopesByDepartment;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct(private NotificationService $notificationService)
     {
     }
@@ -18,6 +21,12 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         $query = Task::with('assignedTo.user', 'assignedBy', 'project');
+
+        // Scope tasks to the manager's department employees
+        $empIds = $this->managedEmployeeIds();
+        if ($empIds !== null) {
+            $query->whereIn('assigned_to', $empIds);
+        }
 
         if ($request->search) {
             $query->where('title', 'like', '%' . $request->search . '%')
@@ -32,26 +41,35 @@ class TaskController extends Controller
             $query->where('priority', $request->priority);
         }
 
-        if ($request->employee_id) {
+        // Admins can filter by specific employee; managers already scoped to dept
+        if ($request->employee_id && $empIds === null) {
+            $query->where('assigned_to', $request->employee_id);
+        } elseif ($request->employee_id && $empIds !== null && in_array((int) $request->employee_id, $empIds)) {
             $query->where('assigned_to', $request->employee_id);
         }
 
-        $tasks = $query->latest()->paginate(15)->withQueryString();
-        $employees = Employee::with('user')->active()->get();
-        $projects = Project::active()->get();
+        $tasks     = $query->latest()->paginate(15)->withQueryString();
+        $employees = $this->deptEmployeeQuery()->get();
+        $projects  = Project::active()->get();
 
         return view('admin.tasks.index', compact('tasks', 'employees', 'projects'));
     }
 
     public function store(Request $request)
     {
+        // Managers can only assign tasks to their own dept employees
+        $empIds = $this->managedEmployeeIds();
+        if ($empIds !== null && !in_array((int) $request->assigned_to, $empIds)) {
+            abort(403, 'You can only assign tasks to employees in your department.');
+        }
+
         $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'assigned_to' => 'required|exists:employees,id',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'due_date' => 'nullable|date|after:today',
-            'project_id' => 'nullable|exists:projects,id',
+            'title'           => 'required|string|max:255',
+            'description'     => 'nullable|string',
+            'assigned_to'     => 'required|exists:employees,id',
+            'priority'        => 'required|in:low,medium,high,urgent',
+            'due_date'        => 'nullable|date|after:today',
+            'project_id'      => 'nullable|exists:projects,id',
             'estimated_hours' => 'nullable|integer|min:0',
         ]);
 
@@ -106,13 +124,15 @@ class TaskController extends Controller
     public function kanban(Request $request)
     {
         $statuses = ['pending', 'in_progress', 'review', 'completed'];
-        $tasks = [];
+        $empIds   = $this->managedEmployeeIds();
+        $tasks    = [];
 
         foreach ($statuses as $status) {
-            $tasks[$status] = Task::with('assignedTo.user')
-                ->where('status', $status)
-                ->latest()
-                ->get();
+            $q = Task::with('assignedTo.user')->where('status', $status);
+            if ($empIds !== null) {
+                $q->whereIn('assigned_to', $empIds);
+            }
+            $tasks[$status] = $q->latest()->get();
         }
 
         return view('admin.tasks.kanban', compact('tasks'));

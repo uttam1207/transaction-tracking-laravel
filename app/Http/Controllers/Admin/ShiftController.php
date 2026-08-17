@@ -40,7 +40,7 @@ class ShiftController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:80',
+            'name'       => 'required|string|max:80|unique:shifts,name',
             'start_time' => 'nullable|date_format:H:i',
             'end_time'   => 'nullable|date_format:H:i',
             'color'      => 'nullable|string|max:20',
@@ -91,7 +91,7 @@ class ShiftController extends Controller
     public function updateShiftType(Request $request, Shift $shift)
     {
         $request->validate([
-            'name'       => 'required|string|max:80',
+            'name'       => 'required|string|max:80|unique:shifts,name,' . $shift->id,
             'start_time' => 'nullable|date_format:H:i',
             'end_time'   => 'nullable|date_format:H:i',
             'color'      => 'nullable|string|max:20',

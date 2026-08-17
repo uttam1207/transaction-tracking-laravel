@@ -8,7 +8,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Employee;
 use App\Models\User;
 use App\Models\Project;
+use App\Models\Milestone;
 use App\Models\TaskComment;
+use App\Models\TaskAssignee;
+use App\Models\TaskWatcher;
+use App\Models\TaskDependency;
+use App\Models\TaskAttachment;
 use App\Models\Timesheet;
 
 class Task extends Model
@@ -16,13 +21,15 @@ class Task extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'task_id', 'title', 'description', 'assigned_to', 'assigned_by', 'project_id',
-        'priority', 'status', 'due_date', 'started_at', 'completed_at',
+        'task_id', 'title', 'description', 'assigned_to', 'assigned_by',
+        'project_id', 'milestone_id',
+        'priority', 'status', 'start_date', 'due_date', 'started_at', 'completed_at',
         'estimated_hours', 'actual_hours', 'progress', 'tags', 'rejection_reason',
         'is_recurring', 'recurrence_type', 'recurring_ends_at', 'parent_task_id',
     ];
 
     protected $casts = [
+        'start_date'        => 'date',
         'due_date'          => 'date',
         'recurring_ends_at' => 'date',
         'started_at'        => 'datetime',
@@ -57,6 +64,11 @@ class Task extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function milestone()
+    {
+        return $this->belongsTo(Milestone::class);
+    }
+
     public function comments()
     {
         return $this->hasMany(TaskComment::class);
@@ -65,6 +77,45 @@ class Task extends Model
     public function timesheets()
     {
         return $this->hasMany(Timesheet::class);
+    }
+
+    // ── Phase 3 V2 relations ──────────────────────────────────────────────────
+
+    public function assignees()
+    {
+        return $this->hasMany(TaskAssignee::class);
+    }
+
+    public function assigneeEmployees()
+    {
+        return $this->belongsToMany(Employee::class, 'task_assignees')
+                    ->withPivot('role', 'assigned_at')
+                    ->withTimestamps();
+    }
+
+    public function watchers()
+    {
+        return $this->hasMany(TaskWatcher::class);
+    }
+
+    public function watcherUsers()
+    {
+        return $this->belongsToMany(User::class, 'task_watchers')->withTimestamps();
+    }
+
+    public function dependencies()
+    {
+        return $this->hasMany(TaskDependency::class, 'task_id');
+    }
+
+    public function dependents()
+    {
+        return $this->hasMany(TaskDependency::class, 'depends_on_id');
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(TaskAttachment::class);
     }
 
     public function scopeByPriority($query, string $priority)

@@ -109,7 +109,7 @@
                 <h6 class="modal-title fw-bold"><i class="bi bi-calendar-plus me-2"></i>Request Leave</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('employee.attendance.leaves.store') }}" method="POST">
+            <form id="leaveRequestForm" action="{{ route('employee.attendance.leaves.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="row g-3">
@@ -161,3 +161,33 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.getElementById('leaveRequestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('[type=submit]');
+    btn.disabled = true;
+    const fd  = new FormData(this);
+    try {
+        const res  = await fetch(this.action, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': fd.get('_token'), 'Accept': 'application/json' },
+            body: fd,
+        });
+        const data = await res.json();
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('requestLeaveModal')).hide();
+            APP.toast(data.message, 'success');
+            setTimeout(() => location.reload(), 900);
+        } else {
+            APP.toast(data.message ?? 'Something went wrong.', 'danger');
+            btn.disabled = false;
+        }
+    } catch (e) {
+        APP.toast('Network error. Please try again.', 'danger');
+        btn.disabled = false;
+    }
+});
+</script>
+@endpush

@@ -22,7 +22,7 @@ class LeaveTypeController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $leaveTypes = $query->orderBy('sort_order')->orderBy('name')->paginate(20)->withQueryString();
+        $leaveTypes = $query->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.leave-types.index', compact('leaveTypes'));
     }

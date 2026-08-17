@@ -39,19 +39,13 @@
         </div>
         <div class="col-md-4 text-end">
             @if(!$todayAttendance)
-            <form action="{{ route('employee.attendance.check-in') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:10px;font-weight:600;padding:10px 24px;backdrop-filter:blur(6px);">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Check In
-                </button>
-            </form>
+            <button type="button" id="btnCheckIn" class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:10px;font-weight:600;padding:10px 24px;backdrop-filter:blur(6px);">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Check In
+            </button>
             @elseif(!$todayAttendance->check_out)
-            <form action="{{ route('employee.attendance.check-out') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn" style="background:#fbbf24;color:#78350f;border:none;border-radius:10px;font-weight:700;padding:10px 24px;">
-                    <i class="bi bi-box-arrow-right me-2"></i>Check Out
-                </button>
-            </form>
+            <button type="button" id="btnCheckOut" class="btn" style="background:#fbbf24;color:#78350f;border:none;border-radius:10px;font-weight:700;padding:10px 24px;">
+                <i class="bi bi-box-arrow-right me-2"></i>Check Out
+            </button>
             @else
             <div style="text-align:center;">
                 <i class="bi bi-check-circle-fill" style="font-size:2.5rem;opacity:.9;"></i>
@@ -64,33 +58,33 @@
 
 {{-- Monthly Summary --}}
 @php
-    $month = now()->format('F Y');
-    $present = $monthlyStats['present'] ?? 0;
-    $absent = $monthlyStats['absent'] ?? 0;
-    $totalHours = $monthlyStats['total_hours'] ?? 0;
-    $attPct = $monthlyStats['attendance_percentage'] ?? 0;
-    $attColor = $attPct >= 90 ? '#16a34a' : ($attPct >= 75 ? '#d97706' : '#dc2626');
+    $monthLabel = now()->format('F Y');
+    $present    = $monthlyReport['present'] ?? 0;
+    $absent     = $monthlyReport['absent'] ?? 0;
+    $totalHours = $monthlyReport['total_hours'] ?? 0;
+    $attPct     = $monthlyReport['attendance_percentage'] ?? 0;
+    $attColor   = $attPct >= 90 ? '#16a34a' : ($attPct >= 75 ? '#d97706' : '#dc2626');
 @endphp
 <div class="row g-3 mb-4">
     <div class="col-md-3">
         <div class="card-glass p-4 text-center" style="border-top:4px solid #16a34a;">
             <div style="font-size:2rem;font-weight:800;color:#16a34a;line-height:1;">{{ $present }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Present Days</div>
-            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $month }}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $monthLabel }}</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card-glass p-4 text-center" style="border-top:4px solid #dc2626;">
             <div style="font-size:2rem;font-weight:800;color:#dc2626;line-height:1;">{{ $absent }}</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Absent Days</div>
-            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $month }}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $monthLabel }}</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card-glass p-4 text-center" style="border-top:4px solid #6366f1;">
             <div style="font-size:2rem;font-weight:800;color:#6366f1;line-height:1;">{{ number_format($totalHours, 1) }}h</div>
             <div style="font-size:.82rem;color:#6b7280;margin-top:4px;">Total Hours</div>
-            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $month }}</div>
+            <div style="font-size:.72rem;color:#9ca3af;margin-top:2px;">{{ $monthLabel }}</div>
         </div>
     </div>
     <div class="col-md-3">
@@ -183,3 +177,38 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+const csrf = document.querySelector('meta[name=csrf-token]').content;
+
+async function doAttendance(url, btnId) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = true;
+    try {
+        const res  = await fetch(url, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            APP.toast(data.message, 'success');
+            setTimeout(() => location.reload(), 900);
+        } else {
+            APP.toast(data.message ?? 'Something went wrong.', 'danger');
+            btn.disabled = false;
+        }
+    } catch (e) {
+        APP.toast('Network error. Please try again.', 'danger');
+        btn.disabled = false;
+    }
+}
+
+const btnIn  = document.getElementById('btnCheckIn');
+const btnOut = document.getElementById('btnCheckOut');
+
+if (btnIn)  btnIn.addEventListener('click',  () => doAttendance('{{ route('employee.attendance.check-in') }}',  'btnCheckIn'));
+if (btnOut) btnOut.addEventListener('click', () => doAttendance('{{ route('employee.attendance.check-out') }}', 'btnCheckOut'));
+</script>
+@endpush

@@ -15,6 +15,7 @@ use Database\Seeders\ServicePermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Database\Seeders\OrganizationSeeder;
 use Database\Seeders\HRMSSeeder;
+use Database\Seeders\PermissionSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -33,6 +34,7 @@ class DatabaseSeeder extends Seeder
             ServicePermissionSeeder::class,
             RoleSeeder::class,
             HRMSSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

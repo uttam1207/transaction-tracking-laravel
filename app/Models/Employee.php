@@ -19,6 +19,15 @@ use App\Models\PerformanceReview;
 use App\Models\Task;
 use App\Models\WorkReport;
 use App\Models\Timesheet;
+use App\Models\EmployeeDepartment;
+use App\Models\EmployeeReportingHistory;
+use App\Models\EmployeeLifecycleEvent;
+use App\Models\EmployeeAsset;
+use App\Models\EmployeeTransfer;
+use App\Models\EmployeePromotion;
+use App\Models\ExitInterview;
+use App\Models\EmployeeOnboarding;
+use App\Models\EmployeeTraining;
 
 class Employee extends Model
 {
@@ -135,6 +144,71 @@ class Employee extends Model
     public function performanceReviews()
     {
         return $this->hasMany(PerformanceReview::class);
+    }
+
+    // ── Phase 3 Employee V2 relationships ─────────────────────────────────────
+
+    /** All department assignments (current and historical). */
+    public function employeeDepartments()
+    {
+        return $this->hasMany(EmployeeDepartment::class);
+    }
+
+    /** Current active department assignments only. */
+    public function currentDepartments()
+    {
+        return $this->hasMany(EmployeeDepartment::class)->whereNull('ended_at');
+    }
+
+    /** Primary department assignment. */
+    public function primaryDepartmentRecord()
+    {
+        return $this->hasOne(EmployeeDepartment::class)->where('is_primary', true)->whereNull('ended_at');
+    }
+
+    public function reportingHistory()
+    {
+        return $this->hasMany(EmployeeReportingHistory::class, 'employee_id')->latest('started_at');
+    }
+
+    public function lifecycleEvents()
+    {
+        return $this->hasMany(EmployeeLifecycleEvent::class)->latest('event_date');
+    }
+
+    public function assets()
+    {
+        return $this->hasMany(EmployeeAsset::class);
+    }
+
+    public function issuedAssets()
+    {
+        return $this->hasMany(EmployeeAsset::class)->where('status', 'issued');
+    }
+
+    public function transfers()
+    {
+        return $this->hasMany(EmployeeTransfer::class)->latest();
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(EmployeePromotion::class)->latest();
+    }
+
+    public function exitInterview()
+    {
+        return $this->hasOne(ExitInterview::class)->latest();
+    }
+
+    public function onboardingTasks()
+    {
+        return $this->hasMany(EmployeeOnboarding::class);
+    }
+
+    public function trainings()
+    {
+        return $this->hasMany(EmployeeTraining::class);
     }
 
     /**

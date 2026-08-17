@@ -12,6 +12,7 @@ use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Shift;
 use App\Models\User;
+use App\Traits\ScopesByDepartment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -20,9 +21,14 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class EmployeeController extends Controller
 {
+    use ScopesByDepartment;
+
     public function index(Request $request)
     {
         $query = Employee::with('user', 'department', 'manager.user');
+
+        // Managers are always restricted to their own department
+        $this->applyDeptScope($query);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -33,7 +39,8 @@ class EmployeeController extends Controller
             });
         }
 
-        if ($request->department_id) {
+        // Admins may filter by dept; managers already scoped — ignore the param
+        if ($request->department_id && $this->managedDeptId() === null) {
             $query->where('department_id', $request->department_id);
         }
 
@@ -45,25 +52,40 @@ class EmployeeController extends Controller
             $query->where('employment_type', $request->employment_type);
         }
 
-        $employees = $query->latest()->paginate(15)->withQueryString();
+        $employees   = $query->latest()->paginate(15)->withQueryString();
         $departments = Department::active()->get();
-        $roles = Role::allActive();
+        $roles       = Role::allActive();
 
         return view('admin.employees.index', compact('employees', 'departments', 'roles'));
     }
 
     public function create()
     {
-        $departments  = Department::active()->get();
-        $managers     = Employee::with('user')->active()->get();
+        // Managers can only add employees to their own dept
+        $deptId = $this->managedDeptId();
+
+        $departments  = $deptId
+            ? Department::active()->where('id', $deptId)->get()
+            : Department::active()->get();
+
+        $managers     = $this->deptEmployeeQuery()->get();
         $branches     = Branch::where('is_active', true)->orderBy('name')->get();
         $designations = Designation::where('is_active', true)->orderBy('level')->orderBy('name')->get();
         $shifts       = Shift::where('is_active', true)->orderBy('name')->get();
-        return view('admin.employees.create', compact('departments', 'managers', 'branches', 'designations', 'shifts'));
+
+        return view('admin.employees.create', compact(
+            'departments', 'managers', 'branches', 'designations', 'shifts'
+        ));
     }
 
     public function store(Request $request)
     {
+        // Enforce manager's own dept when storing
+        $deptId = $this->managedDeptId();
+        if ($deptId !== null) {
+            $request->merge(['department_id' => $deptId]);
+        }
+
         $request->validate([
             'first_name'          => 'required|string|max:255',
             'last_name'           => 'nullable|string|max:255',
@@ -85,10 +107,14 @@ class EmployeeController extends Controller
             'role'                => ['nullable', 'string', Rule::in(Role::pluck('name')->toArray())],
         ]);
 
+        // Double-check: manager cannot assign a different dept even via forged POST
+        if ($deptId !== null && (int) $request->department_id !== $deptId) {
+            abort(403, 'You can only add employees to your own department.');
+        }
+
         $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
         $role = $request->role ?? 'employee';
 
-        // Create user account
         $user = User::create([
             'name'          => $name,
             'username'      => Str::slug($name) . rand(100, 999),
@@ -101,8 +127,7 @@ class EmployeeController extends Controller
         ]);
         $user->assignRole($role);
 
-        // Generate employee ID using max id to avoid duplicates from count()
-        $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
+        $nextNum    = (Employee::withTrashed()->max('id') ?? 0) + 1;
         $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
 
         Employee::create([
@@ -136,23 +161,44 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee)
     {
+        $this->authorizeEmployee($employee);
+
         $employee->load('user', 'department', 'manager.user', 'tasks', 'leaves', 'attendance');
         return view('admin.employees.show', compact('employee'));
     }
 
     public function edit(Employee $employee)
     {
+        $this->authorizeEmployee($employee);
+
         $employee->load('user');
-        $departments  = Department::active()->get();
-        $managers     = Employee::with('user')->active()->where('id', '!=', $employee->id)->get();
+
+        $deptId = $this->managedDeptId();
+
+        $departments  = $deptId
+            ? Department::active()->where('id', $deptId)->get()
+            : Department::active()->get();
+
+        $managers     = $this->deptEmployeeQuery()->where('id', '!=', $employee->id)->get();
         $branches     = Branch::where('is_active', true)->orderBy('name')->get();
         $designations = Designation::where('is_active', true)->orderBy('level')->orderBy('name')->get();
         $shifts       = Shift::where('is_active', true)->orderBy('name')->get();
-        return view('admin.employees.edit', compact('employee', 'departments', 'managers', 'branches', 'designations', 'shifts'));
+
+        return view('admin.employees.edit', compact(
+            'employee', 'departments', 'managers', 'branches', 'designations', 'shifts'
+        ));
     }
 
     public function update(Request $request, Employee $employee)
     {
+        $this->authorizeEmployee($employee);
+
+        // Managers cannot move an employee to a different department
+        $deptId = $this->managedDeptId();
+        if ($deptId !== null) {
+            $request->merge(['department_id' => $deptId]);
+        }
+
         $request->validate([
             'first_name'          => 'required|string|max:255',
             'last_name'           => 'nullable|string|max:255',
@@ -175,9 +221,7 @@ class EmployeeController extends Controller
             'password'            => 'nullable|min:8',
         ]);
 
-        $name = trim($request->first_name . ' ' . ($request->last_name ?? ''));
-
-        // Sync user status: inactive/terminated/on_leave employees can't log in
+        $name       = trim($request->first_name . ' ' . ($request->last_name ?? ''));
         $userStatus = $request->status === 'active' ? 'active' : 'inactive';
 
         $userUpdate = [
@@ -203,7 +247,6 @@ class EmployeeController extends Controller
                 mkdir($uploadPath, 0755, true);
             }
 
-            // Remove old avatar if it lives in uploads/profile/
             $oldAvatar = $employee->user->avatar;
             if ($oldAvatar && str_starts_with($oldAvatar, 'uploads/')) {
                 $oldFile = public_path($oldAvatar);
@@ -231,28 +274,30 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        $this->authorizeEmployee($employee);
+
         $employee->delete();
         return response()->json(['success' => true, 'message' => 'Employee deleted.']);
     }
 
     public function performance(Employee $employee)
     {
+        $this->authorizeEmployee($employee);
+
         $employee->load('user', 'department', 'manager.user');
 
         $now = now();
 
-        // Task stats
         $tasks = $employee->tasks();
         $taskStats = [
-            'total'     => (clone $tasks)->count(),
-            'completed' => (clone $tasks)->where('status', 'completed')->count(),
+            'total'       => (clone $tasks)->count(),
+            'completed'   => (clone $tasks)->where('status', 'completed')->count(),
             'in_progress' => (clone $tasks)->where('status', 'in_progress')->count(),
-            'pending'   => (clone $tasks)->whereIn('status', ['pending', 'assigned'])->count(),
-            'overdue'   => (clone $tasks)->whereNotIn('status', ['completed', 'cancelled'])
+            'pending'     => (clone $tasks)->whereIn('status', ['pending', 'assigned'])->count(),
+            'overdue'     => (clone $tasks)->whereNotIn('status', ['completed', 'cancelled'])
                                 ->whereNotNull('due_date')->where('due_date', '<', $now)->count(),
         ];
 
-        // Attendance stats this month
         $attendance = $employee->attendance()->whereMonth('date', $now->month)->whereYear('date', $now->year);
         $attendanceStats = [
             'present'    => (clone $attendance)->whereIn('status', ['present', 'late'])->count(),
@@ -262,7 +307,6 @@ class EmployeeController extends Controller
             'avg_hours'  => round((clone $attendance)->avg('work_hours') ?? 0, 1),
         ];
 
-        // Work reports
         $reportsStats = [
             'total'     => $employee->workReports()->count(),
             'approved'  => $employee->workReports()->where('status', 'approved')->count(),
@@ -270,12 +314,11 @@ class EmployeeController extends Controller
             'rejected'  => $employee->workReports()->where('status', 'rejected')->count(),
         ];
 
-        // Monthly attendance chart (last 6 months)
-        $chartLabels = [];
+        $chartLabels  = [];
         $chartPresent = [];
         for ($i = 5; $i >= 0; $i--) {
-            $month = $now->copy()->subMonths($i);
-            $chartLabels[] = $month->format('M Y');
+            $month          = $now->copy()->subMonths($i);
+            $chartLabels[]  = $month->format('M Y');
             $chartPresent[] = $employee->attendance()
                 ->whereMonth('date', $month->month)
                 ->whereYear('date', $month->year)
@@ -283,11 +326,7 @@ class EmployeeController extends Controller
                 ->count();
         }
 
-        // Recent tasks
-        $recentTasks = $employee->tasks()->with('project')
-            ->latest('updated_at')->limit(5)->get();
-
-        // Recent work reports
+        $recentTasks   = $employee->tasks()->with('project')->latest('updated_at')->limit(5)->get();
         $recentReports = $employee->workReports()->latest()->limit(5)->get();
 
         return view('admin.employees.performance', compact(
@@ -308,8 +347,8 @@ class EmployeeController extends Controller
 
     public function importTemplate()
     {
-        $headers = ['employee_id','full_name','email','password','department','designation',
-                    'employment_type','work_location','team','joining_date'];
+        $headers  = ['employee_id','full_name','email','password','department','designation',
+                     'employment_type','work_location','team','joining_date'];
         $filename = 'employees_import_template.csv';
         $callback = function () use ($headers) {
             $handle = fopen('php://output', 'w');
@@ -319,7 +358,7 @@ class EmployeeController extends Controller
             fclose($handle);
         };
         return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv',
+            'Content-Type'        => 'text/csv',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ]);
     }
@@ -341,8 +380,8 @@ class EmployeeController extends Controller
 
     private function getAttendancePercentage(Employee $employee): float
     {
-        $month = now()->month;
-        $year = now()->year;
+        $month   = now()->month;
+        $year    = now()->year;
         $present = $employee->attendance()
             ->whereMonth('date', $month)->whereYear('date', $year)
             ->whereIn('status', ['present', 'late'])->count();

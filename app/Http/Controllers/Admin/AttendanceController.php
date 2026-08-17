@@ -8,10 +8,13 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\Leave;
 use App\Services\AttendanceService;
+use App\Traits\ScopesByDepartment;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
+    use ScopesByDepartment;
+
     public function __construct(private AttendanceService $attendanceService)
     {
     }
@@ -23,7 +26,11 @@ class AttendanceController extends Controller
         $query = Attendance::with('employee.user', 'employee.department')
             ->whereDate('date', $date);
 
-        if ($request->department_id) {
+        // Always restrict managers to their own department
+        $this->applyRelatedDeptScope($query);
+
+        // Admins may additionally filter by dept; managers are already scoped
+        if ($request->department_id && $this->managedDeptId() === null) {
             $query->whereHas('employee', fn($q) => $q->where('department_id', $request->department_id));
         }
 
@@ -33,28 +40,38 @@ class AttendanceController extends Controller
 
         $attendance = $query->paginate(15)->withQueryString();
 
+        // Stats scoped to the manager's dept as well
+        $statsBase = Attendance::whereDate('date', $date);
+        $this->applyRelatedDeptScope($statsBase);
+
+        $totalActive = $this->applyDeptScope(Employee::active())->count();
+
         $stats = [
-            'present' => Attendance::whereDate('date', $date)->whereIn('status', ['present', 'late'])->count(),
-            'absent' => Employee::active()->count() - Attendance::whereDate('date', $date)->count(),
-            'late' => Attendance::whereDate('date', $date)->where('status', 'late')->count(),
-            'on_leave' => Attendance::whereDate('date', $date)->where('status', 'on_leave')->count(),
+            'present'  => (clone $statsBase)->whereIn('status', ['present', 'late'])->count(),
+            'absent'   => $totalActive - (clone $statsBase)->count(),
+            'late'     => (clone $statsBase)->where('status', 'late')->count(),
+            'on_leave' => (clone $statsBase)->where('status', 'on_leave')->count(),
         ];
 
         $departments = Department::orderBy('name')->get();
+
         return view('admin.attendance.index', compact('attendance', 'stats', 'date', 'departments'));
     }
 
     public function report(Request $request)
     {
         $month = $request->month ?? now()->month;
-        $year = $request->year ?? now()->year;
+        $year  = $request->year ?? now()->year;
 
-        $employees = Employee::with('user', 'department')->active()->get();
+        // Managers only see their dept employees
+        $empQuery = Employee::with('user', 'department')->active();
+        $this->applyDeptScope($empQuery);
+        $employees = $empQuery->get();
 
         $reportData = $employees->map(function ($employee) use ($month, $year) {
             return [
                 'employee' => $employee,
-                'report' => $this->attendanceService->getMonthlyReport($employee, $month, $year),
+                'report'   => $this->attendanceService->getMonthlyReport($employee, $month, $year),
             ];
         });
 
@@ -64,6 +81,9 @@ class AttendanceController extends Controller
     public function leaves(Request $request)
     {
         $query = Leave::with('employee.user', 'approver');
+
+        // Scope leaves to manager's dept employees
+        $this->applyRelatedDeptScope($query);
 
         if ($request->status) {
             $query->where('status', $request->status);
@@ -76,21 +96,24 @@ class AttendanceController extends Controller
 
     public function approveLeave(Request $request, Leave $leave)
     {
+        // Managers can only approve/reject leaves for their own dept employees
+        $employee = Employee::findOrFail($leave->employee_id);
+        $this->authorizeEmployee($employee);
+
         $request->validate([
-            'action' => 'required|in:approve,reject',
+            'action'           => 'required|in:approve,reject',
             'rejection_reason' => 'required_if:action,reject|nullable|string',
         ]);
 
         $status = $request->action === 'approve' ? 'approved' : 'rejected';
         $leave->update([
-            'status' => $status,
-            'approved_by' => auth()->id(),
+            'status'           => $status,
+            'approved_by'      => auth()->id(),
             'rejection_reason' => $request->rejection_reason,
-            'actioned_at' => now(),
+            'actioned_at'      => now(),
         ]);
 
         if ($status === 'approved') {
-            // Mark attendance as on_leave for those days
             $date = $leave->from_date->copy();
             while ($date->lte($leave->to_date)) {
                 if (!$date->isWeekend()) {

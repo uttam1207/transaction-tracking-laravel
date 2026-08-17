@@ -33,6 +33,13 @@ use App\Http\Controllers\Admin\PerformanceReviewController;
 use App\Http\Controllers\Admin\TimesheetController;
 use App\Http\Controllers\Admin\WorkReportController as AdminWorkReportController;
 use App\Http\Controllers\Admin\WalletController;
+use App\Http\Controllers\Admin\ApprovalWorkflowController;
+use App\Http\Controllers\Admin\RecruitmentController;
+use App\Http\Controllers\Admin\TrainingController;
+use App\Http\Controllers\Admin\EmployeeAssetController;
+use App\Http\Controllers\Admin\EmployeeLifecycleController;
+use App\Http\Controllers\Admin\EmployeeTransferController;
+use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\ExpenseCategoryController;
@@ -327,6 +334,52 @@ Route::prefix('admin')
         ->parameters(['performance-reviews' => 'performanceReview']);
     Route::patch('/performance-reviews/{performanceReview}/submit',      [PerformanceReviewController::class, 'submit'])->name('performance-reviews.submit');
     Route::patch('/performance-reviews/{performanceReview}/acknowledge', [PerformanceReviewController::class, 'acknowledge'])->name('performance-reviews.acknowledge');
+
+    // ─── ERP V2 Phase 3 ──────────────────────────────────────────────────────
+
+    // Approval Engine
+    Route::get('/approvals/workflows',                                    [ApprovalWorkflowController::class, 'index'])->name('approvals.workflows');
+    Route::post('/approvals/workflows',                                   [ApprovalWorkflowController::class, 'store'])->name('approvals.workflows.store');
+    Route::delete('/approvals/workflows/{approvalWorkflow}',              [ApprovalWorkflowController::class, 'destroy'])->name('approvals.workflows.destroy');
+    Route::get('/approvals/requests',                                     [ApprovalWorkflowController::class, 'requests'])->name('approvals.requests');
+    Route::post('/approvals/requests/{approvalRequest}/action',          [ApprovalWorkflowController::class, 'processAction'])->name('approvals.requests.action');
+
+    // Recruitment
+    Route::resource('recruitment', RecruitmentController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['recruitment' => 'recruitmentJob']);
+    Route::get('/recruitment/{recruitmentJob}/applications',              [RecruitmentController::class, 'applications'])->name('recruitment.applications');
+    Route::post('/recruitment/{recruitmentJob}/applications',             [RecruitmentController::class, 'storeApplication'])->name('recruitment.applications.store');
+    Route::put('/recruitment/applications/{recruitmentApplication}',      [RecruitmentController::class, 'updateApplication'])->name('recruitment.applications.update');
+
+    // Training
+    Route::resource('training', TrainingController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['training' => 'trainingProgram']);
+    Route::get('/training/{trainingProgram}/enrollments',                 [TrainingController::class, 'enrollments'])->name('training.enrollments');
+    Route::post('/training/{trainingProgram}/enroll',                     [TrainingController::class, 'enroll'])->name('training.enroll');
+    Route::put('/training/enrollments/{employeeTraining}',                [TrainingController::class, 'updateEnrollment'])->name('training.enrollments.update');
+
+    // Employee Assets
+    Route::resource('employee-assets', EmployeeAssetController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['employee-assets' => 'employeeAsset']);
+
+    // Employee Lifecycle
+    Route::get('/employee-lifecycle',                                     [EmployeeLifecycleController::class, 'index'])->name('employee-lifecycle.index');
+    Route::get('/employee-lifecycle/{employee}',                          [EmployeeLifecycleController::class, 'show'])->name('employee-lifecycle.show');
+    Route::post('/employee-lifecycle',                                    [EmployeeLifecycleController::class, 'store'])->name('employee-lifecycle.store');
+
+    // Leave Requests (super_admin / admin — full management view)
+    Route::get('/leave-requests',                          [LeaveRequestController::class, 'index'])->name('leave-requests.index');
+    Route::post('/leave-requests/{leave}/action',          [LeaveRequestController::class, 'action'])->name('leave-requests.action');
+    Route::post('/leave-requests/bulk-action',             [LeaveRequestController::class, 'bulkAction'])->name('leave-requests.bulk-action');
+
+    // Employee Transfers
+    Route::get('/transfers',                                              [EmployeeTransferController::class, 'index'])->name('transfers.index');
+    Route::post('/transfers',                                             [EmployeeTransferController::class, 'store'])->name('transfers.store');
+    Route::patch('/transfers/{employeeTransfer}/approve',                 [EmployeeTransferController::class, 'approve'])->name('transfers.approve');
+    Route::patch('/transfers/{employeeTransfer}/reject',                  [EmployeeTransferController::class, 'reject'])->name('transfers.reject');
 
     // Shift Management
     Route::get('/shifts', [ShiftController::class, 'index'])->name('shifts.index');
