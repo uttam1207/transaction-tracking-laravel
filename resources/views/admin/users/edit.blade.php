@@ -100,7 +100,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Role <span class="text-danger">*</span></label>
-                            <select name="role" class="form-select @error('role') is-invalid @enderror" required
+                            <select name="role" id="editRoleSelect" class="form-select @error('role') is-invalid @enderror" required
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 @foreach(\App\Models\Role::where('is_active', true)->orderBy('sort_order')->get() as $r)
                                     <option value="{{ $r->name }}" {{ old('role', $user->role) === $r->name ? 'selected' : '' }}>
@@ -110,7 +110,7 @@
                             </select>
                             @error('role')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="editDeptWrapper">
                             <label class="form-label fw-semibold">Department</label>
                             <select name="department_id" class="form-select @error('department_id') is-invalid @enderror"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
@@ -190,5 +190,17 @@ document.getElementById('avatarInput')?.addEventListener('change', function() {
         reader.readAsDataURL(file);
     }
 });
+// Hide department field when Farmer role is selected
+(function() {
+    const roleEl = document.getElementById('editRoleSelect');
+    const deptWrapper = document.getElementById('editDeptWrapper');
+    function toggleDept() {
+        const hidden = roleEl.value === 'farmer';
+        deptWrapper.style.display = hidden ? 'none' : '';
+        if (hidden) deptWrapper.querySelector('select').value = '';
+    }
+    roleEl.addEventListener('change', toggleDept);
+    toggleDept();
+})();
 </script>
 @endpush

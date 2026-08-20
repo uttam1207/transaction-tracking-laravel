@@ -121,6 +121,16 @@ class RoleSeeder extends Seeder
                 'is_active'    => true,
                 'sort_order'   => 11,
             ],
+            [
+                'name'         => 'farmer',
+                'display_name' => 'Farmer',
+                'description'  => 'Farm worker with access only to Animal & Farm modules and own entries.',
+                'color'        => '#16a34a',
+                'icon'         => 'tree',
+                'is_system'    => false,
+                'is_active'    => true,
+                'sort_order'   => 15,
+            ],
         ];
 
         foreach ($roles as $role) {

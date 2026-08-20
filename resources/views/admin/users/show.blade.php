@@ -51,8 +51,13 @@
                     @endif
                     <dt><i class="bi bi-at me-1 text-muted"></i>Username</dt>
                     <dd style="font-family:monospace;color:#4f46e5;font-weight:700;">{{ $user->username }}</dd>
+                    @if($user->isFarmer())
+                    <dt><i class="bi bi-tree me-1 text-muted"></i>Access</dt>
+                    <dd>Animal &amp; Farm modules only</dd>
+                    @else
                     <dt><i class="bi bi-building me-1 text-muted"></i>Department</dt>
-                    <dd>{{ $user->department?->name ?? 'N/A' }}</dd>
+                    <dd>{{ $user->department?->name ?? '—' }}</dd>
+                    @endif
                     <dt><i class="bi bi-calendar me-1 text-muted"></i>Joined</dt>
                     <dd>{{ $user->created_at->format('d M Y') }}</dd>
                     <dt><i class="bi bi-clock me-1 text-muted"></i>Last Login</dt>

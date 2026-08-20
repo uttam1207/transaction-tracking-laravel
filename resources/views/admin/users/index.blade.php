@@ -177,7 +177,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Role <span class="req">*</span></label>
-                            <select name="role" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <select name="role" id="createRoleSelect" class="form-select" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 @foreach($roles as $role)
                                     @if($role->name !== 'super_admin')
                                         <option value="{{ $role->name }}">{{ $role->display_label }}</option>
@@ -185,7 +185,7 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" id="createDeptWrapper">
                             <label class="flabel">Department</label>
                             <select name="department_id" class="form-select" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                                 <option value="">— Select —</option>
@@ -245,6 +245,18 @@ function executeBulk() {
             .done(res => { if (res.success) { APP.toast(res.message); location.reload(); } });
     });
 }
+// Hide department field when Farmer role is selected
+(function() {
+    const roleEl = document.getElementById('createRoleSelect');
+    const deptWrapper = document.getElementById('createDeptWrapper');
+    function toggleDept() {
+        const hidden = roleEl.value === 'farmer';
+        deptWrapper.style.display = hidden ? 'none' : '';
+        if (hidden) deptWrapper.querySelector('select').value = '';
+    }
+    roleEl.addEventListener('change', toggleDept);
+    toggleDept();
+})();
 document.getElementById('createUserForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(this));

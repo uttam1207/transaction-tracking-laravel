@@ -13,9 +13,24 @@ use Illuminate\Support\Facades\Storage;
 
 class AnimalController extends Controller
 {
+    /** Abort 403 if the current user is a farmer who doesn't own the animal. */
+    private function authorizeFarmerAnimal(Animal $animal): void
+    {
+        $user = auth()->user();
+        if ($user->isFarmer() && $animal->created_by !== $user->id) {
+            abort(403);
+        }
+    }
+
     public function index(Request $request)
     {
+        $user  = auth()->user();
         $query = Animal::with('actions');
+
+        // Farmer sees only their own registered animals
+        if ($user->isFarmer()) {
+            $query->where('created_by', $user->id);
+        }
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -38,12 +53,17 @@ class AnimalController extends Controller
 
         $animals = $query->latest()->paginate(15)->withQueryString();
 
+        // Summary stats also scoped to farmer's own animals
+        $base = $user->isFarmer()
+            ? Animal::where('created_by', $user->id)
+            : Animal::query();
+
         $summary = [
-            'total' => Animal::count(),
-            'milking' => Animal::where('pregnancy_status', '!=', 'Dry')->where('lactation_number', '>', 0)->count(),
-            'dry' => Animal::where('pregnancy_status', 'Dry')->count(),
-            'pregnant' => Animal::where('pregnancy_status', 'Pregnant')->count(),
-            'calves' => Animal::where('lactation_number', 0)->count(),
+            'total'    => (clone $base)->count(),
+            'milking'  => (clone $base)->where('pregnancy_status', '!=', 'Dry')->where('lactation_number', '>', 0)->count(),
+            'dry'      => (clone $base)->where('pregnancy_status', 'Dry')->count(),
+            'pregnant' => (clone $base)->where('pregnancy_status', 'Pregnant')->count(),
+            'calves'   => (clone $base)->where('lactation_number', 0)->count(),
         ];
 
         $allBreeds = Breed::orderBy('animal_type')->orderBy('name')->get();
@@ -102,6 +122,7 @@ class AnimalController extends Controller
         if (empty($validated['animal_id'])) {
             $validated['animal_id'] = $this->generateAnimalId($validated['animal_type']);
         }
+        $validated['created_by'] = auth()->id();
 
         Animal::create($validated);
 
@@ -111,6 +132,7 @@ class AnimalController extends Controller
 
     public function show(Animal $animal)
     {
+        $this->authorizeFarmerAnimal($animal);
         $animal->load('actions', 'milkEntries', 'breedingRecords', 'healthRecords', 'photos');
         $actionTypes = ActionType::active()->orderByDesc('is_system')->orderBy('name')->get();
         return view('admin.animals.show', compact('animal', 'actionTypes'));
@@ -191,12 +213,14 @@ class AnimalController extends Controller
 
     public function edit(Animal $animal)
     {
+        $this->authorizeFarmerAnimal($animal);
         $breeds = Breed::orderBy('animal_type')->orderBy('name')->get();
         return view('admin.animals.edit', compact('animal', 'breeds'));
     }
 
     public function update(Request $request, Animal $animal)
     {
+        $this->authorizeFarmerAnimal($animal);
         $validated = $request->validate([
             'animal_id'        => 'nullable|string|max:50|unique:animals,animal_id,' . $animal->id,
             'tag_number'       => 'required|string|unique:animals,tag_number,' . $animal->id,
@@ -232,6 +256,7 @@ class AnimalController extends Controller
 
     public function destroy(Animal $animal)
     {
+        $this->authorizeFarmerAnimal($animal);
         $animal->delete();
 
         return redirect()->route('admin.animals.index')

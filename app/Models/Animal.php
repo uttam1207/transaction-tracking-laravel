@@ -35,6 +35,7 @@ class Animal extends Model
         'owner_name',
         'shed_number',
         'status',
+        'created_by',
     ];
 
     protected $casts = [

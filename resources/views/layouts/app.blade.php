@@ -1012,6 +1012,7 @@
                         <span class="nav-label">Farm</span>
                     </a>
                     @endif
+                    @if(!$svcUser->isFarmer())
                     <div class="nav-sub-title">Finance & Stock</div>
                     @if(\App\Models\ServicePermission::canAccess('expenses', $svcUser))
                     <a href="{{ route('admin.expenses.index') }}" class="sidebar-link {{ request()->routeIs('admin.expenses.*') && !request()->routeIs('admin.expense-categories.*') ? 'active' : '' }}">
@@ -1048,6 +1049,7 @@
                         <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
                         <span class="nav-label">Financial Periods</span>
                     </a>
+                    @endif {{-- !isFarmer: Finance & Stock + Finance V2 --}}
                     <div class="nav-sub-title">Operations</div>
                     @if(\App\Models\ServicePermission::canAccess('maintenance', $svcUser))
                     <a href="{{ route('admin.maintenance.index') }}" class="sidebar-link {{ request()->routeIs('admin.maintenance.*') ? 'active' : '' }}">
@@ -1061,17 +1063,20 @@
                         <span class="nav-label">Compliance</span>
                     </a>
                     @endif
+                    @if(!$svcUser->isFarmer())
                     @if(\App\Models\ServicePermission::canAccess('report_center', $svcUser))
                     <a href="{{ route('admin.reports.center') }}" class="sidebar-link {{ request()->routeIs('admin.reports.center') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
                         <span class="nav-label">Reports Center</span>
                     </a>
                     @endif
+                    @endif {{-- !isFarmer: Reports Center --}}
                 </div>
 
                 {{-- ══════════════════════════════════════════
                      GROUP 2 — HR (Employee Management)
                 ══════════════════════════════════════════ --}}
+                @if(!$svcUser->isFarmer())
                 @if($hasHr)
                 <button class="nav-group-btn {{ $isHrActive ? '' : 'collapsed' }}"
                         data-bs-toggle="collapse" data-bs-target="#grpHr"
@@ -1295,10 +1300,12 @@
                 </div>
 
                 @endif {{-- hasHr --}}
+                @endif {{-- !isFarmer: HR group --}}
 
                 {{-- ══════════════════════════════════════════
                      GROUP 3 — CRM (Customer Related)
                 ══════════════════════════════════════════ --}}
+                @if(!$svcUser->isFarmer())
                 @if($hasCrm)
                 <button class="nav-group-btn {{ $isCrmActive ? '' : 'collapsed' }}"
                         data-bs-toggle="collapse" data-bs-target="#grpCrm"
@@ -1358,6 +1365,7 @@
                     @endif
                 </div>
                 @endif {{-- hasCrm --}}
+                @endif {{-- !isFarmer: CRM group --}}
 
             @else
 

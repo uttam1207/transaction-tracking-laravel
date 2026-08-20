@@ -77,8 +77,8 @@ class UserController extends Controller
         // Assign spatie role
         $user->assignRole($request->role);
 
-        // Create an Employee record for all non-super_admin roles
-        if ($request->role !== 'super_admin') {
+        // Create an Employee record for roles that are staff (not super_admin or farmer)
+        if (!in_array($request->role, ['super_admin', 'farmer'])) {
             $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
             $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
 
@@ -141,8 +141,8 @@ class UserController extends Controller
         $user->update($data);
         $user->syncRoles([$request->role]);
 
-        // If this user has no employee record and is not a super_admin, create one now
-        if ($request->role !== 'super_admin' && !$user->employee) {
+        // If this user has no employee record and is not a super_admin or farmer, create one now
+        if (!in_array($request->role, ['super_admin', 'farmer']) && !$user->employee) {
             $nextNum = (Employee::withTrashed()->max('id') ?? 0) + 1;
             $employeeId = 'EMP-' . str_pad($nextNum, 5, '0', \STR_PAD_LEFT);
 

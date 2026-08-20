@@ -137,6 +137,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === 'hr';
     }
 
+    public function isFarmer(): bool
+    {
+        return $this->role === 'farmer';
+    }
+
     /** The team this user leads (team_lead role only). */
     public function ledTeam()
     {
@@ -164,6 +169,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'super_admin', 'admin' => route('admin.dashboard'),
             'manager', 'team_lead' => route('admin.manager.dashboard'),
             'employee'             => route('employee.dashboard'),
+            'farmer'               => route('admin.animals.index'),
             default                => route('admin.role-dashboard'),
         };
     }

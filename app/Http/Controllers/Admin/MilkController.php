@@ -20,9 +20,35 @@ class MilkController extends Controller
             ->get();
     }
 
+    /** Abort 403 if the current user is a farmer who didn't record this entry. */
+    private function authorizeFarmerMilkEntry(MilkEntry $entry): void
+    {
+        $user = auth()->user();
+        if ($user->isFarmer() && $entry->recorded_by !== $user->id) {
+            abort(403);
+        }
+    }
+
+    /** Active animals visible to the current user (farmer sees only their own). */
+    private function visibleAnimals()
+    {
+        $user  = auth()->user();
+        $query = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($user->isFarmer()) {
+            $query->where('created_by', $user->id);
+        }
+        return $query->get();
+    }
+
     public function index(Request $request)
     {
+        $user  = auth()->user();
         $query = MilkEntry::with('animal');
+
+        // Farmer sees only their own entries
+        if ($user->isFarmer()) {
+            $query->where('recorded_by', $user->id);
+        }
 
         if ($request->date_from) {
             $query->whereDate('date', '>=', $request->date_from);
@@ -42,14 +68,19 @@ class MilkController extends Controller
 
         $entries = $query->latest()->paginate(20)->withQueryString();
 
-        $todayTotal    = MilkEntry::whereDate('date', today())->sum('quantity_liters');
-        $morningTotal  = MilkEntry::whereDate('date', today())->where('shift', 'Morning')->sum('quantity_liters');
-        $eveningTotal  = MilkEntry::whereDate('date', today())->where('shift', 'Evening')->sum('quantity_liters');
-        $avgFat        = MilkEntry::whereDate('date', today())->avg('fat_percentage') ?? 7.5;
-        $rejectedTotal = MilkEntry::whereDate('date', today())->sum('rejected_liters');
+        // Summary stats scoped for farmer
+        $base = $user->isFarmer()
+            ? MilkEntry::where('recorded_by', $user->id)
+            : MilkEntry::query();
+
+        $todayTotal    = (clone $base)->whereDate('date', today())->sum('quantity_liters');
+        $morningTotal  = (clone $base)->whereDate('date', today())->where('shift', 'Morning')->sum('quantity_liters');
+        $eveningTotal  = (clone $base)->whereDate('date', today())->where('shift', 'Evening')->sum('quantity_liters');
+        $avgFat        = (clone $base)->whereDate('date', today())->avg('fat_percentage') ?? 7.5;
+        $rejectedTotal = (clone $base)->whereDate('date', today())->sum('rejected_liters');
 
         $sheds   = $this->getSheds();
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        $animals = $this->visibleAnimals();
 
         return view('admin.milk.index', compact(
             'entries', 'todayTotal', 'morningTotal', 'eveningTotal', 'avgFat', 'rejectedTotal', 'animals', 'sheds'
@@ -58,7 +89,7 @@ class MilkController extends Controller
 
     public function create()
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        $animals = $this->visibleAnimals();
         $sheds   = $this->getSheds();
         return view('admin.milk.create', compact('animals', 'sheds'));
     }
@@ -109,19 +140,22 @@ class MilkController extends Controller
 
     public function show(MilkEntry $milkEntry)
     {
+        $this->authorizeFarmerMilkEntry($milkEntry);
         $milkEntry->load('animal');
         return view('admin.milk.show', compact('milkEntry'));
     }
 
     public function edit(MilkEntry $milkEntry)
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        $this->authorizeFarmerMilkEntry($milkEntry);
+        $animals = $this->visibleAnimals();
         $sheds   = $this->getSheds();
         return view('admin.milk.edit', compact('milkEntry', 'animals', 'sheds'));
     }
 
     public function update(Request $request, MilkEntry $milkEntry)
     {
+        $this->authorizeFarmerMilkEntry($milkEntry);
         $entryType = $request->input('entry_type', $milkEntry->entry_type ?? 'per_animal');
 
         $rules = [
@@ -164,6 +198,7 @@ class MilkController extends Controller
 
     public function destroy(MilkEntry $milkEntry)
     {
+        $this->authorizeFarmerMilkEntry($milkEntry);
         $milkEntry->delete();
         return redirect()->route('admin.milk.index')
             ->with('success', 'Milk entry deleted.');
