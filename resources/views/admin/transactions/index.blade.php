@@ -160,6 +160,8 @@
 .action-btn.edit:hover  { background: #fde68a; }
 .action-btn.voucher     { background: #d1fae5; color: #065f46; }
 .action-btn.voucher:hover { background: #a7f3d0; }
+.action-btn.delete      { background: #fee2e2; color: #dc2626; }
+.action-btn.delete:hover { background: #fecaca; }
 
 .btn-export { height: 32px; padding: 0 12px; font-size: .78rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; font-weight: 600; }
 .btn-new-tx { height: 32px; padding: 0 14px; font-size: .8rem; border-radius: 8px; background: linear-gradient(135deg,#4f46e5,#7c3aed); color: #fff; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
@@ -421,6 +423,12 @@
                             <a href="{{ route('admin.transactions.voucher', $tx) }}" class="action-btn voucher" title="Download Cash Voucher"><i class="bi bi-receipt"></i></a>
                             <button class="action-btn" onclick="changeStatus({{ $tx->id }}, '{{ $tx->status }}')" title="Update Status"
                                     style="background:#dbeafe;color:#2563eb;"><i class="bi bi-arrow-repeat"></i></button>
+                            @if(auth()->user()->role === 'super_admin')
+                            <button class="action-btn delete" title="Delete"
+                                    onclick="deleteTx({{ $tx->id }}, '{{ $tx->transaction_id }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            @endif
                         </div>
                     </td>
                 </tr>
@@ -550,6 +558,22 @@ document.getElementById('txnFilterForm')?.addEventListener('submit', function (e
         errBox.style.display = 'none';
     }
 });
+
+function deleteTx(id, txId) {
+    APP.confirm(
+        'Delete Transaction?',
+        `Permanently delete ${txId}? This cannot be undone. Any wallet balance impact will be reversed.`,
+        () => {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/transactions/${id}`;
+            form.innerHTML = `<input type="hidden" name="_token" value="${document.querySelector('meta[name=csrf-token]').content}">
+                              <input type="hidden" name="_method" value="DELETE">`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    );
+}
 
 function applyBatch() {
     const ids    = [...document.querySelectorAll('.tx-check:checked')].map(c => parseInt(c.value));

@@ -825,6 +825,38 @@ class TransactionController extends Controller
         ]);
     }
 
+    // ── Delete (super_admin only) ─────────────────────────────────────────
+
+    public function destroy(Transaction $transaction)
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403, 'Only super admins can delete transactions.');
+        }
+
+        // Reverse wallet balance for success transactions
+        if ($transaction->status === 'success') {
+            $wallet = Wallet::company();
+            if ($wallet->status === 'active') {
+                $desc = 'Deleted transaction: ' . $transaction->transaction_id;
+                try {
+                    if ($transaction->type === 'credit') {
+                        $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), null);
+                    } else {
+                        $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), null);
+                    }
+                } catch (\RuntimeException $e) {
+                    // Proceed even if wallet reversal fails (e.g. insufficient balance)
+                }
+            }
+        }
+
+        $txId = $transaction->transaction_id;
+        $transaction->delete();
+
+        return redirect()->route('admin.transactions.index')
+            ->with('success', "Transaction {$txId} has been permanently deleted.");
+    }
+
     // ── Voucher PDFs ─────────────────────────────────────────────────────
 
     public function voucherPdf(Transaction $transaction)

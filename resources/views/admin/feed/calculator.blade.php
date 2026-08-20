@@ -349,6 +349,13 @@
             <div id="addPlanForm" style="display:none;background:#f8fafc;border-bottom:1px solid #e5e7eb;" class="p-3">
                 <form action="{{ route('admin.feed.plans.item.store') }}" method="POST">
                     @csrf
+                    @if($errors->hasAny(['animal_group_id','inventory_item_id','quantity_per_animal_kg']))
+                        <div class="alert alert-danger py-2 px-3 mb-2" style="font-size:.8rem;border-radius:8px;">
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="row g-2">
                         <div class="col-md-4">
                             <label style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Animal Group <span class="text-danger">*</span></label>
@@ -360,22 +367,33 @@
                             </select>
                         </div>
                         <div class="col-md-5">
-                            <label style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Feed Item Name <span class="text-danger">*</span></label>
-                            <input type="text" name="feed_item_name" class="form-control form-control-sm @error('feed_item_name') is-invalid @enderror"
-                                placeholder="e.g. Green Fodder, Concentrate" value="{{ old('feed_item_name') }}"
-                                list="feed-items-list" required>
-                            <datalist id="feed-items-list">
-                                <option value="Green Fodder">
-                                <option value="Dry Fodder">
-                                <option value="Concentrate">
-                                <option value="Mineral Mixture">
-                                <option value="Silage">
-                                <option value="Bran">
-                            </datalist>
+                            <label style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">
+                                Feed Item (Stock) <span class="text-danger">*</span>
+                            </label>
+                            <select name="inventory_item_id" class="form-select form-select-sm @error('inventory_item_id') is-invalid @enderror" required>
+                                <option value="">&#8212; Select from Stock &#8212;</option>
+                                @php $currentCat = null; @endphp
+                                @foreach($feedItems as $item)
+                                    @if($item->category !== $currentCat)
+                                        @if($currentCat !== null)</optgroup>@endif
+                                        <optgroup label="{{ $item->category ?? 'Uncategorised' }}">
+                                        @php $currentCat = $item->category; @endphp
+                                    @endif
+                                    <option value="{{ $item->id }}"
+                                            @selected(old('inventory_item_id') == $item->id)>
+                                        {{ $item->name }}
+                                        ({{ number_format($item->available_quantity, 1) }} {{ $item->unit }} available)
+                                    </option>
+                                @endforeach
+                                @if($currentCat !== null)</optgroup>@endif
+                            </select>
+                            <div style="font-size:.7rem;color:#9ca3af;margin-top:3px;">
+                                <i class="bi bi-info-circle me-1"></i>Only items in Stock are listed. Add new items via <a href="{{ route('admin.stock-items.index') }}" style="color:#4f46e5;">Stock Items</a>.
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Daily kg/Head <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" name="quantity_per_animal_kg"
+                            <input type="number" step="0.01" min="0.01" name="quantity_per_animal_kg"
                                 class="form-control form-control-sm @error('quantity_per_animal_kg') is-invalid @enderror"
                                 placeholder="e.g. 5.0" value="{{ old('quantity_per_animal_kg') }}" required>
                         </div>
@@ -480,7 +498,7 @@ function toggleSection(id, btn) {
 @if($errors->hasAny(['name','group_key','head_count']))
     document.addEventListener('DOMContentLoaded', () => toggleSection('addGroupForm', document.querySelector('[onclick*="addGroupForm"]')));
 @endif
-@if($errors->hasAny(['animal_group_id','feed_item_name','quantity_per_animal_kg']))
+@if($errors->hasAny(['animal_group_id','inventory_item_id','quantity_per_animal_kg']))
     document.addEventListener('DOMContentLoaded', () => toggleSection('addPlanForm', document.querySelector('[onclick*="addPlanForm"]')));
 @endif
 </script>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\Animal;
 use App\Models\AnimalGroup;
 use App\Models\FeedPlan;
+use App\Models\InventoryItem;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -18,8 +19,9 @@ class FeedController extends Controller
         $data = $feedService->getFeedCalculationSummary();
         $animalGroups = AnimalGroup::with('feedPlans')->orderBy('name')->get();
         $todayDeductionStatus = $deductService->getTodayDeductionStatus();
+        $feedItems = InventoryItem::where('is_active', true)->orderBy('category')->orderBy('name')->get();
 
-        return view('admin.feed.calculator', compact('data', 'animalGroups', 'todayDeductionStatus'));
+        return view('admin.feed.calculator', compact('data', 'animalGroups', 'todayDeductionStatus', 'feedItems'));
     }
 
     public function deductFeedStock(FeedDeductionService $deductService)
@@ -133,24 +135,33 @@ class FeedController extends Controller
     // Add a new feed item to a group's plan
     public function storePlan(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'animal_group_id'        => 'required|exists:animal_groups,id',
-            'feed_item_name'         => 'required|string|max:100',
+            'inventory_item_id'      => 'required|exists:inventory_items,id',
             'quantity_per_animal_kg' => 'required|numeric|min:0',
         ]);
 
-        // Prevent duplicate feed item in same group
-        $exists = FeedPlan::where('animal_group_id', $validated['animal_group_id'])
-            ->where('feed_item_name', $validated['feed_item_name'])
-            ->exists();
+        $item = InventoryItem::findOrFail($request->inventory_item_id);
+
+        // Prevent duplicate: same group + same inventory item
+        $exists = FeedPlan::where('animal_group_id', $request->animal_group_id)
+            ->where(function ($q) use ($request, $item) {
+                $q->where('inventory_item_id', $request->inventory_item_id)
+                  ->orWhere('feed_item_name', $item->name);
+            })->exists();
 
         if ($exists) {
-            return back()->with('error', '"' . $validated['feed_item_name'] . '" already exists in this group\'s feed plan.');
+            return back()->with('error', '"' . $item->name . '" already exists in this group\'s feed plan.');
         }
 
-        FeedPlan::create($validated);
+        FeedPlan::create([
+            'animal_group_id'        => $request->animal_group_id,
+            'inventory_item_id'      => $item->id,
+            'feed_item_name'         => $item->name,   // keep legacy field in sync
+            'quantity_per_animal_kg' => $request->quantity_per_animal_kg,
+        ]);
 
-        return back()->with('success', '"' . $validated['feed_item_name'] . '" added to feed plan.');
+        return back()->with('success', '"' . $item->name . '" added to feed plan.');
     }
 
     // Delete a feed plan item

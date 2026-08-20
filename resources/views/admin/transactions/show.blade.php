@@ -190,6 +190,20 @@
        onmouseout="this.style.background='#fef9c3'">
         <i class="bi bi-file-earmark-ruled"></i>Blank Voucher
     </a>
+    @if(auth()->user()->role === 'super_admin')
+    <button onclick="deleteTxShow()"
+            style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
+                   padding:6px 14px;border-radius:8px;border:1px solid #fca5a5;
+                   background:#fee2e2;color:#dc2626;cursor:pointer;transition:background .15s;"
+            onmouseover="this.style.background='#fecaca'"
+            onmouseout="this.style.background='#fee2e2'">
+        <i class="bi bi-trash"></i>Delete
+    </button>
+    <form id="deleteTxForm" method="POST"
+          action="{{ route('admin.transactions.destroy', $transaction) }}" style="display:none;">
+        @csrf @method('DELETE')
+    </form>
+    @endif
     @if($transaction->status === 'success' && !$transaction->is_refunded)
     <button onclick="triggerRefund()"
        style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
@@ -482,6 +496,14 @@
 
 @push('scripts')
 <script>
+function deleteTxShow() {
+    APP.confirm(
+        'Delete Transaction?',
+        'Permanently delete {{ $transaction->transaction_id }}? This cannot be undone. Any wallet balance impact will be reversed.',
+        () => document.getElementById('deleteTxForm').submit()
+    );
+}
+
 function updateStatus() {
     const status = document.getElementById('newStatus').value;
     const notes  = document.getElementById('statusNotes').value;

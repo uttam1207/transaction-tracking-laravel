@@ -7,7 +7,7 @@
 
 @section('content')
 
-<div class="page-hero">
+<div class="page-hero" style="overflow:visible;">
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>Stock Management</h4>
@@ -254,3 +254,4 @@
 </div>
 
 @endsection
+
