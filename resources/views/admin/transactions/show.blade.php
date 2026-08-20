@@ -222,7 +222,7 @@
                 <span style="width:7px;height:7px;border-radius:50%;background:currentColor;"></span>
                 {{ ucfirst($transaction->status) }}
             </span>
-            @if($transaction->is_flagged)
+            @if($fraudEnabled && $transaction->is_flagged)
                 <span class="hero-flagged-pill"><i class="bi bi-flag-fill"></i>Flagged for Fraud</span>
             @endif
         </div>

@@ -69,7 +69,7 @@
             <td>{{ $i + 1 }}</td>
             <td style="font-family: monospace; font-size: 7.5px; color: #4f46e5;">
                 {{ $t->transaction_id }}
-                @if($t->is_flagged) <span class="flag">⚑</span> @endif
+                @if($fraudEnabled && $t->is_flagged) <span class="flag">⚑</span> @endif
             </td>
             <td>{{ $t->user?->name ?? $t->sender_name ?? 'N/A' }}</td>
             <td>{{ ucfirst($t->category) }}</td>

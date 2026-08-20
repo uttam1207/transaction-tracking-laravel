@@ -379,13 +379,13 @@
             <tbody>
                 @forelse($transactions as $tx)
                 @php $riskClass = $tx->risk_score >= 70 ? 'risk-high' : ($tx->risk_score >= 40 ? 'risk-mid' : 'risk-low'); @endphp
-                <tr class="{{ $tx->is_flagged ? 'flagged-row' : '' }}"
+                <tr class="{{ ($fraudEnabled && $tx->is_flagged) ? 'flagged-row' : '' }}"
                     style="cursor:pointer;"
                     onclick="rowClick(event, '{{ route('admin.transactions.show', $tx) }}')">
                     <td class="ps-3"><input type="checkbox" value="{{ $tx->id }}" class="tx-check" style="border-radius:4px;" onclick="event.stopPropagation();"></td>
                     <td>
                         <a href="{{ route('admin.transactions.show', $tx) }}" class="tx-id-link">{{ $tx->transaction_id }}</a>
-                        @if($tx->is_flagged)
+                        @if($fraudEnabled && $tx->is_flagged)
                             <span class="flag-badge"><i class="bi bi-flag-fill"></i>Fraud</span>
                         @endif
                     </td>

@@ -24,7 +24,7 @@ class DashboardService
             'total_transactions' => Transaction::count(),
             'today_transactions' => Transaction::whereDate('created_at', $today)->count(),
             'wallet_balance' => (float) Wallet::company()->balance,
-            'today_transactions_amount' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('amount'),
+            'today_transactions_amount' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('net_amount'),
             'fraud_alerts' => FraudAlert::count(),
             'fraud_alerts_open' => FraudAlert::open()->count(),
             'fraud_alerts_critical' => FraudAlert::critical()->open()->count(),

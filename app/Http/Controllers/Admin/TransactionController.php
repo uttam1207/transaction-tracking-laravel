@@ -390,9 +390,31 @@ class TransactionController extends Controller
                 $wallet = Wallet::company();
                 if ($wallet->status === 'active') {
                     $desc = 'Transaction ' . $transaction->transaction_id;
-                    $transaction->type === 'credit'
-                        ? $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
-                        : $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    try {
+                        $transaction->type === 'credit'
+                            ? $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
+                            : $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    } catch (\RuntimeException $e) {
+                        // Insufficient balance — revert this transaction back to its old status
+                        $transaction->update(['status' => $oldStatus]);
+                        $updated--;
+                        continue;
+                    }
+                }
+            }
+
+            // Reverse wallet when a previously-success transaction is batch-reversed
+            if ($request->status === 'reversed' && $oldStatus === 'success') {
+                $wallet = Wallet::company();
+                if ($wallet->status === 'active') {
+                    $desc = 'Batch reversal: ' . $transaction->transaction_id;
+                    try {
+                        $transaction->type === 'credit'
+                            ? $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
+                            : $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                    } catch (\RuntimeException $e) {
+                        // Skip reversal if insufficient balance (edge case)
+                    }
                 }
             }
 
@@ -504,12 +526,12 @@ class TransactionController extends Controller
 
         $callback = function () use ($transactions) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['ID', 'Transaction ID', 'User', 'Category', 'Type', 'Amount', 'Currency', 'Status', 'Risk Score', 'Date']);
+            fputcsv($handle, ['ID', 'Transaction ID', 'User', 'Category', 'Type', 'Amount', 'Fee', 'Net Amount', 'Currency', 'Status', 'Risk Score', 'Date']);
 
             foreach ($transactions as $t) {
                 fputcsv($handle, [
                     $t->id, $t->transaction_id, $t->user?->name ?? 'N/A', $t->category,
-                    $t->type, $t->amount, $t->currency, $t->status, $t->risk_score,
+                    $t->type, $t->amount, $t->fee, $t->net_amount, $t->currency, $t->status, $t->risk_score,
                     $t->created_at->format('Y-m-d H:i:s'),
                 ]);
             }
@@ -620,10 +642,11 @@ class TransactionController extends Controller
                 continue;
             }
 
-            $amount = (float) $cols['amount'];
-            $fee    = (float) ($cols['fee'] ?? 0);
+            $amount   = (float) $cols['amount'];
+            $fee      = (float) ($cols['fee'] ?? 0);
+            $txStatus = in_array($cols['status'] ?? '', $validStatuses) ? $cols['status'] : 'pending';
 
-            Transaction::create([
+            $transaction = Transaction::create([
                 'type'             => $cols['type'],
                 'category'         => in_array($cols['category'] ?? '', $validCats) ? $cols['category'] : 'other',
                 'amount'           => $amount,
@@ -631,7 +654,7 @@ class TransactionController extends Controller
                 'fee'              => $fee,
                 'net_amount'       => $amount - $fee,
                 'payment_method'   => in_array($cols['payment_method'] ?? '', $validMethods) ? $cols['payment_method'] : 'bank_transfer',
-                'status'           => in_array($cols['status'] ?? '', $validStatuses) ? $cols['status'] : 'pending',
+                'status'           => $txStatus,
                 'reference'        => $cols['reference']        ?: null,
                 'country'          => $cols['country']          ?: null,
                 'processed_at'     => !empty($cols['processed_at']) ? $cols['processed_at'] : now(),
@@ -648,6 +671,34 @@ class TransactionController extends Controller
                 'receiver_account' => $cols['receiver_account'] ?: null,
                 'receiver_bank'    => $cols['receiver_bank']    ?: null,
                 'device_id'        => $cols['device_id']        ?: null,
+            ]);
+
+            // Mirror wallet balance for imported success transactions
+            if ($txStatus === 'success') {
+                $wallet = Wallet::company();
+                if ($wallet->status === 'active') {
+                    $desc = 'Imported: ' . $transaction->transaction_id;
+                    try {
+                        if ($transaction->type === 'credit') {
+                            $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                        } else {
+                            $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                        }
+                    } catch (\RuntimeException $e) {
+                        // Insufficient wallet balance — downgrade to pending so wallet stays consistent
+                        $transaction->update(['status' => 'pending']);
+                    }
+                }
+            }
+
+            // Tag this transaction as CSV-imported so it's always identifiable
+            TransactionLog::create([
+                'transaction_id' => $transaction->id,
+                'action'         => 'imported',
+                'to_status'      => $transaction->status,
+                'performed_by'   => auth()->id(),
+                'notes'          => 'Created via CSV/Excel bulk import.',
+                'ip_address'     => request()->ip(),
             ]);
 
             $imported++;
@@ -672,35 +723,38 @@ class TransactionController extends Controller
             'C' => ['amount',           true,  null],
             'D' => ['currency',         false, 'INR'],
             'E' => ['fee',              false, null],
-            'F' => ['payment_method',   true,  'bank_transfer,credit_card,debit_card,cash,mobile_money,wire_transfer,crypto'],
-            'G' => ['status',           false, 'pending,processing,success,failed'],
-            'H' => ['reference',        false, null],
-            'I' => ['country',          false, null],
-            'J' => ['processed_at',     false, null],
-            'K' => ['description',      false, null],
-            'L' => ['sender_name',      true,  null],
-            'M' => ['sender_mobile',    false, null],
-            'N' => ['sender_company',   false, null],
-            'O' => ['sender_account',   false, null],
-            'P' => ['sender_bank',      false, null],
-            'Q' => ['receiver_name',    true,  null],
-            'R' => ['receiver_mobile',  false, null],
-            'S' => ['receiver_company', false, null],
-            'T' => ['receiver_address', false, null],
-            'U' => ['receiver_account', false, null],
-            'V' => ['receiver_bank',    false, null],
-            'W' => ['device_id',        false, null],
+            'F' => ['net_amount',       false, null],   // auto-calculated (amount - fee); read-only reference
+            'G' => ['payment_method',   true,  'bank_transfer,credit_card,debit_card,cash,mobile_money,wire_transfer,crypto'],
+            'H' => ['status',           false, 'pending,processing,success,failed'],
+            'I' => ['reference',        false, null],
+            'J' => ['country',          false, null],
+            'K' => ['processed_at',     false, null],
+            'L' => ['description',      false, null],
+            'M' => ['sender_name',      true,  null],
+            'N' => ['sender_mobile',    false, null],
+            'O' => ['sender_company',   false, null],
+            'P' => ['sender_account',   false, null],
+            'Q' => ['sender_bank',      false, null],
+            'R' => ['receiver_name',    true,  null],
+            'S' => ['receiver_mobile',  false, null],
+            'T' => ['receiver_company', false, null],
+            'U' => ['receiver_address', false, null],
+            'V' => ['receiver_account', false, null],
+            'W' => ['receiver_bank',    false, null],
+            'X' => ['device_id',        false, null],
         ];
 
         // ── Header row styling ───────────────────────────────────────────
         foreach ($cols as $col => [$name, $required, $options]) {
             $cell = $col . '1';
             $sheet->setCellValue($cell, $name);
+            // net_amount gets a teal header to indicate it is auto-calculated
+            $bgColor = $name === 'net_amount' ? '0D9488' : ($required ? 'B91C1C' : '4B5563');
             $sheet->getStyle($cell)->applyFromArray([
                 'font'      => ['bold' => true, 'color' => ['rgb' => 'FFFFFF'], 'size' => 9],
                 'fill'      => [
                     'fillType'   => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => $required ? 'B91C1C' : '4B5563'],
+                    'startColor' => ['rgb' => $bgColor],
                 ],
                 'alignment' => [
                     'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
@@ -713,21 +767,21 @@ class TransactionController extends Controller
 
         // ── Example rows ─────────────────────────────────────────────────
         $sheet->fromArray([
-            'debit','payment', 5000, 'INR', 0,
+            'debit','payment', 5000, 'INR', 0, 5000,
             'bank_transfer','success','REF-001','IN','2026-06-04 10:00:00','Payment for Invoice #001',
             'John Doe','9876543210','ABC Corp','1234567890','HDFC Bank',
             'Jane Smith','9876543211','XYZ Ltd','123 Main St Mumbai','0987654321','SBI Bank','DEV-001',
         ], null, 'A2');
 
         $sheet->fromArray([
-            'credit','salary', 25000, 'INR', 0,
+            'credit','salary', 25000, 'INR', 500, 24500,
             'bank_transfer','success','SAL-JUN-2026','IN','2026-06-04 09:00:00','June 2026 salary',
             'AS Dairy Ltd','','AS Dairy Dashboard','','HDFC Bank',
             'Ramesh Kumar','9512345678','','Nagpur Maharashtra','','SBI Bank','',
         ], null, 'A3');
 
         // Light background on example rows
-        $sheet->getStyle('A2:W3')->applyFromArray([
+        $sheet->getStyle('A2:X3')->applyFromArray([
             'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F0FDF4']],
         ]);
 
@@ -750,11 +804,11 @@ class TransactionController extends Controller
         }
 
         // ── Legend row ───────────────────────────────────────────────────
-        $sheet->setCellValue('A5', '* Red header = Required field   |   Grey header = Optional field   |   Fill your data from row 2 onwards');
-        $sheet->getStyle('A5:W5')->applyFromArray([
+        $sheet->setCellValue('A5', '* Red header = Required field   |   Grey header = Optional field   |   net_amount is auto-calculated (amount − fee); you may leave it blank   |   Fill your data from row 2 onwards');
+        $sheet->getStyle('A5:X5')->applyFromArray([
             'font' => ['italic' => true, 'size' => 8, 'color' => ['rgb' => '9CA3AF']],
         ]);
-        $sheet->mergeCells('A5:W5');
+        $sheet->mergeCells('A5:X5');
 
         // Freeze header
         $sheet->freezePane('A2');

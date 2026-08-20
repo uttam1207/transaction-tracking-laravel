@@ -277,7 +277,7 @@ textarea.form-control { height:auto!important; }
                         {{ $transaction->risk_score }}/100
                     </div>
                 </div>
-                @if($transaction->is_flagged)
+                @if($fraudEnabled && $transaction->is_flagged)
                 <div style="background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;font-size:.8rem;font-weight:600;color:#dc2626;">
                     <i class="bi bi-flag-fill me-1"></i>Flagged for Fraud
                 </div>

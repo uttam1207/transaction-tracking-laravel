@@ -86,7 +86,7 @@
 {{-- Status Banner --}}
 <div class="status-banner status-{{ $transaction->status }}">
     {{ strtoupper($transaction->status) }}
-    @if($transaction->is_flagged) &nbsp;&bull;&nbsp; ⚑ FLAGGED FOR FRAUD REVIEW @endif
+    @if($fraudEnabled && $transaction->is_flagged) &nbsp;&bull;&nbsp; ⚑ FLAGGED FOR FRAUD REVIEW @endif
 </div>
 
 {{-- Amount --}}
