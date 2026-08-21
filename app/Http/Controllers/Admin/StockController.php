@@ -16,6 +16,9 @@ class StockController extends Controller
     // Current Stock Screen (/stock)
     public function index(Request $request)
     {
+        $user      = auth()->user();
+        $isFarmer  = $user->isFarmer();
+
         $query = InventoryItem::with('stockMovements');
 
         if ($request->search) {
@@ -39,18 +42,34 @@ class StockController extends Controller
             ->orderBy('expiry_date')
             ->get();
 
-        $summary = [
-            'total_items'         => InventoryItem::count(),
-            'low_stock'           => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Low Stock')->count(),
-            'out_of_stock'        => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Out of Stock')->count(),
-            'received_this_month' => StockMovement::where('type', 'in')->whereMonth('date', now()->month)->sum('quantity'),
-            'issued_this_month'   => StockMovement::where('type', 'out')->whereMonth('date', now()->month)->sum('quantity'),
-            'expiring_soon'       => $expiryAlerts->count(),
-        ];
+        if ($isFarmer) {
+            // Farmers see summary of only their own recorded movements
+            $summary = [
+                'total_items'         => $items->count(),
+                'low_stock'           => $items->filter(fn ($i) => $i->stock_status === 'Low Stock')->count(),
+                'out_of_stock'        => $items->filter(fn ($i) => $i->stock_status === 'Out of Stock')->count(),
+                'received_this_month' => StockMovement::where('type', 'in')
+                    ->where('recorded_by', $user->id)
+                    ->whereMonth('date', now()->month)->sum('quantity'),
+                'issued_this_month'   => StockMovement::where('type', 'out')
+                    ->where('recorded_by', $user->id)
+                    ->whereMonth('date', now()->month)->sum('quantity'),
+                'expiring_soon'       => $expiryAlerts->count(),
+            ];
+        } else {
+            $summary = [
+                'total_items'         => InventoryItem::count(),
+                'low_stock'           => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Low Stock')->count(),
+                'out_of_stock'        => InventoryItem::all()->filter(fn ($i) => $i->stock_status === 'Out of Stock')->count(),
+                'received_this_month' => StockMovement::where('type', 'in')->whereMonth('date', now()->month)->sum('quantity'),
+                'issued_this_month'   => StockMovement::where('type', 'out')->whereMonth('date', now()->month)->sum('quantity'),
+                'expiring_soon'       => $expiryAlerts->count(),
+            ];
+        }
 
         $categories = InventoryCategory::active()->orderBy('name')->get();
 
-        return view('admin.stock.index', compact('items', 'summary', 'categories', 'expiryAlerts'));
+        return view('admin.stock.index', compact('items', 'summary', 'categories', 'expiryAlerts', 'isFarmer'));
     }
 
     // Stock In Form (/stock/in)
@@ -73,7 +92,7 @@ class StockController extends Controller
         ]);
 
         $validated['type']        = 'in';
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by'] = auth()->user()?->id;
 
         StockMovement::create($validated);
 
@@ -108,7 +127,7 @@ class StockController extends Controller
         }
 
         $validated['type']        = 'out';
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by'] = auth()->user()?->id;
 
         StockMovement::create($validated);
 
@@ -116,16 +135,26 @@ class StockController extends Controller
             ->with('success', 'Stock Out recorded successfully.');
     }
 
-    // Stock Adjustment Form (/stock/adjustment)
+    // Stock Adjustment Form (/stock/adjustment) — Farmers not allowed
     public function adjustmentForm()
     {
+        if (auth()->user()->isFarmer()) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', 'Farmers are not allowed to make stock adjustments.');
+        }
+
         $items = InventoryItem::where('is_active', true)->orderBy('name')->get();
         return view('admin.stock.adjustment', compact('items'));
     }
 
-    // Record Stock Adjustment
+    // Record Stock Adjustment — Farmers not allowed
     public function storeAdjustment(Request $request)
     {
+        if (auth()->user()->isFarmer()) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', 'Farmers are not allowed to make stock adjustments.');
+        }
+
         $validated = $request->validate([
             'date'             => 'required|date',
             'inventory_item_id'=> 'required|exists:inventory_items,id',
@@ -150,7 +179,7 @@ class StockController extends Controller
             'date'                => $validated['date'],
             'reason'              => $validated['adjustment_type'] . ' - ' . $validated['reason'],
             'remarks'             => $validated['remarks'],
-            'recorded_by'         => auth()->id(),
+            'recorded_by'         => auth()->user()?->id,
         ]);
 
         return redirect()->route('admin.stock.index')
@@ -160,7 +189,15 @@ class StockController extends Controller
     // Stock Movement Audit Log
     public function movements(Request $request)
     {
+        $user     = auth()->user();
+        $isFarmer = $user->isFarmer();
+
         $query = StockMovement::with('inventoryItem', 'recorder');
+
+        // Farmers see only their own recorded movements
+        if ($isFarmer) {
+            $query->where('recorded_by', $user->id);
+        }
 
         if ($request->type) {
             $query->where('type', $request->type);
@@ -181,28 +218,43 @@ class StockController extends Controller
         $movements = $query->latest('date')->paginate(25)->withQueryString();
         $items     = InventoryItem::orderBy('name')->get();
 
-        return view('admin.stock.movements', compact('movements', 'items'));
+        return view('admin.stock.movements', compact('movements', 'items', 'isFarmer'));
     }
 
-    // Export Stock Report as PDF
+    // Export Stock Report as PDF — Farmers not allowed
     public function exportPdf()
     {
+        if (auth()->user()->isFarmer()) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', 'Export is not available for farmers.');
+        }
+
         $items = InventoryItem::with('stockMovements')->orderBy('name')->get();
         $pdf   = Pdf::loadView('admin.stock.pdf', compact('items'))->setPaper('a4', 'portrait');
         return $pdf->download('stock_report_' . now()->format('Ymd_His') . '.pdf');
     }
 
-    // Export Stock Report as Excel
+    // Export Stock Report as Excel — Farmers not allowed
     public function exportExcel(Request $request)
     {
+        if (auth()->user()->isFarmer()) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', 'Export is not available for farmers.');
+        }
+
         $filters  = $request->only(['category', 'status']);
         $filename = 'stock_report_' . now()->format('Ymd_His') . '.xlsx';
         return Excel::download(new StockExport($filters), $filename);
     }
 
-    // Export Stock Report as CSV
+    // Export Stock Report as CSV — Farmers not allowed
     public function exportCsv(Request $request)
     {
+        if (auth()->user()->isFarmer()) {
+            return redirect()->route('admin.stock.index')
+                ->with('error', 'Export is not available for farmers.');
+        }
+
         $filters  = $request->only(['category', 'status']);
         $filename = 'stock_report_' . now()->format('Ymd_His') . '.csv';
         return Excel::download(new StockExport($filters), $filename, \Maatwebsite\Excel\Excel::CSV);

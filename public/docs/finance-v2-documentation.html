@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance V2 — Module Documentation | ASDairy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #1a202c;
+            line-height: 1.7;
+        }
+
+        /* ── Header ── */
+        .doc-header {
+            background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 50%, #3182ce 100%);
+            color: white;
+            padding: 60px 40px 40px;
+            text-align: center;
+        }
+        .doc-header .badge-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .doc-header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+        .doc-header p {
+            font-size: 18px;
+            opacity: 0.85;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .doc-header .meta {
+            margin-top: 24px;
+            font-size: 13px;
+            opacity: 0.65;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Table of Contents ── */
+        .toc {
+            background: white;
+            border-left: 4px solid #3182ce;
+            padding: 24px 28px;
+            margin: 32px auto;
+            max-width: 900px;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .toc h2 { font-size: 16px; color: #3182ce; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .toc ol { padding-left: 20px; }
+        .toc li { margin: 6px 0; }
+        .toc a { color: #2b6cb0; text-decoration: none; font-weight: 500; }
+        .toc a:hover { text-decoration: underline; }
+
+        /* ── Main content ── */
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px 60px;
+        }
+
+        /* ── Section ── */
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+            margin-bottom: 36px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 24px 28px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .section-header .icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+        .icon-blue   { background: #ebf4ff; color: #3182ce; }
+        .icon-green  { background: #f0fff4; color: #38a169; }
+        .icon-purple { background: #faf5ff; color: #805ad5; }
+        .icon-orange { background: #fffaf0; color: #dd6b20; }
+        .icon-red    { background: #fff5f5; color: #e53e3e; }
+        .icon-teal   { background: #e6fffa; color: #319795; }
+
+        .section-header-text h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        .section-header-text p {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 2px;
+        }
+        .section-body { padding: 24px 28px; }
+
+        /* ── Overview box ── */
+        .overview-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 24px;
+            font-size: 15px;
+            color: #4a5568;
+        }
+
+        /* ── Feature grid ── */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 18px;
+            background: #fafbfc;
+        }
+        .feature-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .feature-card p {
+            font-size: 13px;
+            color: #718096;
+            line-height: 1.5;
+        }
+
+        /* ── Sub-heading ── */
+        h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #2d3748;
+            margin: 24px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        h3:first-of-type { margin-top: 0; }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin: 16px 0;
+        }
+        th {
+            background: #2d3748;
+            color: white;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        tr:nth-child(even) td { background: #f7fafc; }
+        tr:last-child td { border-bottom: none; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-blue   { background: #ebf4ff; color: #2b6cb0; }
+        .badge-green  { background: #f0fff4; color: #276749; }
+        .badge-yellow { background: #fffff0; color: #744210; }
+        .badge-red    { background: #fff5f5; color: #c53030; }
+        .badge-gray   { background: #f7fafc; color: #4a5568; border: 1px solid #e2e8f0; }
+        .badge-purple { background: #faf5ff; color: #553c9a; }
+        .badge-orange { background: #fffaf0; color: #7b341e; }
+
+        /* ── Workflow diagram ── */
+        .workflow {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .workflow-step {
+            background: #ebf4ff;
+            color: #2b6cb0;
+            border: 2px solid #bee3f8;
+            border-radius: 8px;
+            padding: 10px 18px;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+        }
+        .workflow-arrow {
+            font-size: 20px;
+            color: #a0aec0;
+            margin: 0 8px;
+        }
+        .workflow-step.active {
+            background: #ebf4ff;
+            border-color: #3182ce;
+            color: #1a365d;
+        }
+
+        /* ── Code/Rule block ── */
+        .rule-box {
+            background: #1a202c;
+            color: #68d391;
+            border-radius: 8px;
+            padding: 16px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 16px 0;
+            line-height: 1.8;
+        }
+        .rule-box .comment { color: #718096; }
+        .rule-box .highlight { color: #f6e05e; }
+
+        /* ── Info alert ── */
+        .alert {
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin: 16px 0;
+            font-size: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .alert-info    { background: #ebf8ff; border-left: 4px solid #3182ce; color: #2c5282; }
+        .alert-success { background: #f0fff4; border-left: 4px solid #38a169; color: #276749; }
+        .alert-warning { background: #fffbeb; border-left: 4px solid #d69e2e; color: #744210; }
+        .alert-danger  { background: #fff5f5; border-left: 4px solid #e53e3e; color: #c53030; }
+        .alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+        /* ── List ── */
+        ul.feature-list {
+            padding-left: 0;
+            list-style: none;
+        }
+        ul.feature-list li {
+            padding: 6px 0;
+            padding-left: 24px;
+            position: relative;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        ul.feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #38a169;
+            font-weight: 700;
+        }
+
+        /* ── Two column layout ── */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 16px 0;
+        }
+        @media (max-width: 600px) {
+            .two-col { grid-template-columns: 1fr; }
+            .workflow { flex-direction: column; }
+            .workflow-arrow { transform: rotate(90deg); }
+        }
+
+        .col-box {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 18px;
+        }
+        .col-box h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #2d3748;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            height: 1px;
+            background: #e2e8f0;
+            margin: 24px 0;
+        }
+
+        /* ── Footer ── */
+        footer {
+            background: #1a202c;
+            color: #a0aec0;
+            text-align: center;
+            padding: 28px 20px;
+            font-size: 13px;
+        }
+        footer strong { color: #e2e8f0; }
+
+        /* ── Print ── */
+        @media print {
+            body { background: white; }
+            .section { box-shadow: none; border: 1px solid #e2e8f0; }
+            .doc-header { background: #1a365d !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════════ -->
+<div class="doc-header">
+    <div class="badge-tag">Module Documentation</div>
+    <h1>Finance V2</h1>
+    <p>Complete double-entry accounting system for ASDairy — Chart of Accounts, Journal Entries & Financial Periods</p>
+    <div class="meta">ASDairy Transaction Tracking System &nbsp;·&nbsp; Version 2.0 &nbsp;·&nbsp; August 2026</div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+═══════════════════════════════════════════════════════════ -->
+<div class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+        <li><a href="#overview">Finance V2 Overview</a></li>
+        <li><a href="#coa">Module 1 — Chart of Accounts</a></li>
+        <li><a href="#periods">Module 2 — Financial Periods</a></li>
+        <li><a href="#journal">Module 3 — Journal Entries</a></li>
+        <li><a href="#reports">Module 4 — Financial Reports</a></li>
+        <li><a href="#autoposting">Module 5 — Auto-Posting Integration</a></li>
+        <li><a href="#workflow">End-to-End Workflow</a></li>
+        <li><a href="#database">Database Structure</a></li>
+    </ol>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════════════
+     OVERVIEW
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="overview">
+    <div class="section-header">
+        <div class="icon icon-blue">📊</div>
+        <div class="section-header-text">
+            <h2>Finance V2 — Overview</h2>
+            <p>What is this module and why it exists</p>
+        </div>
+    </div>
+    <div class="section-body">
+        <div class="overview-box">
+            Finance V2 is a complete <strong>double-entry bookkeeping system</strong> built into ASDairy. It provides professional accounting controls for the dairy business — tracking every rupee through structured accounts, fiscal periods, and audited journal entries.
+        </div>
+
+        <h3>What Finance V2 Provides</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>📋 Account Structure</h4>
+                <p>Organize all financial accounts in a hierarchical tree — assets, liabilities, equity, revenue, and expenses.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📅 Period Control</h4>
+                <p>Define monthly, quarterly, or yearly financial periods. Lock closed periods to protect historical data.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📝 Journal Entries</h4>
+                <p>Record every transaction as balanced debit/credit entries with full audit trail.</p>
+            </div>
+            <div class="feature-card">
+                <h4>📈 Financial Reports</h4>
+                <p>Generate Trial Balance, General Ledger, Profit & Loss, and Balance Sheet from posted entries.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔄 Auto-Posting</h4>
+                <p>Expenses, salaries, and depreciation automatically post journal entries when marked as paid.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔒 Immutable Records</h4>
+                <p>Posted entries cannot be edited — only reversed. Complete audit trail maintained.</p>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div>Finance V2 is accessible to all non-farmer roles. Farmers are excluded from the entire Finance V2 section by design.</div>
+        </div>
+
+        <h3>Core Accounting Principle</h3>
+        <div class="rule-box">
+<span class="comment">// The Golden Rule of Double-Entry Bookkeeping</span>
+
+<span class="highlight">Every transaction must have:</span>
+  → At least one DEBIT entry
+  → At least one CREDIT entry
+  → Total Debits MUST equal Total Credits
+
+<span class="comment">// Normal Balance by Account Type</span>
+  Asset   / Expense   → Debit  increases balance
+  Liability / Equity / Revenue → Credit increases balance
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     CHART OF ACCOUNTS
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="coa">
+    <div class="section-header">
+        <div class="icon icon-blue">🏦</div>
+        <div class="section-header-text">
+            <h2>Module 1 — Chart of Accounts</h2>
+            <p>The backbone of your accounting system — defines every financial category</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <div class="overview-box">
+            The Chart of Accounts (CoA) is a structured list of all financial accounts used in the dairy business. Every journal entry line must be assigned to an account from this list. Accounts can be arranged in a parent-child hierarchy for grouped reporting.
+        </div>
+
+        <h3>Account Types</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Purpose</th>
+                    <th>Examples (Dairy)</th>
+                    <th>Normal Balance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-blue">Asset</span></td>
+                    <td>What the dairy owns</td>
+                    <td>Cash, Bank Account, Livestock, Equipment, Milk Receivables</td>
+                    <td>Debit</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">Liability</span></td>
+                    <td>What the dairy owes</td>
+                    <td>Accounts Payable, Bank Loan, Salary Payable, Feed Payable</td>
+                    <td>Credit</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-yellow">Equity</span></td>
+                    <td>Owner's stake in the business</td>
+                    <td>Owner's Capital, Retained Earnings</td>
+                    <td>Credit</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">Revenue</span></td>
+                    <td>Money earned by the dairy</td>
+                    <td>Milk Sales, Calf Sales, Ghee/Butter Sales, Subsidy Income</td>
+                    <td>Credit</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-gray">Expense</span></td>
+                    <td>Money spent by the dairy</td>
+                    <td>Feed & Fodder, Veterinary Expenses, Salary Expense, Depreciation</td>
+                    <td>Debit</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Account Fields</h3>
+        <table>
+            <thead>
+                <tr><th>Field</th><th>Description</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Code</strong></td><td>Unique identifier (max 20 chars)</td><td>1001, 4001, 5003</td></tr>
+                <tr><td><strong>Name</strong></td><td>Descriptive account name</td><td>Cash in Hand, Milk Sales Revenue</td></tr>
+                <tr><td><strong>Type</strong></td><td>One of 5 main account types</td><td>asset, revenue, expense…</td></tr>
+                <tr><td><strong>Sub-Type</strong></td><td>Optional sub-category</td><td>current_asset, fixed_asset</td></tr>
+                <tr><td><strong>Parent Account</strong></td><td>For hierarchical grouping</td><td>Bank Account → under Cash & Bank</td></tr>
+                <tr><td><strong>Active</strong></td><td>Enable/disable the account</td><td>Yes / No</td></tr>
+                <tr><td><strong>Allow Direct Posting</strong></td><td>Whether this account can be selected in journal entries</td><td>Yes / No</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Features & Actions</h3>
+        <ul class="feature-list">
+            <li>Create, edit, and delete accounts via modal dialogs (no page reload)</li>
+            <li>Search accounts by code or name</li>
+            <li>Filter by account type or active status</li>
+            <li>Hierarchical structure — parent accounts group child accounts</li>
+            <li>Delete protection — cannot delete if account has journal lines or sub-accounts</li>
+            <li>Color-coded type badges for quick identification</li>
+        </ul>
+
+        <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div>An account must have <strong>Allow Direct Posting = Yes</strong> to appear in journal entry dropdowns. Parent summary accounts typically have this set to No.</div>
+        </div>
+
+        <h3>Recommended Account Structure for a Dairy</h3>
+        <div class="rule-box">
+<span class="comment">// Suggested Chart of Accounts for ASDairy</span>
+
+<span class="highlight">ASSETS (1xxx)</span>
+  1001 — Cash in Hand
+  1002 — Bank Account (HDFC / SBI)
+  1100 — Milk Receivables
+  1200 — Feed & Fodder Inventory
+  1500 — Fixed Assets (Livestock, Machinery)
+  1501 — Accumulated Depreciation (contra-asset)
+
+<span class="highlight">LIABILITIES (2xxx)</span>
+  2001 — Accounts Payable (Feed Suppliers)
+  2100 — Salary Payable
+  2200 — Bank Loan Payable
+
+<span class="highlight">EQUITY (3xxx)</span>
+  3001 — Owner's Capital
+  3900 — Retained Earnings
+
+<span class="highlight">REVENUE (4xxx)</span>
+  4001 — Milk Sales Revenue
+  4002 — Calf / Cattle Sales
+  4003 — By-Product Sales (Ghee, Butter)
+  4100 — Government Subsidy Income
+
+<span class="highlight">EXPENSES (5xxx)</span>
+  5001 — Feed & Fodder Expense
+  5002 — Salary Expense
+  5003 — Veterinary Expense
+  5004 — Depreciation Expense
+  5005 — Electricity & Utilities
+  5006 — Transportation Expense
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FINANCIAL PERIODS
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="periods">
+    <div class="section-header">
+        <div class="icon icon-purple">📅</div>
+        <div class="section-header-text">
+            <h2>Module 2 — Financial Periods</h2>
+            <p>Define and control fiscal periods — monthly, quarterly, or yearly</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <div class="overview-box">
+            Financial Periods define the time boundaries for accounting. Journal entries are assigned to a period. Closing a period locks the accounting records, preventing backdating and protecting historical financial data.
+        </div>
+
+        <h3>Period Types</h3>
+        <div class="two-col">
+            <div class="col-box">
+                <h4>📆 Month</h4>
+                <p>Example: <em>August 2026</em><br>Used for monthly P&L tracking and expense monitoring.</p>
+            </div>
+            <div class="col-box">
+                <h4>📆 Quarter</h4>
+                <p>Example: <em>Q2 FY2026-27</em><br>Groups three months for quarterly reporting.</p>
+            </div>
+        </div>
+        <div class="two-col">
+            <div class="col-box">
+                <h4>📆 Year</h4>
+                <p>Example: <em>FY 2026-27</em><br>Full fiscal year — used for annual balance sheet and tax filing.</p>
+            </div>
+            <div class="col-box">
+                <h4>💡 Tip</h4>
+                <p>You can run all three simultaneously — monthly for operations, quarterly for review, yearly for tax.</p>
+            </div>
+        </div>
+
+        <h3>Period Status Lifecycle</h3>
+        <div class="workflow">
+            <div class="workflow-step active">Open</div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">Closed</div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">Locked</div>
+        </div>
+
+        <table>
+            <thead>
+                <tr><th>Status</th><th>What It Means</th><th>Who Can Change It</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-green">Open</span></td>
+                    <td>Journal entries can be created and posted for this period. Normal working state.</td>
+                    <td>Any authorised user</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-gray">Closed</span></td>
+                    <td>Period has ended. Ledger balances are recalculated automatically. New entries are blocked.</td>
+                    <td>Any authorised user</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">Locked</span></td>
+                    <td>Period is permanently locked. No changes of any kind are allowed. Used for completed tax years.</td>
+                    <td>Cannot be unlocked</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Close Period — What Happens</h3>
+        <ul class="feature-list">
+            <li>All posted journal entries in the period are summed per account</li>
+            <li>Ledger Balances table is calculated (opening + movement = closing)</li>
+            <li>Closing balance becomes the opening balance for the next period</li>
+            <li>Period status is changed to "Closed"</li>
+            <li>The "Close & Recalculate" button triggers all of this in one click</li>
+        </ul>
+
+        <div class="alert alert-danger">
+            <span class="alert-icon">🔒</span>
+            <div>Once a period is set to <strong>Locked</strong>, it cannot be reopened or changed in any way. Only lock periods that are fully finalized (e.g. after tax filing).</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     JOURNAL ENTRIES
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="journal">
+    <div class="section-header">
+        <div class="icon icon-green">📝</div>
+        <div class="section-header-text">
+            <h2>Module 3 — Journal Entries</h2>
+            <p>The core of double-entry bookkeeping — record every financial transaction</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <div class="overview-box">
+            A Journal Entry is the formal record of a financial transaction. Every entry must have at least two lines (one debit, one credit) and must be perfectly balanced before it can be posted. Once posted, an entry is immutable — it can only be cancelled by creating a Reversal entry.
+        </div>
+
+        <h3>Entry Types</h3>
+        <table>
+            <thead>
+                <tr><th>Type</th><th>When to Use</th><th>Example</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-gray">General</span></td>
+                    <td>Any transaction that does not fit other types</td>
+                    <td>Opening balance entries, adjustments</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">Sales</span></td>
+                    <td>Revenue-generating transactions</td>
+                    <td>Milk sale to cooperative, bulk sale invoice</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">Purchase</span></td>
+                    <td>Buying goods or services</td>
+                    <td>Feed purchase, medicine procurement</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-blue">Payment</span></td>
+                    <td>Cash or bank payment made</td>
+                    <td>Paying a supplier invoice, electricity bill</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-blue">Receipt</span></td>
+                    <td>Cash or bank money received</td>
+                    <td>Subsidy received, farmer payment received</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-purple">Payroll</span></td>
+                    <td>Employee salary payments</td>
+                    <td>Monthly salary disbursement — auto-posted from Salary module</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-orange">Depreciation</span></td>
+                    <td>Periodic asset value reduction</td>
+                    <td>Annual depreciation on machinery — auto-posted from Fixed Assets</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-gray">Adjustment</span></td>
+                    <td>Year-end or period-end corrections</td>
+                    <td>Accruals, prepaid expense adjustments</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Entry Status Workflow</h3>
+        <div class="workflow">
+            <div class="workflow-step">Draft</div>
+            <div class="workflow-arrow">→ Post →</div>
+            <div class="workflow-step active">Posted</div>
+            <div class="workflow-arrow">→ Reverse →</div>
+            <div class="workflow-step">Reversed</div>
+        </div>
+        <div class="workflow" style="margin-top: 8px;">
+            <div class="workflow-step" style="background:#fff5f5; border-color:#fed7d7; color:#c53030;">Cancelled</div>
+        </div>
+
+        <table style="margin-top: 16px;">
+            <thead>
+                <tr><th>Status</th><th>Meaning</th><th>Can Be Edited?</th><th>Actions Available</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="badge badge-gray">Draft</span></td>
+                    <td>Entry created but not yet committed to the ledger</td>
+                    <td>Yes — not yet locked</td>
+                    <td>Post, Delete</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-green">Posted</span></td>
+                    <td>Entry committed to ledger. Ledger balances updated.</td>
+                    <td>No — immutable</td>
+                    <td>Reverse only</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-yellow">Reversed</span></td>
+                    <td>A reversal entry was created to cancel this entry</td>
+                    <td>No</td>
+                    <td>View only</td>
+                </tr>
+                <tr>
+                    <td><span class="badge badge-red">Cancelled</span></td>
+                    <td>Entry was cancelled before posting</td>
+                    <td>No</td>
+                    <td>View only</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Entry Number Format</h3>
+        <div class="rule-box">
+<span class="comment">// Auto-generated, unique, sequential</span>
+Format: <span class="highlight">JE-{YEAR}-{SEQUENCE}</span>
+
+Examples:
+  JE-2026-00001  (first entry of 2026)
+  JE-2026-00047  (forty-seventh entry)
+  REV-JE-2026-00047  (reversal entry — prefixed with REV-)
+        </div>
+
+        <h3>Creating a Journal Entry — Step by Step</h3>
+        <table>
+            <thead>
+                <tr><th>Step</th><th>Action</th><th>Required?</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Set the Entry Date</td><td>Yes</td></tr>
+                <tr><td>2</td><td>Select Entry Type (sales, payment, payroll, etc.)</td><td>Yes</td></tr>
+                <tr><td>3</td><td>Assign to a Financial Period</td><td>Optional</td></tr>
+                <tr><td>4</td><td>Add Reference number (e.g. invoice #, bill #)</td><td>Optional</td></tr>
+                <tr><td>5</td><td>Write a Description / Narration</td><td>Optional</td></tr>
+                <tr><td>6</td><td>Add entry lines — select account, enter Debit or Credit amount</td><td>Yes (min 2 lines)</td></tr>
+                <tr><td>7</td><td>Verify Debit total = Credit total (shown live on screen)</td><td>Yes — auto-validated</td></tr>
+                <tr><td>8</td><td>Submit — entry saved as Draft</td><td>—</td></tr>
+                <tr><td>9</td><td>Review and click Post Entry to commit to ledger</td><td>—</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Reversal Entry</h3>
+        <div class="overview-box">
+            When a posted entry contains an error, you cannot edit or delete it. Instead, create a <strong>Reversal Entry</strong>. The system automatically creates a new entry with all debits and credits swapped, effectively cancelling the original. Both entries remain in the ledger for full audit visibility.
+        </div>
+
+        <ul class="feature-list">
+            <li>Only posted entries can be reversed</li>
+            <li>Reversal entry is auto-created and immediately posted</li>
+            <li>Reversal entry reference is prefixed with REV-</li>
+            <li>Original entry status changes to "Reversed"</li>
+            <li>Both entries remain visible in the journal for audit trail</li>
+        </ul>
+
+        <div class="alert alert-success">
+            <span class="alert-icon">✅</span>
+            <div><strong>Example:</strong> You posted a milk sale of ₹5,000 to the wrong account. Click Reverse → system creates REV-JE-2026-00023 with debits and credits swapped, cancelling the effect. Then create a correct new entry.</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FINANCIAL REPORTS
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="reports">
+    <div class="section-header">
+        <div class="icon icon-teal">📈</div>
+        <div class="section-header-text">
+            <h2>Module 4 — Financial Reports</h2>
+            <p>Trial Balance, General Ledger, Profit & Loss, Balance Sheet</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <h3>1. Trial Balance</h3>
+        <div class="overview-box">
+            Lists every account with its total debits and total credits from all posted journal entries. The grand total of all debits must equal the grand total of all credits. A balanced trial balance confirms the books are mathematically correct.
+        </div>
+        <table>
+            <thead><tr><th>Column</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>Account Code</td><td>Unique account identifier</td></tr>
+                <tr><td>Account Name</td><td>Description of the account</td></tr>
+                <tr><td>Type</td><td>Asset / Liability / Equity / Revenue / Expense</td></tr>
+                <tr><td>Total Debit</td><td>Sum of all debit lines in posted entries</td></tr>
+                <tr><td>Total Credit</td><td>Sum of all credit lines in posted entries</td></tr>
+            </tbody>
+        </table>
+        <ul class="feature-list">
+            <li>Filter by Financial Period or view all-time</li>
+            <li>Green alert shown when balanced, red when not</li>
+            <li>Sorted by account code</li>
+        </ul>
+
+        <div class="divider"></div>
+
+        <h3>2. General Ledger</h3>
+        <div class="overview-box">
+            Shows the complete transaction history for a single account — every journal entry line that touched that account, in chronological order, with a running balance.
+        </div>
+        <table>
+            <thead><tr><th>Column</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>Date</td><td>Journal entry date</td></tr>
+                <tr><td>Entry #</td><td>Clickable link to the full journal entry</td></tr>
+                <tr><td>Description</td><td>Line or entry narration</td></tr>
+                <tr><td>Debit</td><td>Amount debited to this account</td></tr>
+                <tr><td>Credit</td><td>Amount credited to this account</td></tr>
+                <tr><td>Balance</td><td>Running balance after each transaction (Dr/Cr)</td></tr>
+            </tbody>
+        </table>
+        <ul class="feature-list">
+            <li>Filter by account, date from, date to</li>
+            <li>Shows closing balance at the bottom</li>
+            <li>Balance displayed as "Dr" or "Cr" based on normal balance side</li>
+        </ul>
+
+        <div class="divider"></div>
+
+        <h3>3. Profit & Loss Statement</h3>
+        <div class="overview-box">
+            The P&L shows how much profit or loss the dairy made in a period. It summarizes Revenue accounts on one side and Expense accounts on the other. Net Income = Revenue − Expenses.
+        </div>
+        <div class="two-col">
+            <div class="col-box">
+                <h4>Revenue (Income) Side</h4>
+                <p>All accounts of type <em>Revenue</em>. Net = Credit − Debit for each account.</p>
+            </div>
+            <div class="col-box">
+                <h4>Expense Side</h4>
+                <p>All accounts of type <em>Expense</em>. Net = Debit − Credit for each account.</p>
+            </div>
+        </div>
+        <div class="rule-box">
+<span class="highlight">Net Income = Total Revenue − Total Expenses</span>
+
+Positive = Profit 🟢
+Negative = Loss   🔴
+        </div>
+        <ul class="feature-list">
+            <li>Filter by Financial Period or date range</li>
+            <li>Visual progress bar showing revenue vs expense ratio</li>
+            <li>Color-coded: Revenue in green, Expenses in red</li>
+        </ul>
+
+        <div class="divider"></div>
+
+        <h3>4. Balance Sheet</h3>
+        <div class="overview-box">
+            The Balance Sheet is a snapshot of the dairy's financial position at a point in time. It shows everything the business owns (Assets) versus everything it owes (Liabilities) and the owner's stake (Equity). Assets must always equal Liabilities + Equity.
+        </div>
+        <div class="rule-box">
+<span class="highlight">Assets = Liabilities + Equity</span>
+
+Left Side:  Total Assets
+Right Side: Total Liabilities + Total Equity
+Both sides must be equal ✓
+        </div>
+        <ul class="feature-list">
+            <li>Filter by Financial Period</li>
+            <li>Balanced/Unbalanced indicator shown at top</li>
+            <li>Assets shown in blue, Liabilities in red, Equity in yellow</li>
+            <li>Combined right-side total shown for quick comparison</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     AUTO-POSTING
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="autoposting">
+    <div class="section-header">
+        <div class="icon icon-orange">🔄</div>
+        <div class="section-header-text">
+            <h2>Module 5 — Auto-Posting Integration</h2>
+            <p>Expenses, Salaries, and Depreciation automatically create journal entries</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <div class="overview-box">
+            Finance V2 is integrated with three other modules. When you mark an expense as paid, save a salary as Paid, or record depreciation for a fixed asset — journal entries are created automatically in the background. No manual data entry needed.
+        </div>
+
+        <h3>1. Expense → Journal Entry</h3>
+        <table>
+            <thead><tr><th>Trigger</th><th>Debit Entry</th><th>Credit Entry</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Expense created or updated with status = <span class="badge badge-green">Paid</span></td>
+                    <td>Expense Account (type: expense)</td>
+                    <td>Cash/Asset Account (type: asset)</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            <div>Auto-posting only happens the <strong>first time</strong> an expense is marked as Paid. Changing it back and forth will not double-post.</div>
+        </div>
+
+        <h3>2. Salary → Journal Entry</h3>
+        <table>
+            <thead><tr><th>Trigger</th><th>Debit Entry</th><th>Credit Entry</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Salary saved with status = <span class="badge badge-green">Paid</span></td>
+                    <td>Salary Expense Account</td>
+                    <td>Cash/Asset Account</td>
+                </tr>
+            </tbody>
+        </table>
+        <ul class="feature-list">
+            <li>Reference: SAL-{salary_id}</li>
+            <li>Description: "Salary: {Employee Name} (Month Year)"</li>
+            <li>Entry type: Payroll</li>
+            <li>Only triggers when status changes from non-Paid to Paid</li>
+        </ul>
+
+        <h3>3. Fixed Asset Depreciation → Journal Entry</h3>
+        <table>
+            <thead><tr><th>Trigger</th><th>Debit Entry</th><th>Credit Entry</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Click "Post Depreciation" button on the asset page, select year</td>
+                    <td>Depreciation Expense Account</td>
+                    <td>Accumulated Depreciation Account (asset)</td>
+                </tr>
+            </tbody>
+        </table>
+        <ul class="feature-list">
+            <li>Reference: DEP-{asset_code}-{year}</li>
+            <li>Description: "Depreciation: {Asset Name} (FY {Year})"</li>
+            <li>Supports straight-line and reducing-balance methods</li>
+            <li>Entry type: Depreciation</li>
+        </ul>
+
+        <div class="alert alert-warning">
+            <span class="alert-icon">⚠️</span>
+            <div>Auto-posting requires accounts to exist in the Chart of Accounts. You need at least one <strong>expense</strong> account and one <strong>asset</strong> account with <em>Allow Direct Posting = Yes</em>. For best results, create accounts named "Salary Expense", "Depreciation Expense", "Cash in Hand", and "Accumulated Depreciation".</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     END-TO-END WORKFLOW
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="workflow">
+    <div class="section-header">
+        <div class="icon icon-blue">🔁</div>
+        <div class="section-header-text">
+            <h2>End-to-End Workflow</h2>
+            <p>How to use Finance V2 from setup to reporting</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <h3>Step-by-Step Setup</h3>
+        <table>
+            <thead><tr><th>Step</th><th>Action</th><th>Where</th></tr></thead>
+            <tbody>
+                <tr><td><strong>1</strong></td><td>Create your Chart of Accounts (assets, liabilities, equity, revenue, expenses)</td><td>Finance V2 → Chart of Accounts</td></tr>
+                <tr><td><strong>2</strong></td><td>Create a Financial Period for the current month or year</td><td>Finance V2 → Financial Periods</td></tr>
+                <tr><td><strong>3</strong></td><td>Record milk sales, purchases, and other transactions as Journal Entries</td><td>Finance V2 → Journal Entries → Create</td></tr>
+                <tr><td><strong>4</strong></td><td>Review each draft entry and click Post to commit to the ledger</td><td>Journal Entries → Show → Post Entry</td></tr>
+                <tr><td><strong>5</strong></td><td>Pay expenses via Expense module — journal entries auto-post</td><td>Expenses → Mark as Paid</td></tr>
+                <tr><td><strong>6</strong></td><td>Process salaries via Salary module — payroll entries auto-post</td><td>Salaries → Save as Paid</td></tr>
+                <tr><td><strong>7</strong></td><td>View Trial Balance to verify books are balanced</td><td>Finance Reports → Trial Balance</td></tr>
+                <tr><td><strong>8</strong></td><td>Generate P&L to see profit/loss for the period</td><td>Finance Reports → Profit & Loss</td></tr>
+                <tr><td><strong>9</strong></td><td>Generate Balance Sheet to verify financial position</td><td>Finance Reports → Balance Sheet</td></tr>
+                <tr><td><strong>10</strong></td><td>At month end — click "Close & Recalculate" to finalize the period</td><td>Financial Periods → Close Period</td></tr>
+                <tr><td><strong>11</strong></td><td>Once fully finalized — set period to Locked to prevent any changes</td><td>Financial Periods → Mark Locked</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Monthly Dairy Accounting Cycle</h3>
+        <div class="rule-box">
+<span class="comment">// Every month, this is the recommended flow:</span>
+
+<span class="highlight">1. Start of Month</span>
+   → Create new monthly period (e.g. "September 2026")
+
+<span class="highlight">2. During Month</span>
+   → Record milk sales as Journal Entries (Sales type)
+   → Pay expenses → auto-post to GL (Payment type)
+   → Pay staff salaries → auto-post to GL (Payroll type)
+   → Any manual purchases or receipts → create entries
+
+<span class="highlight">3. End of Month</span>
+   → Check Trial Balance — must be balanced
+   → Generate Profit & Loss — see monthly profit
+   → Generate Balance Sheet — verify financial position
+   → Click "Close & Recalculate" on the period
+   → Review General Ledger per account if needed
+
+<span class="highlight">4. Year End</span>
+   → Post annual depreciation for all fixed assets
+   → Generate yearly P&L and Balance Sheet
+   → Lock the yearly period after tax filing
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     DATABASE STRUCTURE
+═══════════════════════════════════════════════════════════ -->
+<div class="section" id="database">
+    <div class="section-header">
+        <div class="icon icon-red">🗄️</div>
+        <div class="section-header-text">
+            <h2>Database Structure</h2>
+            <p>How the data is stored in the database</p>
+        </div>
+    </div>
+    <div class="section-body">
+
+        <h3>Tables</h3>
+        <table>
+            <thead><tr><th>Table</th><th>Purpose</th><th>Key Fields</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td><code>chart_of_accounts</code></td>
+                    <td>All financial accounts</td>
+                    <td>code, name, type, sub_type, parent_id, is_active, allow_direct_posting</td>
+                </tr>
+                <tr>
+                    <td><code>financial_periods</code></td>
+                    <td>Fiscal periods (month/quarter/year)</td>
+                    <td>name, type, start_date, end_date, status, created_by</td>
+                </tr>
+                <tr>
+                    <td><code>journal_entries</code></td>
+                    <td>Journal entry headers</td>
+                    <td>entry_number, period_id, entry_date, type, total_debit, total_credit, status, created_by, posted_by, posted_at, reversal_of</td>
+                </tr>
+                <tr>
+                    <td><code>journal_entry_lines</code></td>
+                    <td>Individual debit/credit lines</td>
+                    <td>journal_entry_id, account_id, debit, credit, description, cost_center_id</td>
+                </tr>
+                <tr>
+                    <td><code>ledger_balances</code></td>
+                    <td>Pre-computed account balances per period</td>
+                    <td>account_id, period_id, opening_balance, total_debit, total_credit, closing_balance</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Key Constraints</h3>
+        <ul class="feature-list">
+            <li>Account codes are unique across the entire chart</li>
+            <li>Journal entries enforce: total_debit = total_credit</li>
+            <li>Ledger balances: unique per account + period combination</li>
+            <li>Journal lines cascade-delete when parent entry is deleted</li>
+            <li>Soft-delete not used — posted entries are never physically deleted</li>
+        </ul>
+
+        <h3>Access Permissions</h3>
+        <table>
+            <thead><tr><th>Role</th><th>Finance V2 Access</th></tr></thead>
+            <tbody>
+                <tr><td>Super Admin</td><td>Full access — all CRUD operations</td></tr>
+                <tr><td>Admin</td><td>Full access — all CRUD operations</td></tr>
+                <tr><td>Manager</td><td>View and create — depends on permissions</td></tr>
+                <tr><td>Staff</td><td>View only — depends on permissions</td></tr>
+                <tr><td>Farmer</td><td>No access — completely excluded</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</div><!-- /container -->
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer>
+    <p><strong>ASDairy — Finance V2 Module Documentation</strong></p>
+    <p style="margin-top:6px;">Generated August 2026 &nbsp;·&nbsp; Transaction Tracking Laravel System &nbsp;·&nbsp; For internal use only</p>
+</footer>
+
+</body>
+</html>

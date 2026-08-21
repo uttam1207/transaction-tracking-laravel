@@ -10,9 +10,34 @@ use Illuminate\Support\Facades\Storage;
 
 class HealthController extends Controller
 {
+    private function farmerAnimalIds(): \Illuminate\Support\Collection
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        return Animal::where('created_by', $user->getAuthIdentifier())->pluck('id');
+    }
+
+    private function authorizeFarmerHealth(HealthRecord $record): void
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($record->animal_id)) {
+            abort(403, 'You do not have access to this health record.');
+        }
+    }
+
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user     = auth()->user();
+        $isFarmer = $user->isFarmer();
+
         $query = HealthRecord::with('animal');
+
+        if ($isFarmer) {
+            $farmerAnimalIds = $this->farmerAnimalIds();
+            $query->whereIn('animal_id', $farmerAnimalIds);
+        }
 
         if ($request->search) {
             $query->whereHas('animal', fn($q) => $q
@@ -24,24 +49,48 @@ class HealthController extends Controller
         }
 
         $records = $query->latest('date')->paginate(15)->withQueryString();
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
 
-        $summary = [
-            'sick_animals' => Animal::where('health_status', 'Sick')->count(),
-            'under_treatment' => Animal::where('health_status', 'Under Treatment')->count(),
-            'recent_vaccinations' => HealthRecord::where('record_type', 'Vaccination')->whereMonth('date', now()->month)->count(),
-        ];
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($isFarmer) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
 
-        return view('admin.health.index', compact('records', 'animals', 'summary'));
+        if ($isFarmer) {
+            $farmerAnimalIds = $this->farmerAnimalIds();
+            $summary = [
+                'sick_animals'        => Animal::whereIn('id', $farmerAnimalIds)->where('health_status', 'Sick')->count(),
+                'under_treatment'     => Animal::whereIn('id', $farmerAnimalIds)->where('health_status', 'Under Treatment')->count(),
+                'recent_vaccinations' => HealthRecord::whereIn('animal_id', $farmerAnimalIds)->where('record_type', 'Vaccination')->whereMonth('date', now()->month)->count(),
+            ];
+        } else {
+            $summary = [
+                'sick_animals'        => Animal::where('health_status', 'Sick')->count(),
+                'under_treatment'     => Animal::where('health_status', 'Under Treatment')->count(),
+                'recent_vaccinations' => HealthRecord::where('record_type', 'Vaccination')->whereMonth('date', now()->month)->count(),
+            ];
+        }
+
+        return view('admin.health.index', compact('records', 'animals', 'summary', 'isFarmer'));
     }
 
     public function create()
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($user->isFarmer()) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
         return view('admin.health.create', compact('animals'));
     }
+
     public function store(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         $validated = $request->validate([
             'animal_id'        => 'required|exists:animals,id',
             'record_type'      => 'required|in:Vaccination,Deworming,Treatment,Doctor Visit,Emergency',
@@ -55,6 +104,11 @@ class HealthController extends Controller
             'status'           => 'nullable|string|max:100',
             'report_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        // Ensure farmer can only add records for their own animals
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($validated['animal_id'])) {
+            return back()->with('error', 'You can only add health records for your own animals.');
+        }
 
         if ($request->hasFile('report_file')) {
             $validated['report_path'] = $request->file('report_file')->store('health-reports', 'uploads');
@@ -72,18 +126,33 @@ class HealthController extends Controller
 
     public function show(HealthRecord $healthRecord)
     {
+        $this->authorizeFarmerHealth($healthRecord);
         $healthRecord->load('animal');
         return view('admin.health.show', compact('healthRecord'));
     }
 
     public function edit(HealthRecord $healthRecord)
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        $this->authorizeFarmerHealth($healthRecord);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($user->isFarmer()) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
+
         return view('admin.health.edit', compact('healthRecord', 'animals'));
     }
 
     public function update(Request $request, HealthRecord $healthRecord)
     {
+        $this->authorizeFarmerHealth($healthRecord);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         $validated = $request->validate([
             'animal_id'        => 'required|exists:animals,id',
             'record_type'      => 'required|in:Vaccination,Deworming,Treatment,Doctor Visit,Emergency',
@@ -97,6 +166,11 @@ class HealthController extends Controller
             'status'           => 'nullable|string|max:100',
             'report_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        // Ensure farmer can only assign their own animals
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($validated['animal_id'])) {
+            return back()->with('error', 'You can only use your own animals in health records.');
+        }
 
         if ($request->hasFile('report_file')) {
             if ($healthRecord->report_path) {
@@ -114,6 +188,7 @@ class HealthController extends Controller
 
     public function destroy(HealthRecord $healthRecord)
     {
+        $this->authorizeFarmerHealth($healthRecord);
         $healthRecord->delete();
         return redirect()->route('admin.health.index')
             ->with('success', 'Health record deleted.');

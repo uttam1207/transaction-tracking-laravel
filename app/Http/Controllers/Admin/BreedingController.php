@@ -10,9 +10,34 @@ use Illuminate\Support\Facades\Storage;
 
 class BreedingController extends Controller
 {
+    private function farmerAnimalIds(): \Illuminate\Support\Collection
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        return Animal::where('created_by', $user->getAuthIdentifier())->pluck('id');
+    }
+
+    private function authorizeFarmerBreeding(BreedingRecord $record): void
+    {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($record->animal_id)) {
+            abort(403, 'You do not have access to this breeding record.');
+        }
+    }
+
     public function index(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user     = auth()->user();
+        $isFarmer = $user->isFarmer();
+
         $query = BreedingRecord::with('animal');
+
+        if ($isFarmer) {
+            $farmerAnimalIds = $this->farmerAnimalIds();
+            $query->whereIn('animal_id', $farmerAnimalIds);
+        }
 
         if ($request->search) {
             $query->whereHas('animal', fn($q) => $q
@@ -24,25 +49,50 @@ class BreedingController extends Controller
         }
 
         $records = $query->latest()->paginate(15)->withQueryString();
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
 
-        $summary = [
-            'inseminated' => BreedingRecord::where('status', 'AI Done')->count(),
-            'pregnant' => BreedingRecord::where('status', 'Confirmed Pregnant')->count(),
-            'expected_calving_month' => BreedingRecord::whereMonth('expected_calving_date', now()->month)->count(),
-            'repeat_breeders' => BreedingRecord::where('status', 'Repeat Breeder')->count(),
-        ];
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($isFarmer) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
 
-        return view('admin.breeding.index', compact('records', 'animals', 'summary'));
+        if ($isFarmer) {
+            $farmerAnimalIds = $this->farmerAnimalIds();
+            $summary = [
+                'inseminated'           => BreedingRecord::whereIn('animal_id', $farmerAnimalIds)->where('status', 'AI Done')->count(),
+                'pregnant'              => BreedingRecord::whereIn('animal_id', $farmerAnimalIds)->where('status', 'Confirmed Pregnant')->count(),
+                'expected_calving_month'=> BreedingRecord::whereIn('animal_id', $farmerAnimalIds)->whereMonth('expected_calving_date', now()->month)->count(),
+                'repeat_breeders'       => BreedingRecord::whereIn('animal_id', $farmerAnimalIds)->where('status', 'Repeat Breeder')->count(),
+            ];
+        } else {
+            $summary = [
+                'inseminated'           => BreedingRecord::where('status', 'AI Done')->count(),
+                'pregnant'              => BreedingRecord::where('status', 'Confirmed Pregnant')->count(),
+                'expected_calving_month'=> BreedingRecord::whereMonth('expected_calving_date', now()->month)->count(),
+                'repeat_breeders'       => BreedingRecord::where('status', 'Repeat Breeder')->count(),
+            ];
+        }
+
+        return view('admin.breeding.index', compact('records', 'animals', 'summary', 'isFarmer'));
     }
 
     public function create()
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($user->isFarmer()) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
         return view('admin.breeding.create', compact('animals'));
     }
+
     public function store(Request $request)
     {
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         $validated = $request->validate([
             'animal_id'             => 'required|exists:animals,id',
             'heat_date'             => 'required|date',
@@ -52,6 +102,11 @@ class BreedingController extends Controller
             'expected_calving_date' => 'nullable|date',
             'certificate_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        // Ensure farmer can only add records for their own animals
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($validated['animal_id'])) {
+            return back()->with('error', 'You can only add breeding records for your own animals.');
+        }
 
         if ($request->hasFile('certificate_file')) {
             $validated['certificate_path'] = $request->file('certificate_file')->store('breeding-certificates', 'uploads');
@@ -69,18 +124,33 @@ class BreedingController extends Controller
 
     public function show(BreedingRecord $breedingRecord)
     {
+        $this->authorizeFarmerBreeding($breedingRecord);
         $breedingRecord->load('animal');
         return view('admin.breeding.show', compact('breedingRecord'));
     }
 
     public function edit(BreedingRecord $breedingRecord)
     {
-        $animals = Animal::where('status', 'Active')->orderBy('tag_number')->get();
+        $this->authorizeFarmerBreeding($breedingRecord);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+        $animalsQuery = Animal::where('status', 'Active')->orderBy('tag_number');
+        if ($user->isFarmer()) {
+            $animalsQuery->where('created_by', $user->getAuthIdentifier());
+        }
+        $animals = $animalsQuery->get();
+
         return view('admin.breeding.edit', compact('breedingRecord', 'animals'));
     }
 
     public function update(Request $request, BreedingRecord $breedingRecord)
     {
+        $this->authorizeFarmerBreeding($breedingRecord);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->user();
+
         $validated = $request->validate([
             'animal_id'             => 'required|exists:animals,id',
             'heat_date'             => 'required|date',
@@ -94,6 +164,11 @@ class BreedingController extends Controller
             'calf_tag_number'       => 'nullable|string|max:50',
             'certificate_file'      => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        // Ensure farmer can only assign their own animals
+        if ($user->isFarmer() && !$this->farmerAnimalIds()->contains($validated['animal_id'])) {
+            return back()->with('error', 'You can only use your own animals in breeding records.');
+        }
 
         if ($request->hasFile('certificate_file')) {
             if ($breedingRecord->certificate_path) {
@@ -117,6 +192,7 @@ class BreedingController extends Controller
 
     public function destroy(BreedingRecord $breedingRecord)
     {
+        $this->authorizeFarmerBreeding($breedingRecord);
         $breedingRecord->delete();
         return redirect()->route('admin.breeding.index')
             ->with('success', 'Breeding record deleted.');

@@ -20,7 +20,13 @@ class FarmRecord extends Model
         'diesel_liters',
         'electricity_units',
         'water_usage_liters',
+        'created_by',
     ];
+
+    public function createdBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 
     protected $casts = [
         'plantation_date' => 'date',

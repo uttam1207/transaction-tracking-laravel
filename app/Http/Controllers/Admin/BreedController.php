@@ -17,6 +17,10 @@ class BreedController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->isFarmer()) {
+            return back()->with('error', 'Farmers cannot add breeds.');
+        }
+
         $validated = $request->validate([
             'name'        => 'required|string|max:100|unique:breeds,name',
             'animal_type' => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
@@ -30,6 +34,10 @@ class BreedController extends Controller
 
     public function update(Request $request, Breed $breed)
     {
+        if (auth()->user()->isFarmer()) {
+            return back()->with('error', 'Farmers cannot edit breeds.');
+        }
+
         $validated = $request->validate([
             'name'        => 'required|string|max:100|unique:breeds,name,' . $breed->id,
             'animal_type' => 'required|in:Cow,Buffalo,Bull,Heifer,Calf,Goat,Sheep,Ox',
@@ -48,6 +56,10 @@ class BreedController extends Controller
 
     public function destroy(Breed $breed)
     {
+        if (auth()->user()->isFarmer()) {
+            return back()->with('error', 'Farmers cannot delete breeds.');
+        }
+
         $usedBy = Animal::where('breed', $breed->name)->count();
 
         if ($usedBy > 0) {
