@@ -41,6 +41,8 @@ class ServicePermissionSeeder extends Seeder
             ['sort_order' => 35,  'service_key' => 'feed',               'service_name' => 'Feed Calculator',       'icon' => 'basket',             'description' => 'Calculate and track animal feed',                 'allowed_roles' => ['admin', 'manager', 'employee', 'farmer']],
             ['sort_order' => 36,  'service_key' => 'farm',               'service_name' => 'Farm Management',       'icon' => 'house-door',         'description' => 'Manage farm facilities and infrastructure',        'allowed_roles' => ['admin', 'manager', 'farmer']],
 
+            ['sort_order' => 39,  'service_key' => 'fixed_assets',       'service_name' => 'Fixed Assets',          'icon' => 'box2-heart',         'description' => 'Track company fixed assets and depreciation',     'allowed_roles' => ['admin', 'manager', 'auditor']],
+
             // ── Inventory / Operations ────────────────────────────────────
             ['sort_order' => 40,  'service_key' => 'stock',              'service_name' => 'Inventory & Stock',     'icon' => 'boxes',              'description' => 'Manage inventory items and stock levels',         'allowed_roles' => ['admin', 'manager', 'farmer']],
             ['sort_order' => 41,  'service_key' => 'maintenance',        'service_name' => 'Maintenance',           'icon' => 'wrench',             'description' => 'Log and manage equipment maintenance',            'allowed_roles' => ['admin', 'manager', 'employee', 'farmer']],

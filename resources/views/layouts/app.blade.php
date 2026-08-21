@@ -1036,6 +1036,12 @@
                         <span class="nav-icon"><i class="bi bi-building-fill"></i></span>
                         <span class="nav-label">Warehouses</span>
                     </a>
+                    @if(\App\Models\ServicePermission::canAccess('fixed_assets', $svcUser))
+                    <a href="{{ route('admin.fixed-assets.index') }}" class="sidebar-link {{ request()->routeIs('admin.fixed-assets.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-box2-heart"></i></span>
+                        <span class="nav-label">Fixed Assets</span>
+                    </a>
+                    @endif
                     <div class="nav-sub-title">Finance V2</div>
                     <a href="{{ route('admin.finance.coa.index') }}" class="sidebar-link {{ request()->routeIs('admin.finance.coa.*') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-list-columns-reverse"></i></span>

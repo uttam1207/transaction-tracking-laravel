@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\EmployeeTransferController;
 use App\Http\Controllers\Admin\LeaveRequestController;
 use App\Http\Controllers\Admin\EmployeeWalletController;
 use App\Http\Controllers\Admin\ExpenseController;
+use App\Http\Controllers\Admin\FixedAssetController;
 use App\Http\Controllers\Admin\ExpenseCategoryController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\InventoryItemController;
@@ -423,6 +424,9 @@ Route::prefix('admin')
         ->parameters(['expense-categories' => 'expenseCategory']);
     Route::patch('/expense-categories/{expenseCategory}/toggle', [ExpenseCategoryController::class, 'toggleStatus'])
         ->name('expense-categories.toggle');
+
+    // Fixed Assets (Module 8b)
+    Route::resource('fixed-assets', FixedAssetController::class)->parameters(['fixed-assets' => 'fixedAsset']);
 
     // Stock Management (Module 9)
     Route::resource('stock-items', InventoryItemController::class)->except(['show'])->parameters(['stock-items' => 'item']);
