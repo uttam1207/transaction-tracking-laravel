@@ -528,15 +528,16 @@ Route::prefix('admin')
     Route::prefix('warehouses')->name('warehouses.')->group(function () {
         Route::get('/',                          [WarehouseController::class, 'index'])->name('index');
         Route::post('/',                         [WarehouseController::class, 'store'])->name('store');
-        Route::get('/{warehouse}',               [WarehouseController::class, 'show'])->name('show');
-        Route::put('/{warehouse}',               [WarehouseController::class, 'update'])->name('update');
-        Route::post('/{warehouse}/locations',    [WarehouseController::class, 'storeLocation'])->name('locations.store');
 
-        // Stock Transfers
-        Route::get('/transfers',                 [WarehouseController::class, 'transferIndex'])->name('transfers')->middleware('web');
+        // Stock Transfers — must be before /{warehouse} wildcard to avoid conflict
+        Route::get('/transfers',                 [WarehouseController::class, 'transferIndex'])->name('transfers');
         Route::get('/transfers/create',          [WarehouseController::class, 'transferCreate'])->name('transfer.create');
         Route::post('/transfers',                [WarehouseController::class, 'transferStore'])->name('transfer.store');
         Route::post('/transfers/{transfer}/complete', [WarehouseController::class, 'transferComplete'])->name('transfer.complete');
+
+        Route::get('/{warehouse}',               [WarehouseController::class, 'show'])->name('show');
+        Route::put('/{warehouse}',               [WarehouseController::class, 'update'])->name('update');
+        Route::post('/{warehouse}/locations',    [WarehouseController::class, 'storeLocation'])->name('locations.store');
     });
 
     // CRM V2 — Leads Pipeline
