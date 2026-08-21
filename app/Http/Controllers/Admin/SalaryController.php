@@ -7,6 +7,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use App\Models\EmployeeSalary;
 use App\Models\SalaryStructure;
+use App\Services\JournalPostingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -76,7 +77,15 @@ class SalaryController extends Controller
         $grossSalary      = $validated['basic_salary'] + $hra + $otherAllowances;
         $netSalary        = $grossSalary - $pfDeduction - $taxDeduction - $otherDeductions;
 
-        EmployeeSalary::updateOrCreate(
+        $existing = EmployeeSalary::where([
+            'employee_id'  => $validated['employee_id'],
+            'year'         => $validated['year'],
+            'month_number' => $validated['month_number'],
+        ])->first();
+
+        $wasUnpaid = !$existing || $existing->payment_status !== 'Paid';
+
+        $salary = EmployeeSalary::updateOrCreate(
             [
                 'employee_id'  => $validated['employee_id'],
                 'year'         => $validated['year'],
@@ -100,6 +109,11 @@ class SalaryController extends Controller
                 'remarks'          => $validated['remarks'] ?? null,
             ]
         );
+
+        // Auto-post to General Ledger when salary is marked as Paid for the first time
+        if ($wasUnpaid && $salary->payment_status === 'Paid') {
+            app(JournalPostingService::class)->postSalary($salary->load('employee.user'));
+        }
 
         return redirect()->route('admin.salaries.index', ['year' => $validated['year'], 'month' => $validated['month_number']])
             ->with('success', 'Salary record saved successfully.');

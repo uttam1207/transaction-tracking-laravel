@@ -427,6 +427,7 @@ Route::prefix('admin')
 
     // Fixed Assets (Module 8b)
     Route::resource('fixed-assets', FixedAssetController::class)->parameters(['fixed-assets' => 'fixedAsset']);
+    Route::post('fixed-assets/{fixedAsset}/post-depreciation', [FixedAssetController::class, 'postDepreciation'])->name('fixed-assets.post-depreciation');
 
     // Stock Management (Module 9)
     Route::resource('stock-items', InventoryItemController::class)->except(['show'])->parameters(['stock-items' => 'item']);
@@ -511,6 +512,17 @@ Route::prefix('admin')
         Route::get('/journal/{entry}',               [FinanceController::class, 'journalShow'])->name('journal.show');
         Route::post('/journal/{entry}/post',         [FinanceController::class, 'journalPost'])->name('journal.post');
         Route::post('/journal/{entry}/reverse',      [FinanceController::class, 'journalReverse'])->name('journal.reverse');
+
+        // Period Closing
+        Route::post('/periods/{period}/close',       [FinanceController::class, 'periodsClose'])->name('periods.close');
+
+        // Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/trial-balance',  [FinanceController::class, 'trialBalance'])->name('trial-balance');
+            Route::get('/general-ledger', [FinanceController::class, 'generalLedger'])->name('general-ledger');
+            Route::get('/profit-loss',    [FinanceController::class, 'profitLoss'])->name('profit-loss');
+            Route::get('/balance-sheet',  [FinanceController::class, 'balanceSheet'])->name('balance-sheet');
+        });
     });
 
     // Procurement V2 — Purchase Requests

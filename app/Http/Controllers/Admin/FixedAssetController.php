@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\FixedAsset;
+use App\Services\JournalPostingService;
 use Illuminate\Http\Request;
 
 class FixedAssetController extends Controller
@@ -138,5 +139,23 @@ class FixedAssetController extends Controller
         $fixedAsset->delete();
         return redirect()->route('admin.fixed-assets.index')
             ->with('success', "Asset \"{$name}\" has been removed.");
+    }
+
+    /**
+     * Post depreciation journal entry for a fixed asset for a given year.
+     */
+    public function postDepreciation(Request $request, FixedAsset $fixedAsset)
+    {
+        $request->validate([
+            'year' => 'required|integer|min:2000|max:2099',
+        ]);
+
+        $entry = app(JournalPostingService::class)->postDepreciation($fixedAsset, (int) $request->year);
+
+        if (!$entry) {
+            return back()->with('error', 'Could not post depreciation. Ensure expense and asset accounts exist in Chart of Accounts.');
+        }
+
+        return back()->with('success', "Depreciation journal entry {$entry->entry_number} posted for FY {$request->year}.");
     }
 }

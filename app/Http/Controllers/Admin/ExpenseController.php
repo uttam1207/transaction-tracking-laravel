@@ -6,6 +6,7 @@ use App\Exports\ExpensesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Services\JournalPostingService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -80,13 +81,18 @@ class ExpenseController extends Controller
             'remarks'             => 'nullable|string|max:1000',
         ]);
 
-        $validated['recorded_by'] = auth()->id();
+        $validated['recorded_by'] = auth()->user()?->id;
 
         if ($request->hasFile('bill')) {
             $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'uploads');
         }
 
-        Expense::create($validated);
+        $expense = Expense::create($validated);
+
+        // Auto-post to General Ledger when expense is paid
+        if ($expense->payment_status === 'paid') {
+            app(JournalPostingService::class)->postExpense($expense->load('category'));
+        }
 
         return redirect()->route('admin.expenses.index')
             ->with('success', 'Expense recorded successfully.');
@@ -126,7 +132,13 @@ class ExpenseController extends Controller
             $validated['bill_path'] = $request->file('bill')->store('expenses/bills', 'uploads');
         }
 
+        $wasUnpaid = $expense->payment_status !== 'paid';
         $expense->update($validated);
+
+        // Auto-post when status changes to paid for the first time
+        if ($wasUnpaid && $expense->payment_status === 'paid') {
+            app(JournalPostingService::class)->postExpense($expense->load('category'));
+        }
 
         return redirect()->route('admin.expenses.show', $expense)
             ->with('success', 'Expense updated successfully.');

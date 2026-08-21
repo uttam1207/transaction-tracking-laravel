@@ -45,6 +45,11 @@
                             </td>
                             <td class="small text-muted">{{ $period->createdBy?->name ?? '—' }}</td>
                             <td class="text-end">
+                                @if ($period->status === 'open')
+                                <button class="btn btn-sm btn-warning me-1" onclick="closePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')">
+                                    <i class="bi bi-lock me-1"></i>Close & Recalculate
+                                </button>
+                                @endif
                                 @if ($period->status !== 'locked')
                                 <div class="dropdown d-inline-block">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Status</button>
@@ -135,6 +140,17 @@ function updatePeriod(id, status) {
         body: JSON.stringify({ _method: 'PATCH', status })
     }).then(r => r.json()).then(d => {
         if (d.success) location.reload();
+        else alert(d.message);
+    });
+}
+
+function closePeriod(id, name) {
+    if (!confirm(`Close period "${name}"?\n\nThis will recalculate all ledger balances and mark the period as Closed.`)) return;
+    fetch(`/admin/finance/periods/${id}/close`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    }).then(r => r.json()).then(d => {
+        if (d.success) { alert(d.message); location.reload(); }
         else alert(d.message);
     });
 }

@@ -7,12 +7,14 @@ use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
-use App\Models\LedgerBalance;
+use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
+    public function __construct(protected LedgerBalanceService $ledger) {}
+
     // ── Chart of Accounts ────────────────────────────────────────────────────
 
     public function coaIndex(Request $request)
@@ -108,7 +110,7 @@ class FinanceController extends Controller
             'start_date' => $request->start_date,
             'end_date'   => $request->end_date,
             'status'     => 'open',
-            'created_by' => auth()->id(),
+            'created_by' => auth()->user()?->id,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Period created.', 'period' => $period]);
@@ -126,6 +128,21 @@ class FinanceController extends Controller
 
         $period->update(['status' => $request->status]);
         return response()->json(['success' => true, 'message' => 'Period updated.']);
+    }
+
+    /**
+     * Close a period: recalculate all ledger balances then set status to closed.
+     */
+    public function periodsClose(FinancialPeriod $period)
+    {
+        if ($period->status !== 'open') {
+            return response()->json(['success' => false, 'message' => 'Only open periods can be closed.'], 422);
+        }
+
+        $this->ledger->recalculateForPeriod($period);
+        $period->update(['status' => 'closed']);
+
+        return response()->json(['success' => true, 'message' => 'Period closed and ledger balances updated.']);
     }
 
     // ── Journal Entries ──────────────────────────────────────────────────────
@@ -209,7 +226,7 @@ class FinanceController extends Controller
                 'total_debit'  => $totalDebit,
                 'total_credit' => $totalCredit,
                 'status'       => 'draft',
-                'created_by'   => auth()->id(),
+                'created_by'   => auth()->user()?->id,
             ]);
 
             foreach ($request->lines as $line) {
@@ -242,9 +259,12 @@ class FinanceController extends Controller
 
         $entry->update([
             'status'    => 'posted',
-            'posted_by' => auth()->id(),
+            'posted_by' => auth()->user()?->id,
             'posted_at' => now(),
         ]);
+
+        // Update ledger balances after posting
+        $this->ledger->updateAfterPost($entry->load('lines'));
 
         return response()->json(['success' => true, 'message' => 'Entry posted successfully.']);
     }
@@ -266,8 +286,8 @@ class FinanceController extends Controller
                 'total_debit'  => $entry->total_credit,
                 'total_credit' => $entry->total_debit,
                 'status'       => 'posted',
-                'created_by'   => auth()->id(),
-                'posted_by'    => auth()->id(),
+                'created_by'   => auth()->user()?->id,
+                'posted_by'    => auth()->user()?->id,
                 'posted_at'    => now(),
                 'reversal_of'  => $entry->id,
             ]);
@@ -283,8 +303,79 @@ class FinanceController extends Controller
             }
 
             $entry->update(['status' => 'reversed']);
+
+            // Update ledger balances for reversal
+            $this->ledger->updateAfterPost($reversal->load('lines'));
         });
 
         return response()->json(['success' => true, 'message' => 'Entry reversed.']);
+    }
+
+    // ── Reports ──────────────────────────────────────────────────────────────
+
+    public function trialBalance(Request $request)
+    {
+        $periods  = FinancialPeriod::orderByDesc('start_date')->get();
+        $periodId = $request->period_id;
+
+        $rows = $this->ledger->trialBalance($periodId ?: null);
+
+        $totalDebit  = $rows->sum('total_debit');
+        $totalCredit = $rows->sum('total_credit');
+        $balanced    = round($totalDebit, 2) === round($totalCredit, 2);
+
+        $selectedPeriod = $periodId ? $periods->firstWhere('id', $periodId) : null;
+
+        return view('admin.finance.reports.trial-balance', compact(
+            'rows', 'periods', 'selectedPeriod', 'totalDebit', 'totalCredit', 'balanced'
+        ));
+    }
+
+    public function generalLedger(Request $request)
+    {
+        $accounts = ChartOfAccount::active()->orderBy('code')->get();
+        $accountId = $request->account_id;
+        $dateFrom  = $request->date_from;
+        $dateTo    = $request->date_to;
+
+        $data = null;
+        $selectedAccount = null;
+
+        if ($accountId) {
+            $selectedAccount = ChartOfAccount::find($accountId);
+            $data = $this->ledger->generalLedger((int) $accountId, $dateFrom, $dateTo);
+        }
+
+        return view('admin.finance.reports.general-ledger', compact(
+            'accounts', 'accountId', 'dateFrom', 'dateTo', 'data', 'selectedAccount'
+        ));
+    }
+
+    public function profitLoss(Request $request)
+    {
+        $periods       = FinancialPeriod::orderByDesc('start_date')->get();
+        $periodId      = $request->period_id;
+        $dateFrom      = $request->date_from;
+        $dateTo        = $request->date_to;
+        $selectedPeriod = $periodId ? $periods->firstWhere('id', $periodId) : null;
+
+        $data = $this->ledger->profitAndLoss($periodId ?: null, $dateFrom ?: null, $dateTo ?: null);
+
+        return view('admin.finance.reports.profit-loss', compact(
+            'periods', 'selectedPeriod', 'periodId', 'dateFrom', 'dateTo', 'data'
+        ));
+    }
+
+    public function balanceSheet(Request $request)
+    {
+        $periods        = FinancialPeriod::orderByDesc('start_date')->get();
+        $periodId       = $request->period_id;
+        $selectedPeriod = $periodId ? $periods->firstWhere('id', $periodId) : null;
+
+        $data = $this->ledger->balanceSheet($periodId ?: null);
+
+        return view('admin.finance.reports.balance-sheet', compact(
+            'periods', 'selectedPeriod', 'periodId', 'data'
+        ));
     }
 }

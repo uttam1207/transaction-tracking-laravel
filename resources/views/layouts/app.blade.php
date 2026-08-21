@@ -1055,6 +1055,23 @@
                         <span class="nav-icon"><i class="bi bi-calendar-range"></i></span>
                         <span class="nav-label">Financial Periods</span>
                     </a>
+                    <div class="nav-sub-title">Finance Reports</div>
+                    <a href="{{ route('admin.finance.reports.trial-balance') }}" class="sidebar-link {{ request()->routeIs('admin.finance.reports.trial-balance') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-table"></i></span>
+                        <span class="nav-label">Trial Balance</span>
+                    </a>
+                    <a href="{{ route('admin.finance.reports.general-ledger') }}" class="sidebar-link {{ request()->routeIs('admin.finance.reports.general-ledger') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-journal-bookmark"></i></span>
+                        <span class="nav-label">General Ledger</span>
+                    </a>
+                    <a href="{{ route('admin.finance.reports.profit-loss') }}" class="sidebar-link {{ request()->routeIs('admin.finance.reports.profit-loss') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-graph-up-arrow"></i></span>
+                        <span class="nav-label">Profit &amp; Loss</span>
+                    </a>
+                    <a href="{{ route('admin.finance.reports.balance-sheet') }}" class="sidebar-link {{ request()->routeIs('admin.finance.reports.balance-sheet') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-bar-chart-steps"></i></span>
+                        <span class="nav-label">Balance Sheet</span>
+                    </a>
                     @endif {{-- !isFarmer: Finance & Stock + Finance V2 --}}
                     <div class="nav-sub-title">Operations</div>
                     @if(\App\Models\ServicePermission::canAccess('maintenance', $svcUser))
