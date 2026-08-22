@@ -10,6 +10,12 @@ use App\Http\Controllers\API\V1\FraudAlertApiController;
 use App\Http\Controllers\API\V1\EmployeeApiController;
 use App\Http\Controllers\API\V1\LeaveApiController;
 use App\Http\Controllers\API\V1\SalaryApiController;
+// Dairy Module API
+use App\Http\Controllers\API\V1\AnimalApiController;
+use App\Http\Controllers\API\V1\MilkApiController;
+use App\Http\Controllers\API\V1\BreedingApiController;
+use App\Http\Controllers\API\V1\HealthApiController;
+use App\Http\Controllers\API\V1\FarmApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -119,6 +125,26 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(functi
         $settings = \App\Models\Setting::where('is_public', true)->get()->pluck('value', 'key');
         return response()->json(['success' => true, 'data' => $settings]);
     });
+
+    // ── Dairy Module API (v1) ──────────────────────────────────────────────────
+
+    // Animals
+    Route::get('/animals/summary', [AnimalApiController::class, 'summary']);
+    Route::apiResource('animals', AnimalApiController::class);
+
+    // Milk Entries
+    Route::get('/milk/summary', [MilkApiController::class, 'summary']);
+    Route::apiResource('milk', MilkApiController::class);
+
+    // Breeding Records
+    Route::apiResource('breeding', BreedingApiController::class);
+
+    // Health Records
+    Route::apiResource('health', HealthApiController::class);
+
+    // Farm Records
+    Route::get('/farm/summary', [FarmApiController::class, 'summary']);
+    Route::apiResource('farm', FarmApiController::class);
 });
 
 // API Health Check
