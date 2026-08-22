@@ -16,6 +16,8 @@ use App\Http\Controllers\API\V1\MilkApiController;
 use App\Http\Controllers\API\V1\BreedingApiController;
 use App\Http\Controllers\API\V1\HealthApiController;
 use App\Http\Controllers\API\V1\FarmApiController;
+use App\Http\Controllers\API\V1\StockApiController;
+use App\Http\Controllers\API\V1\FeedApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -145,6 +147,17 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'throttle:60,1'])->group(functi
     // Farm Records
     Route::get('/farm/summary', [FarmApiController::class, 'summary']);
     Route::apiResource('farm', FarmApiController::class);
+
+    // Stock / Inventory
+    Route::get('/stock/summary',   [StockApiController::class, 'summary']);
+    Route::get('/stock/items',     [StockApiController::class, 'items']);
+    Route::get('/stock/movements', [StockApiController::class, 'movements']);
+    Route::post('/stock/in',       [StockApiController::class, 'storeIn']);
+    Route::post('/stock/out',      [StockApiController::class, 'storeOut']);
+
+    // Feed Calculator
+    Route::get('/feed/calculator',         [FeedApiController::class, 'calculator']);
+    Route::get('/feed/deduction-history',  [FeedApiController::class, 'deductionHistory']);
 });
 
 // API Health Check
