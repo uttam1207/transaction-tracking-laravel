@@ -15,7 +15,7 @@
             <p>Cattle master registry — health, breeding, shed & lactation tracking</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.breeds.index') }}" class="btn btn-sm btn-outline-light px-4">
+            <a href="{{ route('admin.breeds.index') }}" target="_blank" class="btn btn-sm btn-outline-light px-4">
                 <i class="bi bi-collection me-1"></i>Breeds
             </a>
             <a href="{{ route('admin.animals.create') }}" class="btn btn-primary-grad btn-sm px-4">

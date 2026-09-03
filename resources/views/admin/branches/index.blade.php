@@ -86,14 +86,15 @@
                             <button class="act-btn act-edit" title="Edit"
                                 onclick="openEdit(
                                     {{ $branch->id }},
+                                    {{ $branch->company_id }},
                                     '{{ addslashes($branch->name) }}',
                                     '{{ $branch->code }}',
                                     '{{ addslashes($branch->address ?? '') }}',
-                                    '{{ $branch->city }}',
-                                    '{{ $branch->state }}',
-                                    '{{ $branch->country }}',
-                                    '{{ $branch->phone }}',
-                                    '{{ $branch->email }}',
+                                    '{{ addslashes($branch->city ?? '') }}',
+                                    '{{ addslashes($branch->state ?? '') }}',
+                                    '{{ addslashes($branch->country ?? '') }}',
+                                    '{{ addslashes($branch->phone ?? '') }}',
+                                    '{{ addslashes($branch->email ?? '') }}',
                                     {{ $branch->manager_id ?? 'null' }},
                                     {{ $branch->is_headquarters ? 1 : 0 }},
                                     {{ $branch->is_active ? 1 : 0 }}
@@ -130,6 +131,7 @@
             <form id="branchForm" method="POST">
                 @csrf
                 <span id="branchMethod"></span>
+                <input type="hidden" name="company_id" id="bCompanyId">
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-8">
@@ -209,16 +211,18 @@ function openCreate() {
     document.getElementById('branchMethod').innerHTML = '';
     document.getElementById('branchSubmitBtn').textContent = 'Create';
     ['bName','bCode','bAddress','bCity','bState','bCountry','bPhone','bEmail'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('bCompanyId').value = '{{ optional($companies->first())->id ?? '' }}';
     document.getElementById('bManager').value = '';
     document.getElementById('bHq').value = '0';
     document.getElementById('bStatus').value = '1';
 }
 
-function openEdit(id, name, code, address, city, state, country, phone, email, managerId, isHq, isActive) {
+function openEdit(id, companyId, name, code, address, city, state, country, phone, email, managerId, isHq, isActive) {
     document.getElementById('branchModalTitle').textContent = 'Edit Branch';
     document.getElementById('branchForm').action = `/admin/branches/${id}`;
     document.getElementById('branchMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
     document.getElementById('branchSubmitBtn').textContent = 'Save Changes';
+    document.getElementById('bCompanyId').value = companyId;
     document.getElementById('bName').value    = name;
     document.getElementById('bCode').value    = code || '';
     document.getElementById('bAddress').value = address || '';

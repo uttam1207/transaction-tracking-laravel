@@ -41,7 +41,8 @@ class TransactionController extends Controller
                 $q->where('transaction_id', 'like', '%' . $request->search . '%')
                   ->orWhere('sender_name', 'like', '%' . $request->search . '%')
                   ->orWhere('receiver_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('reference', 'like', '%' . $request->search . '%');
+                  ->orWhere('reference', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', '%' . $request->search . '%'));
             });
         }
 

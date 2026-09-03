@@ -191,7 +191,7 @@
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
-                            <label class="flabel">Budget ($)</label>
+                            <label class="flabel">Budget (₹)</label>
                             <input type="number" name="budget" class="form-control" step="0.01" min="0"
                                 style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
