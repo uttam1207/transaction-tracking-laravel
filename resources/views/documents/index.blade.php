@@ -469,8 +469,27 @@ const fileInput  = document.getElementById('fileInput');
 const dropZone   = document.getElementById('dropZone');
 const fileInfo   = document.getElementById('fileInfo');
 
+const MAX_FILE_BYTES = 20 * 1024 * 1024; // 20 MB
+
 function showFileInfo(file) {
     if (!file) return;
+
+    if (file.size > MAX_FILE_BYTES) {
+        // Clear the input so the oversized file is not submitted
+        fileInput.value = '';
+        fileInfo.innerHTML = '';
+        Swal.fire({
+            icon: 'error',
+            title: 'File Too Large',
+            html: `<strong>${file.name}</strong> is <strong>${(file.size / 1048576).toFixed(2)} MB</strong>.<br>Maximum allowed size is <strong>20 MB</strong>.`,
+            confirmButtonColor: '#4f46e5',
+            confirmButtonText: 'Choose Another File',
+        }).then(() => {
+            document.getElementById('fileInput').click();
+        });
+        return;
+    }
+
     const size = file.size >= 1048576
         ? (file.size / 1048576).toFixed(2) + ' MB'
         : (file.size / 1024).toFixed(1) + ' KB';
@@ -500,9 +519,21 @@ document.getElementById('uploadModal').addEventListener('hidden.bs.modal', funct
     if (defaultCat) { defaultCat.checked = true; defaultCat.closest('.cat-tab-pick').classList.add('selected'); }
 });
 
+// Form submit — safety net: block submission if file is still too large
+document.querySelector('#uploadModal form').addEventListener('submit', function (e) {
+    const file = fileInput.files[0];
+    if (file && file.size > MAX_FILE_BYTES) {
+        e.preventDefault();
+        showFileInfo(file); // triggers Swal
+    }
+});
+
 // ── Swal alerts for upload result ────────────────────────────────────────
+// Script is injected at the bottom of <body> so the DOM is ready — no
+// DOMContentLoaded wrapper needed (and it avoids the race condition where
+// DOMContentLoaded fires before the listener is registered).
 @if($errors->any())
-document.addEventListener('DOMContentLoaded', function () {
+(function () {
     const errorList = @json($errors->all());
     Swal.fire({
         icon: 'error',
@@ -532,13 +563,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         @endif
     });
-});
+})();
 @endif
 
 @if(session('doc_success'))
-document.addEventListener('DOMContentLoaded', function () {
-    APP.toast({{ json_encode(session('doc_success')) }}, 'success');
-});
+APP.toast({{ json_encode(session('doc_success')) }}, 'success');
 @endif
 
 // Delete
