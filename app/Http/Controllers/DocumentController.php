@@ -52,7 +52,7 @@ class DocumentController extends Controller
             'uploaded_by' => auth()->id(),
         ]);
 
-        return redirect()->route('documents.index')->with('success', 'Document uploaded successfully.');
+        return redirect()->route('documents.index')->with('doc_success', 'Document uploaded successfully.');
     }
 
     public function preview(Document $document)

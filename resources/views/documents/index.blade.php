@@ -378,20 +378,6 @@
                 @csrf
                 <div class="modal-body px-4 py-3">
 
-                    {{-- Validation errors --}}
-                    @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show py-2 mb-3" role="alert">
-                        <i class="bi bi-exclamation-circle me-2"></i>
-                        <strong>Please fix the following:</strong>
-                        <ul class="mb-0 mt-1 ps-3">
-                            @foreach($errors->all() as $error)
-                                <li style="font-size:.875rem;">{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
-
                     <div class="row g-3">
 
                         {{-- Title --}}
@@ -514,26 +500,44 @@ document.getElementById('uploadModal').addEventListener('hidden.bs.modal', funct
     if (defaultCat) { defaultCat.checked = true; defaultCat.closest('.cat-tab-pick').classList.add('selected'); }
 });
 
-// Re-open upload modal automatically when there are validation errors
+// ── Swal alerts for upload result ────────────────────────────────────────
 @if($errors->any())
 document.addEventListener('DOMContentLoaded', function () {
-    var uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
-    uploadModal.show();
-    // Restore previously submitted values
-    @if(old('title'))
-    document.querySelector('#uploadModal input[name="title"]').value = {{ json_encode(old('title')) }};
-    @endif
-    @if(old('description'))
-    document.querySelector('#uploadModal textarea[name="description"]').value = {{ json_encode(old('description')) }};
-    @endif
-    @if(old('category'))
-    const oldCat = document.querySelector('#uploadModal input[name="category"][value="{{ old('category') }}"]');
-    if (oldCat) {
-        oldCat.checked = true;
-        document.querySelectorAll('.cat-tab-pick').forEach(l => l.classList.remove('selected'));
-        oldCat.closest('.cat-tab-pick').classList.add('selected');
-    }
-    @endif
+    const errorList = @json($errors->all());
+    Swal.fire({
+        icon: 'error',
+        title: 'Upload Failed',
+        html: '<ul class="text-start mb-0 ps-3 small">' +
+              errorList.map(e => '<li>' + e + '</li>').join('') +
+              '</ul>',
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: '<i class="bi bi-pencil me-1"></i>Fix & Retry',
+    }).then(() => {
+        // Open the upload modal so the user can correct and resubmit
+        const uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+        uploadModal.show();
+        // Restore previously submitted values
+        @if(old('title'))
+        document.querySelector('#uploadModal input[name="title"]').value = {{ json_encode(old('title')) }};
+        @endif
+        @if(old('description'))
+        document.querySelector('#uploadModal textarea[name="description"]').value = {{ json_encode(old('description')) }};
+        @endif
+        @if(old('category'))
+        const oldCat = document.querySelector('#uploadModal input[name="category"][value="{{ old('category') }}"]');
+        if (oldCat) {
+            oldCat.checked = true;
+            document.querySelectorAll('.cat-tab-pick').forEach(l => l.classList.remove('selected'));
+            oldCat.closest('.cat-tab-pick').classList.add('selected');
+        }
+        @endif
+    });
+});
+@endif
+
+@if(session('doc_success'))
+document.addEventListener('DOMContentLoaded', function () {
+    APP.toast({{ json_encode(session('doc_success')) }}, 'success');
 });
 @endif
 
