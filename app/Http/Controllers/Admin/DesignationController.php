@@ -59,12 +59,19 @@ class DesignationController extends Controller
         return back()->with('success', 'Designation updated.');
     }
 
-    public function destroy(Designation $designation)
+    public function destroy(int $designation)
     {
-        if ($designation->employees()->count() > 0) {
-            return back()->with('error', 'Cannot delete designation with assigned employees.');
+        $record = Designation::find($designation);
+
+        if (! $record) {
+            return response()->json(['success' => false, 'message' => 'Designation not found.'], 404);
         }
-        $designation->delete();
-        return back()->with('success', 'Designation deleted.');
+
+        if ($record->employees()->count() > 0) {
+            return response()->json(['success' => false, 'message' => 'Cannot delete: designation has assigned employees.']);
+        }
+
+        $record->delete();
+        return response()->json(['success' => true]);
     }
 }

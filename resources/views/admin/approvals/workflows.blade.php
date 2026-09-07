@@ -22,7 +22,7 @@
     <div class="card-header d-flex align-items-center justify-content-between">
         <div>
             <span class="card-title">{{ $wf->name }}</span>
-            <span class="badge bg-primary bg-opacity-15 text-primary ms-2" style="font-size:.72rem;">{{ strtoupper(str_replace('_',' ',$wf->module)) }}</span>
+            <span style="display:inline-block;background:#dbeafe;color:#1d4ed8;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600;vertical-align:middle;">{{ strtoupper(str_replace('_',' ',$wf->module)) }}</span>
             <span class="spill {{ $wf->is_active ? 'spill-active' : 'spill-inactive' }} ms-2">{{ $wf->is_active ? 'Active' : 'Inactive' }}</span>
         </div>
         <button class="btn btn-sm btn-outline-primary px-3" onclick="openEditWorkflow({{ $wf->id }})">
@@ -35,16 +35,22 @@
             <tbody>
                 @forelse($wf->steps as $step)
                 <tr>
-                    <td><span style="background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:20px;font-size:.75rem;font-weight:700;">{{ $step->step_number }}</span></td>
+                    <td><span style="background:#ede9fe;color:#7c3aed;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700;">{{ $step->step_number }}</span></td>
                     <td style="font-weight:600;font-size:.88rem;">{{ $step->step_name }}</td>
-                    <td><span class="badge bg-secondary bg-opacity-15 text-secondary" style="font-size:.72rem;">{{ str_replace('_',' ',$step->approver_type) }}</span></td>
-                    <td style="font-size:.82rem;color:#6b7280;">
+                    <td><span style="display:inline-block;background:#e0e7ef;color:#374151;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600;white-space:nowrap;">{{ ucwords(str_replace('_',' ',$step->approver_type)) }}</span></td>
+                    <td style="font-size:.85rem;color:#374151;">
                         @if($step->approver_type === 'specific_user') {{ $step->approverUser?->name ?? '—' }}
-                        @elseif($step->approver_type === 'role') {{ $step->approver_role }}
+                        @elseif($step->approver_type === 'role') {{ $step->approver_role ?? '—' }}
                         @else {{ ucwords(str_replace('_',' ',$step->approver_type)) }}
                         @endif
                     </td>
-                    <td>@if($step->is_final)<span class="badge bg-success bg-opacity-15 text-success" style="font-size:.72rem;">Yes</span>@else —@endif</td>
+                    <td>
+                        @if($step->is_final)
+                            <span style="display:inline-block;background:#d1fae5;color:#065f46;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:600;">Final</span>
+                        @else
+                            <span style="color:#9ca3af;font-size:.82rem;">—</span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr><td colspan="5"><div class="empty-state"><i class="bi bi-diagram-2"></i><p>No steps configured</p></div></td></tr>
