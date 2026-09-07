@@ -54,7 +54,7 @@
                         <select name="vendor_id" class="form-select @error('vendor_id') is-invalid @enderror" required>
                             <option value="">— Select Vendor —</option>
                             @foreach($vendors as $v)
-                                <option value="{{ $v->id }}" @selected(old('vendor_id')==$v->id)>{{ $v->name }} ({{ $v->category }})</option>
+                                <option value="{{ $v->id }}" @selected(old('vendor_id')==$v->id)>{{ $v->name }} ({{ is_array($v->category) ? implode(', ', $v->category) : $v->category }})</option>
                             @endforeach
                         </select>
                         @error('vendor_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
