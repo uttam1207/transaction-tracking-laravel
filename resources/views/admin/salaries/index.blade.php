@@ -107,8 +107,8 @@
                 @csrf
                 <input type="hidden" name="year" value="{{ $year }}">
                 <input type="hidden" name="month" value="{{ $month }}">
-                <button type="submit" class="btn btn-sm btn-outline-primary px-3"
-                    onclick="return confirm('Auto-generate salaries for all active employees for {{ date('F', mktime(0,0,0,$month,1)) }} {{ $year }}?')"
+                <button type="button" class="btn btn-sm btn-outline-primary px-3"
+                    onclick="APP.confirm('Generate Salaries', 'Auto-generate salaries for all active employees for {{ date(\'F\', mktime(0,0,0,$month,1)) }} {{ $year }}?', () => this.closest(\'form\').submit())"
                     title="Bulk generate from employee base salary">
                     <i class="bi bi-lightning-charge me-1"></i>Bulk Gen
                 </button>
@@ -173,10 +173,9 @@
                                 <i class="bi bi-check-circle"></i>
                             </button>
                             @endif
-                            <form action="{{ route('admin.salaries.destroy', $sal) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Delete this salary record?')">
+                            <form action="{{ route('admin.salaries.destroy', $sal) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button class="act-btn act-delete" title="Delete"><i class="bi bi-trash3"></i></button>
+                                <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete this salary record?', () => this.closest('form').submit())"><i class="bi bi-trash3"></i></button>
                             </form>
                         </div>
                     </td>

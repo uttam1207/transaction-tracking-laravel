@@ -1,102 +1,102 @@
 @extends('layouts.app')
-
 @section('title', 'Chart of Accounts')
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('admin.finance.journal.index') }}">Finance</a></li>
+    <li class="breadcrumb-item active">Chart of Accounts</li>
+@endsection
+
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
-            <h4 class="mb-0 fw-bold">Chart of Accounts</h4>
-            <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0 small">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Chart of Accounts</li>
-            </ol></nav>
+            <h4>Chart of Accounts</h4>
+            <p>Manage your accounting accounts and structure</p>
         </div>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addAccountModal">
-            <i class="bi bi-plus-lg me-1"></i> New Account
-        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary-grad btn-sm px-4" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+                <i class="bi bi-plus-lg me-1"></i> New Account
+            </button>
+        </div>
     </div>
+</div>
 
-    {{-- Filters --}}
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body py-2">
-            <form method="GET" class="row g-2 align-items-end">
-                <div class="col-md-4">
-                    <input type="text" name="search" class="form-control form-control-sm" placeholder="Search code or name…" value="{{ request('search') }}">
-                </div>
-                <div class="col-md-3">
-                    <select name="type" class="form-select form-select-sm">
-                        <option value="">All Types</option>
-                        @foreach ($types as $t)
-                            <option value="{{ $t }}" @selected(request('type') === $t)>{{ ucfirst($t) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select name="active" class="form-select form-select-sm">
-                        <option value="">All Status</option>
-                        <option value="1" @selected(request('active') === '1')>Active</option>
-                        <option value="0" @selected(request('active') === '0')>Inactive</option>
-                    </select>
-                </div>
-                <div class="col-md-auto">
-                    <button class="btn btn-sm btn-outline-primary">Filter</button>
-                    <a href="{{ route('admin.finance.coa.index') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
-                </div>
-            </form>
+{{-- Filters --}}
+<div class="card-glass mb-3 px-4 py-3">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <input type="text" name="search" class="form-control" placeholder="Search code or name…" value="{{ request('search') }}">
         </div>
-    </div>
+        <div class="col-md-3">
+            <select name="type" class="form-select">
+                <option value="">All Types</option>
+                @foreach ($types as $t)
+                    <option value="{{ $t }}" @selected(request('type') === $t)>{{ ucfirst($t) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="active" class="form-select">
+                <option value="">All Status</option>
+                <option value="1" @selected(request('active') === '1')>Active</option>
+                <option value="0" @selected(request('active') === '0')>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-auto">
+            <button class="btn btn-sm btn-outline-primary">Filter</button>
+            <a href="{{ route('admin.finance.coa.index') }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+        </div>
+    </form>
+</div>
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Code</th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Sub-Type</th>
-                            <th>Parent</th>
-                            <th>Status</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($accounts as $account)
-                        <tr>
-                            <td><span class="fw-mono fw-semibold">{{ $account->code }}</span></td>
-                            <td>{{ $account->name }}</td>
-                            <td><span class="badge bg-{{ $account->type_color }}-subtle text-{{ $account->type_color }}">{{ ucfirst($account->type) }}</span></td>
-                            <td class="text-muted small">{{ $account->sub_type ?? '—' }}</td>
-                            <td class="text-muted small">{{ $account->parent?->name ?? '—' }}</td>
-                            <td>
-                                @if ($account->is_active)
-                                    <span class="badge bg-success-subtle text-success">Active</span>
-                                @else
-                                    <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
-                                @endif
-                            </td>
-                            <td class="text-end">
-                                <button class="btn btn-sm btn-outline-secondary" onclick="editAccount({{ $account->id }}, @json($account))">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger" onclick="deleteAccount({{ $account->id }}, '{{ $account->name }}')">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="7" class="text-center text-muted py-4">No accounts found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($accounts->hasPages())
-            <div class="px-3 py-2">{{ $accounts->withQueryString()->links() }}</div>
-            @endif
-        </div>
+<div class="card-glass overflow-hidden">
+    <div class="table-responsive">
+        <table class="modern-table table mb-0">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Sub-Type</th>
+                    <th>Parent</th>
+                    <th>Status</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($accounts as $account)
+                <tr>
+                    <td><span class="fw-mono fw-semibold">{{ $account->code }}</span></td>
+                    <td>{{ $account->name }}</td>
+                    <td><span class="badge bg-{{ $account->type_color }}-subtle text-{{ $account->type_color }}">{{ ucfirst($account->type) }}</span></td>
+                    <td class="text-muted small">{{ $account->sub_type ?? '—' }}</td>
+                    <td class="text-muted small">{{ $account->parent?->name ?? '—' }}</td>
+                    <td>
+                        @if ($account->is_active)
+                            <span class="badge bg-success-subtle text-success">Active</span>
+                        @else
+                            <span class="badge bg-secondary-subtle text-secondary">Inactive</span>
+                        @endif
+                    </td>
+                    <td class="text-end">
+                        <button class="act-btn" onclick="editAccount({{ $account->id }}, @json($account))" title="Edit">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="act-btn" onclick="deleteAccount({{ $account->id }}, '{{ $account->name }}')" title="Delete">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" class="text-center text-muted py-4">No accounts found.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
+    @if ($accounts->hasPages())
+    <div class="px-3 py-2">{{ $accounts->withQueryString()->links() }}</div>
+    @endif
 </div>
 
 {{-- Add Account Modal --}}
@@ -156,7 +156,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Create Account</button>
+                    <button type="submit" class="btn btn-primary-grad btn-sm px-4">Create Account</button>
                 </div>
             </div>
         </form>
@@ -210,7 +210,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                    <button type="submit" class="btn btn-primary-grad btn-sm px-4">Save Changes</button>
                 </div>
             </div>
         </form>
@@ -238,7 +238,7 @@ function deleteAccount(id, name) {
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     }).then(r => r.json()).then(d => {
         if (d.success) location.reload();
-        else alert(d.message);
+        else APP.toast(d.message, 'error');
     });
 }
 
@@ -253,7 +253,7 @@ function deleteAccount(id, name) {
         });
         const d = await r.json();
         if (d.success) location.reload();
-        else alert(d.message ?? 'Error');
+        else APP.toast(d.message ?? 'Error', 'error');
     });
 });
 </script>

@@ -217,10 +217,9 @@
                 </button>
                 @endif
                 @if($question->canDelete(auth()->user()))
-                <form method="POST" action="{{ route('questions.destroy', $question) }}"
-                      onsubmit="return confirm('Delete this question and all its answers?')">
+                <form method="POST" action="{{ route('questions.destroy', $question) }}">
                     @csrf @method('DELETE')
-                    <button type="submit" class="qa-btn-sm qa-btn-delete">
+                    <button type="button" class="qa-btn-sm qa-btn-delete" onclick="APP.confirm('Delete', 'Delete this question and all its answers?', () => this.closest('form').submit())">
                         <i class="bi bi-trash3"></i> Delete
                     </button>
                 </form>
@@ -310,10 +309,9 @@
 
                 {{-- Delete (own answer or super_admin) --}}
                 @if($answer->canDelete(auth()->user()))
-                <form method="POST" action="{{ route('questions.answers.destroy', [$question, $answer]) }}"
-                      onsubmit="return confirm('Delete this answer?')">
+                <form method="POST" action="{{ route('questions.answers.destroy', [$question, $answer]) }}">
                     @csrf @method('DELETE')
-                    <button type="submit" class="qa-btn-sm qa-btn-delete">
+                    <button type="button" class="qa-btn-sm qa-btn-delete" onclick="APP.confirm('Delete', 'Delete this answer?', () => this.closest('form').submit())">
                         <i class="bi bi-trash3"></i> Delete
                     </button>
                 </form>

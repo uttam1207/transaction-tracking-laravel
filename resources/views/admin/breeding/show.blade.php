@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Breeding — ' . $breedingRecord->animal->tag_number)
 
 @section('breadcrumb')
@@ -20,7 +20,7 @@
             </a>
             <form method="POST" action="{{ route('admin.breeding.destroy', $breedingRecord) }}" class="d-inline">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger px-4" onclick="return confirm('Delete this breeding record?')">
+                <button type="button" class="btn btn-sm btn-danger px-4" onclick="APP.confirm('Delete', 'Delete this breeding record?', () => this.closest('form').submit())">
                     <i class="bi bi-trash3 me-1"></i>Delete
                 </button>
             </form>

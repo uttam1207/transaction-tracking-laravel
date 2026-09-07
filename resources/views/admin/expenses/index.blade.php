@@ -97,7 +97,7 @@
 {{-- Table --}}
 <div class="card-glass">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="modern-table table mb-0">
             <thead>
                 <tr>
                     <th>Date</th>
@@ -138,9 +138,9 @@
                         <div class="d-flex justify-content-center gap-1">
                             <a href="{{ route('admin.expenses.show', $expense) }}" class="btn btn-xs btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('admin.expenses.edit', $expense) }}" class="btn btn-xs btn-outline-warning" title="Edit"><i class="bi bi-pencil"></i></a>
-                            <form method="POST" action="{{ route('admin.expenses.destroy', $expense) }}" onsubmit="return confirm('Delete this expense?')">
+                            <form method="POST" action="{{ route('admin.expenses.destroy', $expense) }}">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-xs btn-outline-danger" title="Delete"><i class="bi bi-trash3"></i></button>
+                                <button type="button" class="btn btn-xs btn-outline-danger" title="Delete" onclick="APP.confirm('Delete', 'Delete this expense?', () => this.closest('form').submit())"><i class="bi bi-trash3"></i></button>
                             </form>
                         </div>
                     </td>

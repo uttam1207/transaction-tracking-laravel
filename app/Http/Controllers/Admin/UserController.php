@@ -56,7 +56,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|regex:/^[6-9][0-9]{9}$/',
             'role' => ['required', 'string', \Illuminate\Validation\Rule::in(Role::pluck('name')->toArray())],
             'department_id' => 'nullable|exists:departments,id',
             'password' => 'required|min:8|confirmed',
@@ -118,7 +118,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|regex:/^[6-9][0-9]{9}$/',
             'role' => ['required', 'string', \Illuminate\Validation\Rule::in(Role::pluck('name')->toArray())],
             'department_id' => 'nullable|exists:departments,id',
             'status' => 'required|in:active,inactive,pending,suspended',

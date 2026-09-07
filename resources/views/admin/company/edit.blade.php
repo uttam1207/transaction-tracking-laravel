@@ -102,14 +102,16 @@
                 <div style="padding:24px;">
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="flabel">Phone</label>
-                            <input type="text" name="phone" class="form-control"
-                                value="{{ old('phone', $company->phone) }}" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <label class="flabel">Phone <span class="req">*</span></label>
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                                value="{{ old('phone', $company->phone) }}" pattern="[6-9][0-9]{9}" maxlength="10" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.75rem;color:#9ca3af;">10 digits, starting with 6–9</div>
+                            @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4">
-                            <label class="flabel">Email</label>
+                            <label class="flabel">Email <span class="req">*</span></label>
                             <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                value="{{ old('email', $company->email) }}" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                                value="{{ old('email', $company->email) }}" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
                             @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-4">

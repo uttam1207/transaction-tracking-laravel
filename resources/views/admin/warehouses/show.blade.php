@@ -1,99 +1,102 @@
 @extends('layouts.app')
-
 @section('title', 'Warehouse — ' . $warehouse->name)
 
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Inventory</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.warehouses.index') }}">Warehouses</a></li>
+    <li class="breadcrumb-item active">{{ $warehouse->name }}</li>
+@endsection
+
 @section('content')
-<div class="container-fluid">
-    <div class="d-flex align-items-center justify-content-between mb-4">
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
-            <h4 class="mb-0 fw-bold">{{ $warehouse->name }} <span class="badge bg-primary-subtle text-primary fs-6">{{ $warehouse->code }}</span></h4>
-            <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0 small">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('admin.warehouses.index') }}">Warehouses</a></li>
-                <li class="breadcrumb-item active">{{ $warehouse->name }}</li>
-            </ol></nav>
+            <h4>{{ $warehouse->name }} <span class="badge bg-primary-subtle text-primary fs-6">{{ $warehouse->code }}</span></h4>
+            <p>
+                @if ($warehouse->city){{ $warehouse->city }}@if ($warehouse->country), {{ $warehouse->country }}@endif@endif
+                &nbsp;<span class="badge bg-{{ $warehouse->is_active ? 'success' : 'secondary' }}">{{ $warehouse->is_active ? 'Active' : 'Inactive' }}</span>
+            </p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+            <button class="btn btn-primary-grad btn-sm px-4" data-bs-toggle="modal" data-bs-target="#addLocationModal">
                 <i class="bi bi-geo-alt me-1"></i> Add Location
             </button>
             <a href="{{ route('admin.warehouses.index') }}" class="btn btn-outline-secondary btn-sm">Back</a>
         </div>
     </div>
+</div>
 
-    <div class="row g-4">
-        {{-- Warehouse Info --}}
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent fw-semibold">Warehouse Details</div>
-                <div class="card-body">
-                    <dl class="row mb-0 small">
-                        <dt class="col-5 text-muted">Code</dt><dd class="col-7">{{ $warehouse->code }}</dd>
-                        <dt class="col-5 text-muted">Name</dt><dd class="col-7">{{ $warehouse->name }}</dd>
-                        <dt class="col-5 text-muted">City</dt><dd class="col-7">{{ $warehouse->city ?? '—' }}</dd>
-                        <dt class="col-5 text-muted">Country</dt><dd class="col-7">{{ $warehouse->country ?? '—' }}</dd>
-                        <dt class="col-5 text-muted">Manager</dt><dd class="col-7">{{ $warehouse->manager?->name ?? '—' }}</dd>
-                        <dt class="col-5 text-muted">Status</dt>
-                        <dd class="col-7"><span class="badge bg-{{ $warehouse->is_active ? 'success' : 'secondary' }}">{{ $warehouse->is_active ? 'Active' : 'Inactive' }}</span></dd>
-                    </dl>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm mt-3">
-                <div class="card-header bg-transparent fw-semibold">Locations ({{ $warehouse->locations->count() }})</div>
-                <div class="list-group list-group-flush">
-                    @forelse ($warehouse->locations as $loc)
-                    <div class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="badge bg-light text-dark border me-1">{{ $loc->code }}</span>
-                            {{ $loc->name }}
-                            <span class="text-muted small ms-1">({{ $loc->type }})</span>
-                        </div>
-                        @if (!$loc->is_active)<span class="badge bg-secondary">Inactive</span>@endif
-                    </div>
-                    @empty
-                    <div class="list-group-item text-muted text-center py-3 small">No locations defined.</div>
-                    @endforelse
-                </div>
+<div class="row g-4">
+    {{-- Warehouse Info --}}
+    <div class="col-md-4">
+        <div class="card-glass mb-3">
+            <div class="px-4 pt-4 pb-2 fw-semibold">Warehouse Details</div>
+            <div class="px-4 pb-4">
+                <dl class="row mb-0 small">
+                    <dt class="col-5 text-muted">Code</dt><dd class="col-7">{{ $warehouse->code }}</dd>
+                    <dt class="col-5 text-muted">Name</dt><dd class="col-7">{{ $warehouse->name }}</dd>
+                    <dt class="col-5 text-muted">City</dt><dd class="col-7">{{ $warehouse->city ?? '—' }}</dd>
+                    <dt class="col-5 text-muted">Country</dt><dd class="col-7">{{ $warehouse->country ?? '—' }}</dd>
+                    <dt class="col-5 text-muted">Manager</dt><dd class="col-7">{{ $warehouse->manager?->name ?? '—' }}</dd>
+                    <dt class="col-5 text-muted">Status</dt>
+                    <dd class="col-7"><span class="badge bg-{{ $warehouse->is_active ? 'success' : 'secondary' }}">{{ $warehouse->is_active ? 'Active' : 'Inactive' }}</span></dd>
+                </dl>
             </div>
         </div>
 
-        {{-- Stock --}}
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent fw-semibold">Stock at this Warehouse</div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Item</th>
-                                    <th>Location</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Reserved</th>
-                                    <th class="text-end">Available</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($stock as $s)
-                                <tr>
-                                    <td>{{ $s->inventoryItem?->name ?? '—' }}</td>
-                                    <td class="text-muted small">{{ $s->location?->name ?? 'Default' }}</td>
-                                    <td class="text-end">{{ number_format($s->quantity, 3) }}</td>
-                                    <td class="text-end text-warning">{{ number_format($s->reserved_qty, 3) }}</td>
-                                    <td class="text-end fw-semibold text-success">{{ number_format($s->available_qty, 3) }}</td>
-                                </tr>
-                                @empty
-                                <tr><td colspan="5" class="text-center text-muted py-4">No stock records.</td></tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+        <div class="card-glass">
+            <div class="px-4 pt-4 pb-2 fw-semibold">Locations ({{ $warehouse->locations->count() }})</div>
+            <div class="list-group list-group-flush">
+                @forelse ($warehouse->locations as $loc)
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="badge bg-light text-dark border me-1">{{ $loc->code }}</span>
+                        {{ $loc->name }}
+                        <span class="text-muted small ms-1">({{ $loc->type }})</span>
                     </div>
-                    @if ($stock->hasPages())
-                    <div class="px-3 py-2">{{ $stock->links() }}</div>
-                    @endif
+                    @if (!$loc->is_active)<span class="badge bg-secondary">Inactive</span>@endif
                 </div>
+                @empty
+                <div class="list-group-item text-muted text-center py-3 small">No locations defined.</div>
+                @endforelse
             </div>
+        </div>
+    </div>
+
+    {{-- Stock --}}
+    <div class="col-md-8">
+        <div class="card-glass overflow-hidden">
+            <div class="px-4 pt-4 pb-2 fw-semibold">Stock at this Warehouse</div>
+            <div class="table-responsive">
+                <table class="modern-table table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Location</th>
+                            <th class="text-end">Qty</th>
+                            <th class="text-end">Reserved</th>
+                            <th class="text-end">Available</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($stock as $s)
+                        <tr>
+                            <td>{{ $s->inventoryItem?->name ?? '—' }}</td>
+                            <td class="text-muted small">{{ $s->location?->name ?? 'Default' }}</td>
+                            <td class="text-end">{{ number_format($s->quantity, 3) }}</td>
+                            <td class="text-end text-warning">{{ number_format($s->reserved_qty, 3) }}</td>
+                            <td class="text-end fw-semibold text-success">{{ number_format($s->available_qty, 3) }}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="5" class="text-center text-muted py-4">No stock records.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($stock->hasPages())
+            <div class="px-3 py-2">{{ $stock->links() }}</div>
+            @endif
         </div>
     </div>
 </div>
@@ -141,8 +144,9 @@ function addLocation() {
             name: document.getElementById('loc_name').value,
             type: document.getElementById('loc_type').value,
         })
-    }).then(r => r.json()).then(d => { if (d.success) location.reload(); else alert(d.message); });
+    }).then(r => r.json()).then(d => { if (d.success) location.reload(); else APP.toast(d.message, 'error'); });
 }
 </script>
 @endpush
+
 @endsection

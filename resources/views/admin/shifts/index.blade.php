@@ -41,10 +41,9 @@
                     ]) }})">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <form method="POST" action="{{ route('admin.shifts.types.destroy', $shift) }}" style="display:inline;"
-                    onsubmit="return confirm('Delete shift type \'{{ addslashes($shift->name) }}\'?\nEmployees already on this shift will keep their current assignment.')">
+                <form method="POST" action="{{ route('admin.shifts.types.destroy', $shift) }}" style="display:inline;">
                     @csrf @method('DELETE')
-                    <button type="submit" class="act-btn act-del" title="Delete Shift Type" style="width:24px;height:24px;font-size:.65rem;">
+                    <button type="button" class="act-btn act-del" title="Delete Shift Type" style="width:24px;height:24px;font-size:.65rem;" onclick="APP.confirm('Delete', 'Delete shift type {{ addslashes($shift->name) }}? Employees already on this shift will keep their current assignment.', () => this.closest(\'form\').submit())">
                         <i class="bi bi-trash"></i>
                     </button>
                 </form>

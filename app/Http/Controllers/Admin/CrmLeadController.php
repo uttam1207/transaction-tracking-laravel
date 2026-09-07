@@ -54,7 +54,8 @@ class CrmLeadController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:200',
-            'email'    => 'nullable|email|max:150',
+            'email'    => 'required|email|max:150',
+            'phone'    => 'required|regex:/^[6-9][0-9]{9}$/',
             'priority' => 'required|in:low,medium,high',
             'status'   => 'required|in:new,contacted,qualified,proposal,negotiation,won,lost',
         ]);
@@ -71,15 +72,19 @@ class CrmLeadController extends Controller
     public function show(CrmLead $lead)
     {
         $lead->load('assignedTo', 'createdBy', 'activities.createdBy', 'convertedCustomer');
-        $users = User::active()->orderBy('name')->get();
+        $users         = User::active()->orderBy('name')->get();
         $activityTypes = ['call', 'email', 'meeting', 'note', 'demo', 'proposal'];
-        return view('admin.crm-leads.show', compact('lead', 'users', 'activityTypes'));
+        $statuses      = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+        $priorities    = ['low', 'medium', 'high'];
+        return view('admin.crm-leads.show', compact('lead', 'users', 'activityTypes', 'statuses', 'priorities'));
     }
 
     public function update(Request $request, CrmLead $lead)
     {
         $request->validate([
             'name'     => 'required|string|max:200',
+            'email'    => 'required|email|max:150',
+            'phone'    => 'required|regex:/^[6-9][0-9]{9}$/',
             'status'   => 'required|in:new,contacted,qualified,proposal,negotiation,won,lost',
             'priority' => 'required|in:low,medium,high',
         ]);
@@ -122,7 +127,7 @@ class CrmLeadController extends Controller
             return response()->json(['success' => false, 'message' => 'Cannot convert a lost lead.'], 422);
         }
 
-        DB::transaction(function () use ($lead, $request) {
+        DB::transaction(function () use ($lead) {
             $customer = CrmCustomer::create([
                 'name'    => $lead->company ?? $lead->name,
                 'email'   => $lead->email,

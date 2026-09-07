@@ -70,13 +70,15 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Service Date <span class="text-danger">*</span></label>
-                                <input type="date" name="service_date" class="form-control @error('service_date') is-invalid @enderror"
+                                <input type="date" id="serviceDateInput" name="service_date"
+                                    class="form-control @error('service_date') is-invalid @enderror"
                                     value="{{ old('service_date', now()->toDateString()) }}" required>
                                 @error('service_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Next Service Due</label>
-                                <input type="date" name="next_service_due" class="form-control @error('next_service_due') is-invalid @enderror"
+                                <input type="date" id="nextServiceDueInput" name="next_service_due"
+                                    class="form-control @error('next_service_due') is-invalid @enderror"
                                     value="{{ old('next_service_due') }}">
                                 @error('next_service_due')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
@@ -118,3 +120,29 @@
 </div>
 
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const serviceDate    = document.getElementById('serviceDateInput');
+    const nextServiceDue = document.getElementById('nextServiceDueInput');
+
+    function setMinDate() {
+        if (!serviceDate.value) return;
+        // Next service date must be strictly after service date
+        const d = new Date(serviceDate.value);
+        d.setDate(d.getDate() + 1);
+        const minVal = d.toISOString().split('T')[0];
+        nextServiceDue.min = minVal;
+
+        // If the already-selected next date is now invalid, clear it
+        if (nextServiceDue.value && nextServiceDue.value <= serviceDate.value) {
+            nextServiceDue.value = '';
+        }
+    }
+
+    setMinDate(); // apply on page load
+    serviceDate.addEventListener('change', setMinDate);
+})();
+</script>
+@endpush

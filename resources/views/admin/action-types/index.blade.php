@@ -143,10 +143,9 @@
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     @if(!$type->is_system)
-                                        <form action="{{ route('admin.action-types.destroy', $type) }}" method="POST" class="d-inline"
-                                            onsubmit="return confirm('Delete action type \'{{ addslashes($type->name) }}\'? Existing records will keep the old name.')">
+                                        <form action="{{ route('admin.action-types.destroy', $type) }}" method="POST" class="d-inline">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="act-btn act-delete" title="Delete">
+                                            <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete action type {{ addslashes($type->name) }}? Existing records will keep the old name.', () => this.closest('form').submit())">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>

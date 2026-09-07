@@ -44,7 +44,7 @@ class ComplianceController extends Controller
             'category' => 'required|in:FSSAI,Animal Insurance,Vaccination Certificates,Government Licenses,Bank Loan Documents,Land Records,Audit Files',
             'document_number' => 'nullable|string|max:100',
             'issue_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date',
+            'expiry_date' => 'nullable|date|after:issue_date',
             'status' => 'required|in:Active,Expiring Soon,Expired',
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
@@ -75,7 +75,7 @@ class ComplianceController extends Controller
             'category'        => 'required|in:FSSAI,Animal Insurance,Vaccination Certificates,Government Licenses,Bank Loan Documents,Land Records,Audit Files',
             'document_number' => 'nullable|string|max:100',
             'issue_date'      => 'nullable|date',
-            'expiry_date'     => 'nullable|date',
+            'expiry_date'     => 'nullable|date|after:issue_date',
             'status'          => 'required|in:Active,Expiring Soon,Expired',
             'file'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);

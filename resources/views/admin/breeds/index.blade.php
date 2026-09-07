@@ -155,11 +155,11 @@
                                         title="Edit">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form action="{{ route('admin.breeds.destroy', $breed) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Delete breed \'{{ addslashes($breed->name) }}\'? This cannot be undone.')">
+                                    <form action="{{ route('admin.breeds.destroy', $breed) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="act-btn act-delete" title="Delete"
-                                            {{ $breed->animals_count > 0 ? 'disabled title=Animals assigned — cannot delete' : '' }}>
+                                        <button type="button" class="act-btn act-delete" title="Delete"
+                                            {{ $breed->animals_count > 0 ? 'disabled title=Animals assigned — cannot delete' : '' }}
+                                            onclick="APP.confirm('Delete', 'Delete breed {{ addslashes($breed->name) }}? This cannot be undone.', () => this.closest(\'form\').submit())">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>

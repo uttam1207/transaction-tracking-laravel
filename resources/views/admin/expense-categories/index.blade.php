@@ -151,10 +151,9 @@
                                         </button>
                                     </form>
                                     @if(($cat->expense_count ?? 0) == 0)
-                                    <form action="{{ route('admin.expense-categories.destroy', $cat) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Delete category \'{{ addslashes($cat->name) }}\'?')">
+                                    <form action="{{ route('admin.expense-categories.destroy', $cat) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button class="act-btn" style="color:#ef4444;" title="Delete">
+                                        <button type="button" class="act-btn" style="color:#ef4444;" title="Delete" onclick="APP.confirm('Delete', 'Delete category {{ addslashes($cat->name) }}?', () => this.closest(\'form\').submit())">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>

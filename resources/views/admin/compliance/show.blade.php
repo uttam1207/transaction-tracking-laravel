@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Compliance — ' . $complianceDocument->document_title)
 
 @section('breadcrumb')
@@ -20,7 +20,7 @@
             </a>
             <form method="POST" action="{{ route('admin.compliance.destroy', $complianceDocument) }}" class="d-inline">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger px-4" onclick="return confirm('Delete this document?')">
+                <button type="button" class="btn btn-sm btn-danger px-4" onclick="APP.confirm('Delete', 'Delete this document?', () => this.closest('form').submit())">
                     <i class="bi bi-trash3 me-1"></i>Delete
                 </button>
             </form>

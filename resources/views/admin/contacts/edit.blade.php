@@ -83,21 +83,25 @@
             <div class="form-section-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Primary Phone</label>
+                        <label class="form-label fw-semibold">Primary Phone <span class="text-danger">*</span></label>
                         <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                               value="{{ old('phone', $contact->phone) }}">
+                               value="{{ old('phone', $contact->phone) }}"
+                               pattern="[6-9][0-9]{9}" maxlength="10" required>
+                        <div class="form-text">10 digits, starting with 6–9</div>
                         @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Alternate Phone</label>
                         <input type="text" name="alternate_phone" class="form-control @error('alternate_phone') is-invalid @enderror"
-                               value="{{ old('alternate_phone', $contact->alternate_phone) }}">
+                               value="{{ old('alternate_phone', $contact->alternate_phone) }}"
+                               pattern="[6-9][0-9]{9}" maxlength="10">
+                        <div class="form-text">10 digits, starting with 6–9</div>
                         @error('alternate_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Email Address</label>
+                        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
                         <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                               value="{{ old('email', $contact->email) }}">
+                               value="{{ old('email', $contact->email) }}" required>
                         @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>

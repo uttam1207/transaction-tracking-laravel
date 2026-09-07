@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Service Permissions')
 @section('content')
 
@@ -376,9 +376,9 @@ document.querySelectorAll('.delete-svc-btn').forEach(btn => {
         .then(r => r.json())
         .then(data => {
             if (data.success) location.reload();
-            else alert(data.message || 'Failed to delete.');
+            else APP.toast(data.message || 'Failed to delete.', 'error');
         })
-        .catch(() => alert('Network error.'));
+        .catch(() => APP.toast('Network error.', 'error'));
     });
 });
 

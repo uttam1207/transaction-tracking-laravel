@@ -44,8 +44,8 @@ class CrmController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'category' => 'required|in:Milk Buyer,Animal Buyer,Franchise Lead,Investor,Government Official,Veterinary Doctor',
-            'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100',
+            'phone' => 'required|regex:/^[6-9][0-9]{9}$/',
+            'email' => 'required|email|max:100',
             'address' => 'nullable|string|max:255',
             'status' => 'required|in:Lead,Contacted,Active Customer,Partner,Inactive',
         ]);
@@ -70,8 +70,8 @@ class CrmController extends Controller
         $validated = $request->validate([
             'name'                 => 'required|string|max:100',
             'category'             => 'required|in:Milk Buyer,Animal Buyer,Franchise Lead,Investor,Government Official,Veterinary Doctor',
-            'phone'                => 'nullable|string|max:20',
-            'email'                => 'nullable|email|max:100',
+            'phone'                => 'required|regex:/^[6-9][0-9]{9}$/',
+            'email'                => 'required|email|max:100',
             'address'              => 'nullable|string|max:255',
             'total_business_value' => 'nullable|numeric|min:0',
             'status'               => 'required|in:Lead,Contacted,Active Customer,Partner,Inactive',

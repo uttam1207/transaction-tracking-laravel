@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('title', 'Maintenance — ' . $machineMaintenance->machine_name)
 
 @section('breadcrumb')
@@ -20,7 +20,7 @@
             </a>
             <form method="POST" action="{{ route('admin.maintenance.destroy', $machineMaintenance) }}" class="d-inline">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger px-4" onclick="return confirm('Delete this maintenance record?')">
+                <button type="button" class="btn btn-sm btn-danger px-4" onclick="APP.confirm('Delete', 'Delete this maintenance record?', () => this.closest('form').submit())">
                     <i class="bi bi-trash3 me-1"></i>Delete
                 </button>
             </form>

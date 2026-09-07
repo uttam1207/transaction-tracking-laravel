@@ -69,10 +69,10 @@
                     data-bs-toggle="modal" data-bs-target="#editCategoryModal">
                     <i class="bi bi-pencil me-1"></i>Edit
                 </button>
-                <form method="POST" action="{{ route('admin.contact-categories.destroy', $cat) }}"
-                      onsubmit="return confirm('Delete category \'{{ addslashes($cat->name) }}\'? This cannot be undone.')">
+                <form method="POST" action="{{ route('admin.contact-categories.destroy', $cat) }}">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-outline-danger" {{ $cat->contacts_count > 0 ? 'disabled title=\'Has contacts — cannot delete\'' : '' }}>
+                    <button type="button" class="btn btn-sm btn-outline-danger" {{ $cat->contacts_count > 0 ? 'disabled title=\'Has contacts — cannot delete\'' : '' }}
+                        onclick="APP.confirm('Delete', 'Delete category {{ addslashes($cat->name) }}? This cannot be undone.', () => this.closest(\'form\').submit())">
                         <i class="bi bi-trash"></i>
                     </button>
                 </form>

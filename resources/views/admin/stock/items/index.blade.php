@@ -115,10 +115,9 @@
                             <a href="{{ route('admin.stock-items.edit', $item) }}" class="act-btn act-edit" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form action="{{ route('admin.stock-items.destroy', $item) }}" method="POST" class="d-inline"
-                                onsubmit="return confirm('Delete \'{{ addslashes($item->name) }}\'? This cannot be undone.')">
+                            <form action="{{ route('admin.stock-items.destroy', $item) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="act-btn act-delete" title="Delete">
+                                <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete {{ addslashes($item->name) }}? This cannot be undone.', () => this.closest(\'form\').submit())">
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>

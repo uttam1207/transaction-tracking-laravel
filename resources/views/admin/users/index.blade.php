@@ -172,8 +172,9 @@
                             <input type="email" name="email" class="form-control" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
                         <div class="col-md-6">
-                            <label class="flabel">Phone</label>
-                            <input type="tel" name="phone" class="form-control" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <label class="flabel">Phone <span class="req">*</span></label>
+                            <input type="text" name="phone" class="form-control" pattern="[6-9][0-9]{9}" maxlength="10" required style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                            <div class="form-text" style="font-size:.75rem;color:#9ca3af;">10 digits, starting with 6–9</div>
                         </div>
                         <div class="col-md-6">
                             <label class="flabel">Role <span class="req">*</span></label>

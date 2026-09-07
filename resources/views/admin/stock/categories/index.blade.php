@@ -122,10 +122,9 @@
                                         title="Rename">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form action="{{ route('admin.stock-categories.destroy', $cat) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('Delete category \'{{ addslashes($cat->name) }}\'?')">
+                                    <form action="{{ route('admin.stock-categories.destroy', $cat) }}" method="POST" class="d-inline">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="act-btn act-delete" title="Delete">
+                                        <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete category {{ addslashes($cat->name) }}?', () => this.closest(\'form\').submit())">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>

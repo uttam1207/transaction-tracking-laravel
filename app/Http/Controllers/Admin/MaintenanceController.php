@@ -40,7 +40,7 @@ class MaintenanceController extends Controller
             'cost' => 'nullable|numeric|min:0',
             'serviced_by' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:500',
-            'next_service_due' => 'nullable|date',
+            'next_service_due' => 'nullable|date|after:service_date',
         ]);
 
         MachineMaintenance::create($validated);
@@ -66,7 +66,7 @@ class MaintenanceController extends Controller
             'cost'             => 'nullable|numeric|min:0',
             'serviced_by'      => 'nullable|string|max:100',
             'description'      => 'nullable|string|max:500',
-            'next_service_due' => 'nullable|date',
+            'next_service_due' => 'nullable|date|after:service_date',
         ]);
 
         $machineMaintenance->update($validated);

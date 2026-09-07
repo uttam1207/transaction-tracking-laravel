@@ -1,80 +1,84 @@
 @extends('layouts.app')
-
 @section('title', 'Financial Periods')
 
-@section('content')
-<div class="container-fluid">
-    <div class="d-flex align-items-center justify-content-between mb-4">
-        <div>
-            <h4 class="mb-0 fw-bold">Financial Periods</h4>
-            <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0 small">
-                <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item active">Financial Periods</li>
-            </ol></nav>
-        </div>
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPeriodModal">
-            <i class="bi bi-plus-lg me-1"></i> New Period
-        </button>
-    </div>
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('admin.finance.journal.index') }}">Finance</a></li>
+    <li class="breadcrumb-item active">Financial Periods</li>
+@endsection
 
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Status</th>
-                            <th>Created By</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($periods as $period)
-                        <tr>
-                            <td class="fw-semibold">{{ $period->name }}</td>
-                            <td><span class="badge bg-light text-dark border text-capitalize">{{ $period->type }}</span></td>
-                            <td>{{ $period->start_date->format('d M Y') }}</td>
-                            <td>{{ $period->end_date->format('d M Y') }}</td>
-                            <td>
-                                @php $color = match($period->status) { 'open' => 'success', 'closed' => 'secondary', 'locked' => 'danger', default => 'dark' }; @endphp
-                                <span class="badge bg-{{ $color }}">{{ ucfirst($period->status) }}</span>
-                            </td>
-                            <td class="small text-muted">{{ $period->createdBy?->name ?? '—' }}</td>
-                            <td class="text-end">
-                                @if ($period->status === 'open')
-                                <button class="btn btn-sm btn-warning me-1" onclick="closePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')">
-                                    <i class="bi bi-lock me-1"></i>Close & Recalculate
-                                </button>
-                                @endif
-                                @if ($period->status !== 'locked')
-                                <div class="dropdown d-inline-block">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">Status</button>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        @foreach (['open', 'closed', 'locked'] as $s)
-                                        @if ($s !== $period->status)
-                                        <li><a class="dropdown-item" href="#" onclick="updatePeriod({{ $period->id }}, '{{ $s }}')">Mark {{ ucfirst($s) }}</a></li>
-                                        @endif
-                                        @endforeach
-                                    </ul>
-                                </div>
-                                @endif
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="7" class="text-center text-muted py-4">No financial periods defined.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($periods->hasPages())
-            <div class="px-3 py-2">{{ $periods->withQueryString()->links() }}</div>
-            @endif
+@section('content')
+
+<div class="page-hero">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
+        <div>
+            <h4>Financial Periods</h4>
+            <p>Manage fiscal periods for accounting</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary-grad btn-sm px-4" data-bs-toggle="modal" data-bs-target="#addPeriodModal">
+                <i class="bi bi-plus-lg me-1"></i> New Period
+            </button>
         </div>
     </div>
+</div>
+
+<div class="card-glass overflow-hidden">
+    <div class="table-responsive">
+        <table class="modern-table table mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Created By</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($periods as $period)
+                <tr>
+                    <td class="fw-semibold">{{ $period->name }}</td>
+                    <td><span class="badge bg-light text-dark border text-capitalize">{{ $period->type }}</span></td>
+                    <td>{{ $period->start_date->format('d M Y') }}</td>
+                    <td>{{ $period->end_date->format('d M Y') }}</td>
+                    <td>
+                        @php $color = match($period->status) { 'open' => 'success', 'closed' => 'secondary', 'locked' => 'danger', default => 'dark' }; @endphp
+                        <span class="badge bg-{{ $color }}">{{ ucfirst($period->status) }}</span>
+                    </td>
+                    <td class="small text-muted">{{ $period->createdBy?->name ?? '—' }}</td>
+                    <td class="text-end">
+                        @if ($period->status === 'open')
+                        <button class="act-btn me-1" onclick="closePeriod({{ $period->id }}, '{{ addslashes($period->name) }}')" title="Close & Recalculate">
+                            <i class="bi bi-lock"></i>
+                        </button>
+                        @endif
+                        @if ($period->status !== 'locked')
+                        <div class="dropdown d-inline-block">
+                            <button class="act-btn dropdown-toggle" data-bs-toggle="dropdown" title="Change Status">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @foreach (['open', 'closed', 'locked'] as $s)
+                                @if ($s !== $period->status)
+                                <li><a class="dropdown-item" href="#" onclick="updatePeriod({{ $period->id }}, '{{ $s }}')">Mark {{ ucfirst($s) }}</a></li>
+                                @endif
+                                @endforeach
+                            </ul>
+                        </div>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" class="text-center text-muted py-4">No financial periods defined.</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if ($periods->hasPages())
+    <div class="px-3 py-2">{{ $periods->withQueryString()->links() }}</div>
+    @endif
 </div>
 
 {{-- Add Period Modal --}}
@@ -108,7 +112,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary btn-sm" onclick="createPeriod()">Create Period</button>
+                <button type="button" class="btn btn-primary-grad btn-sm px-4" onclick="createPeriod()">Create Period</button>
             </div>
         </div>
     </div>
@@ -128,7 +132,7 @@ function createPeriod() {
         })
     }).then(r => r.json()).then(d => {
         if (d.success) location.reload();
-        else alert(d.message ?? 'Error');
+        else APP.toast(d.message ?? 'Error', 'error');
     });
 }
 
@@ -140,7 +144,7 @@ function updatePeriod(id, status) {
         body: JSON.stringify({ _method: 'PATCH', status })
     }).then(r => r.json()).then(d => {
         if (d.success) location.reload();
-        else alert(d.message);
+        else APP.toast(d.message, 'error');
     });
 }
 
@@ -150,8 +154,8 @@ function closePeriod(id, name) {
         method: 'POST',
         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
     }).then(r => r.json()).then(d => {
-        if (d.success) { alert(d.message); location.reload(); }
-        else alert(d.message);
+        if (d.success) { APP.toast(d.message, 'success'); setTimeout(() => location.reload(), 800); }
+        else APP.toast(d.message, 'error');
     });
 }
 </script>

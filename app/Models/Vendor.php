@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\PurchaseOrder;
 
 class Vendor extends Model
 {
@@ -16,6 +17,10 @@ class Vendor extends Model
         'email',
         'category',
         'address',
+    ];
+
+    protected $casts = [
+        'category' => 'array',
     ];
 
     public function purchaseOrders()

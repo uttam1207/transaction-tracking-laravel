@@ -20,7 +20,7 @@
             </a>
             <form method="POST" action="{{ route('admin.animals.destroy', $animal) }}" class="d-inline">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-sm btn-danger px-4" onclick="return confirm('Remove this animal from the register?')">
+                <button type="button" class="btn btn-sm btn-danger px-4" onclick="APP.confirm('Delete', 'Remove this animal from the register?', () => this.closest('form').submit())">
                     <i class="bi bi-trash3 me-1"></i>Delete
                 </button>
             </form>
@@ -289,10 +289,9 @@
                                 @if($action->cost)
                                     <span class="fw-bold" style="color:#059669;font-size:.84rem;">&#8377;{{ number_format($action->cost, 0) }}</span>
                                 @endif
-                                <form action="{{ route('admin.animals.actions.destroy', [$animal, $action]) }}" method="POST" class="d-inline"
-                                    onsubmit="return confirm('Delete this action record?')">
+                                <form action="{{ route('admin.animals.actions.destroy', [$animal, $action]) }}" method="POST" class="d-inline">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="act-btn act-delete" title="Delete action" style="width:26px;height:26px;font-size:.7rem;">
+                                    <button type="button" class="act-btn act-delete" title="Delete action" style="width:26px;height:26px;font-size:.7rem;" onclick="APP.confirm('Delete', 'Delete this action record?', () => this.closest('form').submit())">
                                         <i class="bi bi-trash3"></i>
                                     </button>
                                 </form>
@@ -365,10 +364,9 @@
                         <img src="{{ asset('uploads/' . $photo->photo_path) }}" alt="Animal photo"
                             style="width:100%;height:100%;object-fit:cover;">
                         <form method="POST" action="{{ route('admin.animals.photos.destroy', [$animal, $photo]) }}"
-                            onsubmit="return confirm('Delete this photo?')"
                             style="position:absolute;top:3px;right:3px;margin:0;">
                             @csrf @method('DELETE')
-                            <button type="submit"
+                            <button type="button" onclick="APP.confirm('Delete', 'Delete this photo?', () => this.closest('form').submit())"
                                 style="width:22px;height:22px;background:rgba(220,38,38,.85);border:none;border-radius:5px;color:#fff;font-size:.6rem;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;">
                                 <i class="bi bi-trash3"></i>
                             </button>

@@ -233,10 +233,9 @@
                         <td style="text-align:center;">
                             <a href="{{ route('admin.contacts.show', $c) }}" class="act-btn act-view" title="View"><i class="bi bi-eye"></i></a>
                             <a href="{{ route('admin.contacts.edit', $c) }}" class="act-btn act-edit" title="Edit"><i class="bi bi-pencil"></i></a>
-                            <form method="POST" action="{{ route('admin.contacts.destroy', $c) }}" style="display:inline;"
-                                  onsubmit="return confirm('Delete contact {{ addslashes($c->name) }}?')">
+                            <form method="POST" action="{{ route('admin.contacts.destroy', $c) }}" style="display:inline;">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="act-btn act-delete" title="Delete" style="border:none;background:none;cursor:pointer;padding:0;">
+                                <button type="button" class="act-btn act-delete" title="Delete" style="border:none;background:none;cursor:pointer;padding:0;" onclick="APP.confirm('Delete', 'Delete contact {{ addslashes($c->name) }}?', () => this.closest('form').submit())">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>

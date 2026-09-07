@@ -163,10 +163,9 @@
                 <a href="{{ route('admin.contacts.edit', $contact) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="bi bi-pencil me-1"></i>Edit Contact
                 </a>
-                <form method="POST" action="{{ route('admin.contacts.destroy', $contact) }}"
-                      onsubmit="return confirm('Delete this contact permanently?')">
+                <form method="POST" action="{{ route('admin.contacts.destroy', $contact) }}">
                     @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="APP.confirm('Delete', 'Delete this contact permanently?', () => this.closest('form').submit())">
                         <i class="bi bi-trash me-1"></i>Delete Contact
                     </button>
                 </form>

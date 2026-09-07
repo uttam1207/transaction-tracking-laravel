@@ -312,10 +312,9 @@
                                     </form>
                                 </td>
                                 <td>
-                                    <form action="{{ route('admin.feed.groups.destroy', $ag) }}" method="POST"
-                                        onsubmit="return confirm('Delete group \'{{ addslashes($ag->name) }}\' and all its feed plans?')">
+                                    <form action="{{ route('admin.feed.groups.destroy', $ag) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="act-btn act-delete" title="Delete">
+                                        <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete group {{ addslashes($ag->name) }} and all its feed plans?', () => this.closest(\'form\').submit())">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>
@@ -443,10 +442,9 @@
                                         @php $planIdx++; @endphp
                                     </td>
                                     <td>
-                                        <form action="{{ route('admin.feed.plans.item.destroy', $fp) }}" method="POST"
-                                            onsubmit="return confirm('Remove \'{{ addslashes($fp->feed_item_name) }}\' from {{ addslashes($ag->name) }} feed plan?')">
+                                        <form action="{{ route('admin.feed.plans.item.destroy', $fp) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="act-btn act-delete" title="Remove">
+                                            <button type="button" class="act-btn act-delete" title="Remove" onclick="APP.confirm('Delete', 'Remove {{ addslashes($fp->feed_item_name) }} from {{ addslashes($ag->name) }} feed plan?', () => this.closest(\'form\').submit())">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>

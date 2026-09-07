@@ -21,7 +21,7 @@
             </form>
             <form method="POST" action="{{ route('admin.queue.flush') }}">
                 @csrf
-                <button class="btn btn-sm" onclick="return confirm('Flush ALL failed jobs? This cannot be undone.')"
+                <button type="button" class="btn btn-sm" onclick="APP.confirm('Flush Jobs', 'Flush ALL failed jobs? This cannot be undone.', () => this.closest('form').submit())"
                     style="background:rgba(239,68,68,.2);color:#ef4444;border:1.5px solid rgba(239,68,68,.4);border-radius:9px;font-weight:600;">
                     <i class="bi bi-trash me-1"></i>Flush Failed
                 </button>
@@ -169,7 +169,7 @@
                             </form>
                             <form method="POST" action="{{ route('admin.queue.delete-failed', $job->uuid) }}" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button class="act-btn act-delete" onclick="return confirm('Delete this failed job?')" title="Delete">
+                                <button type="button" class="act-btn act-delete" onclick="APP.confirm('Delete', 'Delete this failed job?', () => this.closest('form').submit())" title="Delete">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>

@@ -75,15 +75,17 @@
                                 @error('category')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Phone</label>
+                                <label class="form-label fw-semibold">Phone <span class="text-danger">*</span></label>
                                 <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                                    value="{{ old('phone', $crmCustomer->phone) }}">
+                                    value="{{ old('phone', $crmCustomer->phone) }}"
+                                    pattern="[6-9][0-9]{9}" maxlength="10" required>
+                                <div class="form-text">10 digits, starting with 6–9</div>
                                 @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Email</label>
+                                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
                                 <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                                    value="{{ old('email', $crmCustomer->email) }}">
+                                    value="{{ old('email', $crmCustomer->email) }}" required>
                                 @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-12">

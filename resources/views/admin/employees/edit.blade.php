@@ -69,9 +69,12 @@
                         @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Phone</label>
-                        <input type="text" name="phone" class="form-control"
-                            value="{{ old('phone', $employee->user->phone) }}">
+                        <label class="form-label fw-semibold">Phone <span class="text-danger">*</span></label>
+                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                            value="{{ old('phone', $employee->user->phone) }}"
+                            pattern="[6-9][0-9]{9}" maxlength="10" required>
+                        <div class="form-text">10 digits, starting with 6–9</div>
+                        @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
             </div>

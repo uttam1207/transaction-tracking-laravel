@@ -79,21 +79,25 @@
             <div class="form-section-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Primary Phone</label>
+                        <label class="form-label fw-semibold">Primary Phone <span class="text-danger">*</span></label>
                         <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                               value="{{ old('phone') }}" placeholder="e.g. +91 98765 43210">
+                               value="{{ old('phone') }}" placeholder="e.g. 9876543210"
+                               pattern="[6-9][0-9]{9}" maxlength="10" required>
+                        <div class="form-text">10 digits, starting with 6–9</div>
                         @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Alternate Phone</label>
                         <input type="text" name="alternate_phone" class="form-control @error('alternate_phone') is-invalid @enderror"
-                               value="{{ old('alternate_phone') }}" placeholder="e.g. +91 91234 56789">
+                               value="{{ old('alternate_phone') }}" placeholder="e.g. 9123456789"
+                               pattern="[6-9][0-9]{9}" maxlength="10">
+                        <div class="form-text">10 digits, starting with 6–9</div>
                         @error('alternate_phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-semibold">Email Address</label>
+                        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
                         <input type="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                               value="{{ old('email') }}" placeholder="e.g. ramesh@example.com">
+                               value="{{ old('email') }}" placeholder="e.g. ramesh@example.com" required>
                         @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
@@ -152,7 +156,7 @@
             <div class="form-section-body">
                 <div style="font-size:.82rem;color:#6b7280;line-height:1.7;">
                     <div class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i>Select the right <strong>category</strong> to keep the directory organised.</div>
-                    <div class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i>Phone and email are optional but useful for quick contact.</div>
+                    <div class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i>Phone (10 digits, 6–9 start) and email are required.</div>
                     <div class="mb-2"><i class="bi bi-check-circle-fill text-success me-1"></i>Use <strong>Notes</strong> for payment terms, specialisation or any custom details.</div>
                     <div><i class="bi bi-check-circle-fill text-success me-1"></i>You can add new categories from the <a href="{{ route('admin.contact-categories.index') }}" class="text-primary">Categories</a> page.</div>
                 </div>

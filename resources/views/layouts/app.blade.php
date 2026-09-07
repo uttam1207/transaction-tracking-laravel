@@ -2017,5 +2017,74 @@
     </script>
 
     @stack('scripts')
+
+    {{-- Global phone validation: targets every input with pattern="[6-9][0-9]{9}" --}}
+    <script>
+    (function () {
+        const PHONE_RE = /^[6-9][0-9]{9}$/;
+        const MSG      = 'Enter a valid 10-digit number starting with 6–9.';
+
+        function getOrCreateError(input) {
+            let el = input.nextElementSibling;
+            // Skip over the "form-text" hint div to look for our error span
+            if (el && el.classList.contains('form-text')) el = el.nextElementSibling;
+            if (el && el.classList.contains('phone-err')) return el;
+
+            const span = document.createElement('span');
+            span.className = 'phone-err';
+            span.style.cssText = 'display:none;font-size:.78rem;color:#dc2626;margin-top:3px;';
+            span.textContent = MSG;
+
+            // Insert after .form-text if present, else directly after input
+            const hint = input.nextElementSibling;
+            if (hint && hint.classList.contains('form-text')) {
+                hint.after(span);
+            } else {
+                input.after(span);
+            }
+            return span;
+        }
+
+        function validate(input) {
+            const val = input.value.trim();
+            const err = getOrCreateError(input);
+            if (val === '') {
+                err.style.display = 'none';
+                input.classList.remove('is-invalid', 'is-valid');
+                return;
+            }
+            if (!PHONE_RE.test(val)) {
+                err.style.display = 'block';
+                input.classList.add('is-invalid');
+                input.classList.remove('is-valid');
+            } else {
+                err.style.display = 'none';
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            }
+        }
+
+        function attachTo(input) {
+            input.addEventListener('input',  () => validate(input));
+            input.addEventListener('blur',   () => validate(input));
+            input.addEventListener('focus',  () => {
+                const err = getOrCreateError(input);
+                err.style.display = 'none';
+            });
+        }
+
+        function initAll() {
+            document.querySelectorAll('input[pattern="[6-9][0-9]{9}"]').forEach(attachTo);
+        }
+
+        // Init on DOM ready
+        document.addEventListener('DOMContentLoaded', initAll);
+
+        // Re-init when modals open (Bootstrap modals load inputs dynamically)
+        document.addEventListener('show.bs.modal', function () {
+            setTimeout(initAll, 50);
+        });
+    })();
+    </script>
 </body>
 </html>

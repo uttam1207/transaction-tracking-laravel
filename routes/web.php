@@ -568,6 +568,10 @@ Route::prefix('admin')
 
     // Vendor Management (sub-resource of Procurement)
     Route::resource('vendors', VendorController::class)->only(['index', 'store', 'update', 'destroy']);
+    // Vendor Category Management (admin AJAX)
+    Route::get('/vendor-categories', [VendorController::class, 'categoriesIndex'])->name('vendor-categories.index');
+    Route::post('/vendor-categories', [VendorController::class, 'categoriesStore'])->name('vendor-categories.store');
+    Route::delete('/vendor-categories/{vendorCategory}', [VendorController::class, 'categoriesDestroy'])->name('vendor-categories.destroy');
 
     // Module 6 — Salary & Payroll (bulk-generate must come before resource to avoid {salary} catch-all)
     Route::post('/salaries/bulk-generate', [SalaryController::class, 'bulkGenerate'])->name('salaries.bulk-generate');

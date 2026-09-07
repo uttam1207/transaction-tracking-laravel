@@ -69,13 +69,15 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Issue Date</label>
-                        <input type="date" name="issue_date" class="form-control @error('issue_date') is-invalid @enderror"
+                        <input type="date" id="issueDateInput" name="issue_date"
+                            class="form-control @error('issue_date') is-invalid @enderror"
                             value="{{ old('issue_date') }}">
                         @error('issue_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Expiry Date</label>
-                        <input type="date" name="expiry_date" class="form-control @error('expiry_date') is-invalid @enderror"
+                        <input type="date" id="expiryDateInput" name="expiry_date"
+                            class="form-control @error('expiry_date') is-invalid @enderror"
                             value="{{ old('expiry_date') }}">
                         @error('expiry_date')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
@@ -118,5 +120,27 @@ function showFileName(input, hintId) {
         hint.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i><strong>' + f.name + '</strong> (' + mb + ' MB)';
     }
 }
+
+(function () {
+    const issueDate  = document.getElementById('issueDateInput');
+    const expiryDate = document.getElementById('expiryDateInput');
+
+    function setMinExpiry() {
+        if (!issueDate.value) return;
+        // Expiry must be after issue date (strictly)
+        const d = new Date(issueDate.value);
+        d.setDate(d.getDate() + 1);
+        const minVal = d.toISOString().split('T')[0];
+        expiryDate.min = minVal;
+
+        // Clear expiry if it's now invalid
+        if (expiryDate.value && expiryDate.value <= issueDate.value) {
+            expiryDate.value = '';
+        }
+    }
+
+    setMinExpiry();
+    issueDate.addEventListener('change', setMinExpiry);
+})();
 </script>
 @endpush
