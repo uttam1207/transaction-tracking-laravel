@@ -108,7 +108,11 @@
                     <td>
                         <div style="font-weight:700;font-size:.87rem;color:#111827;">{{ Str::limit($task->title,45) }}</div>
                         <div style="font-size:.72rem;color:#9ca3af;font-family:monospace;">{{ $task->task_id }}</div>
-                        @if($isOverdue)<span style="background:#fee2e2;color:#dc2626;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:4px;margin-top:3px;display:inline-block;">OVERDUE</span>@endif
+                        <div class="d-flex flex-wrap gap-1 mt-1">
+                            @if($isOverdue)<span style="background:#fee2e2;color:#dc2626;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:4px;">OVERDUE</span>@endif
+                            @if($task->is_recurring)<span style="background:#ede9fe;color:#7c3aed;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:4px;">↻ RECURRING</span>@endif
+                            @if($task->parent_task_id && !$task->is_recurring)<span style="background:#e0f2fe;color:#0369a1;font-size:.65rem;font-weight:700;padding:1px 6px;border-radius:4px;">↻ AUTO</span>@endif
+                        </div>
                     </td>
                     <td>
                         @if($task->assignedTo)
@@ -140,15 +144,18 @@
                             @endif
                             <button class="act-btn act-edit" title="Edit"
                                 onclick="editTask({{ json_encode([
-                                    'id'              => $task->id,
-                                    'title'           => $task->title,
-                                    'description'     => $task->description,
-                                    'priority'        => $task->priority,
-                                    'status'          => $task->status,
-                                    'progress'        => $task->progress ?? 0,
-                                    'due_date'        => $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : '',
-                                    'estimated_hours' => $task->estimated_hours,
-                                    'assigned_to'     => $task->assigned_to,
+                                    'id'                 => $task->id,
+                                    'title'              => $task->title,
+                                    'description'        => $task->description,
+                                    'priority'           => $task->priority,
+                                    'status'             => $task->status,
+                                    'progress'           => $task->progress ?? 0,
+                                    'due_date'           => $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y-m-d') : '',
+                                    'estimated_hours'    => $task->estimated_hours,
+                                    'assigned_to'        => $task->assigned_to,
+                                    'is_recurring'       => (bool)$task->is_recurring,
+                                    'recurrence_type'    => $task->recurrence_type ?? 'weekly',
+                                    'recurring_ends_at'  => $task->recurring_ends_at ? \Carbon\Carbon::parse($task->recurring_ends_at)->format('Y-m-d') : '',
                                 ]) }})">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -214,6 +221,35 @@
                         <div class="col-md-6">
                             <label class="flabel">Estimated Hours</label>
                             <input type="number" name="estimated_hours" class="form-control" step="0.5" min="0" style="border-radius:9px;border:1.5px solid #e5e7eb;">
+                        </div>
+                        {{-- Recurring --}}
+                        <div class="col-12">
+                            <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:14px 16px;">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="is_recurring" id="c_isRecurring" value="1"
+                                        onchange="document.getElementById('c_recurringFields').style.display=this.checked?'block':'none'">
+                                    <label class="form-check-label fw-semibold" for="c_isRecurring" style="color:#7c3aed;">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Make this a Recurring Task
+                                    </label>
+                                </div>
+                                <div id="c_recurringFields" style="display:none;margin-top:12px;">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="flabel">Repeat Every</label>
+                                            <select name="recurrence_type" class="form-select form-select-sm" style="border-radius:8px;">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly" selected>Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="flabel">Ends On <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+                                            <input type="date" name="recurring_ends_at" class="form-control form-control-sm" style="border-radius:8px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -287,6 +323,35 @@
                             <label class="flabel">Progress (%)</label>
                             <input type="number" id="editProgress" name="progress" class="form-control" min="0" max="100" style="border-radius:9px;border:1.5px solid #e5e7eb;">
                         </div>
+                        {{-- Recurring --}}
+                        <div class="col-12">
+                            <div style="background:#faf5ff;border:1.5px solid #e9d5ff;border-radius:10px;padding:14px 16px;">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" name="is_recurring" id="e_isRecurring" value="1"
+                                        onchange="document.getElementById('e_recurringFields').style.display=this.checked?'block':'none'">
+                                    <label class="form-check-label fw-semibold" for="e_isRecurring" style="color:#7c3aed;">
+                                        <i class="bi bi-arrow-repeat me-1"></i>Recurring Task
+                                    </label>
+                                </div>
+                                <div id="e_recurringFields" style="display:none;margin-top:12px;">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="flabel">Repeat Every</label>
+                                            <select id="editRecurrenceType" name="recurrence_type" class="form-select form-select-sm" style="border-radius:8px;">
+                                                <option value="daily">Daily</option>
+                                                <option value="weekly">Weekly</option>
+                                                <option value="monthly">Monthly</option>
+                                                <option value="yearly">Yearly</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="flabel">Ends On <span style="font-weight:400;color:#9ca3af;">(optional)</span></label>
+                                            <input type="date" id="editRecurringEndsAt" name="recurring_ends_at" class="form-control form-control-sm" style="border-radius:8px;">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -356,6 +421,15 @@ function editTask(task) {
     document.getElementById('editDueDate').value        = task.due_date ?? '';
     document.getElementById('editEstimatedHours').value = task.estimated_hours ?? '';
     document.getElementById('editAssignedTo').value     = task.assigned_to ?? '';
+
+    // Recurring fields
+    const recurringChk    = document.getElementById('e_isRecurring');
+    const recurringFields = document.getElementById('e_recurringFields');
+    recurringChk.checked  = task.is_recurring;
+    recurringFields.style.display = task.is_recurring ? 'block' : 'none';
+    document.getElementById('editRecurrenceType').value   = task.recurrence_type ?? 'weekly';
+    document.getElementById('editRecurringEndsAt').value  = task.recurring_ends_at ?? '';
+
     new bootstrap.Modal(document.getElementById('editTaskModal')).show();
 }
 

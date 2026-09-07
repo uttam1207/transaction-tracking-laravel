@@ -64,21 +64,29 @@ class TaskController extends Controller
         }
 
         $request->validate([
-            'title'           => 'required|string|max:255',
-            'description'     => 'nullable|string',
-            'assigned_to'     => 'required|exists:employees,id',
-            'priority'        => 'required|in:low,medium,high,urgent',
-            'due_date'        => 'nullable|date|after:today',
-            'project_id'      => 'nullable|exists:projects,id',
-            'estimated_hours' => 'nullable|integer|min:0',
+            'title'             => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'assigned_to'       => 'required|exists:employees,id',
+            'priority'          => 'required|in:low,medium,high,urgent',
+            'due_date'          => 'nullable|date|after:today',
+            'project_id'        => 'nullable|exists:projects,id',
+            'estimated_hours'   => 'nullable|integer|min:0',
+            'is_recurring'      => 'nullable|boolean',
+            'recurrence_type'   => 'nullable|in:daily,weekly,monthly,yearly',
+            'recurring_ends_at' => 'nullable|date|after:today',
         ]);
+
+        $isRecurring = $request->boolean('is_recurring');
 
         $task = Task::create(array_merge(
             $request->only(['title', 'description', 'assigned_to', 'priority', 'due_date', 'project_id', 'estimated_hours']),
             [
-                'assigned_by' => auth()->id(),
-                'status' => 'pending',
-                'task_id' => 'TASK-' . strtoupper(uniqid()),
+                'assigned_by'       => auth()->id(),
+                'status'            => 'pending',
+                'task_id'           => 'TASK-' . strtoupper(uniqid()),
+                'is_recurring'      => $isRecurring,
+                'recurrence_type'   => $isRecurring ? $request->recurrence_type : null,
+                'recurring_ends_at' => $isRecurring ? $request->recurring_ends_at : null,
             ]
         ));
 
@@ -97,16 +105,26 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'status' => 'required|in:pending,in_progress,review,approved,rejected,completed,cancelled',
-            'progress' => 'nullable|integer|min:0|max:100',
+            'title'             => 'required|string|max:255',
+            'priority'          => 'required|in:low,medium,high,urgent',
+            'status'            => 'required|in:pending,in_progress,review,approved,rejected,completed,cancelled',
+            'progress'          => 'nullable|integer|min:0|max:100',
+            'is_recurring'      => 'nullable|boolean',
+            'recurrence_type'   => 'nullable|in:daily,weekly,monthly,yearly',
+            'recurring_ends_at' => 'nullable|date',
         ]);
 
-        $task->update($request->only([
-            'title', 'description', 'priority', 'status', 'due_date',
-            'estimated_hours', 'progress', 'rejection_reason', 'assigned_to'
-        ]));
+        $isRecurring = $request->boolean('is_recurring');
+
+        $task->update(array_merge(
+            $request->only(['title', 'description', 'priority', 'status', 'due_date',
+                            'estimated_hours', 'progress', 'rejection_reason', 'assigned_to']),
+            [
+                'is_recurring'      => $isRecurring,
+                'recurrence_type'   => $isRecurring ? $request->recurrence_type : null,
+                'recurring_ends_at' => $isRecurring ? $request->recurring_ends_at : null,
+            ]
+        ));
 
         if ($request->status === 'completed' && !$task->completed_at) {
             $task->update(['completed_at' => now()]);
