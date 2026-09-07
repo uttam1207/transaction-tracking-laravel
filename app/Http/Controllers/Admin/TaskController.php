@@ -141,16 +141,16 @@ class TaskController extends Controller
 
     public function kanban(Request $request)
     {
-        $statuses = ['pending', 'in_progress', 'review', 'completed'];
+        $statuses = ['pending', 'assigned', 'in_progress', 'review', 'completed'];
         $empIds   = $this->managedEmployeeIds();
-        $tasks    = [];
+        $grouped  = [];
 
         foreach ($statuses as $status) {
             $q = Task::with('assignedTo.user')->where('status', $status);
             if ($empIds !== null) {
                 $q->whereIn('assigned_to', $empIds);
             }
-            $tasks[$status] = $q->latest()->get();
+            $grouped[$status] = $q->latest()->get();
         }
 
         $empQuery = Employee::with('user')->active();
@@ -159,7 +159,7 @@ class TaskController extends Controller
         }
         $employees = $empQuery->orderBy('id')->get();
 
-        return view('admin.tasks.kanban', compact('tasks', 'employees'));
+        return view('admin.tasks.kanban', compact('grouped', 'employees'));
     }
 
     public function approve(Request $request, Task $task)
