@@ -36,8 +36,9 @@ class EmployeeLifecycleController extends Controller
         return view('admin.employee-lifecycle.index', compact('events', 'employees', 'eventTypes'));
     }
 
-    public function show(Employee $employee)
+    public function show(int $employee)
     {
+        $employee = Employee::withTrashed()->findOrFail($employee);
         $this->authorizeEmployee($employee);
         $employee->load('user', 'department', 'branch', 'designationModel');
 
