@@ -171,7 +171,7 @@
                 <h6 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Create New Task</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form action="{{ route('admin.tasks.store') }}" method="POST">
+            <form id="kanbanCreateForm" action="{{ route('admin.tasks.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <div class="row g-3">
@@ -206,7 +206,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-sm btn-primary-grad px-4">Create Task</button>
+                    <button type="submit" id="kanbanCreateBtn" class="btn btn-sm btn-primary-grad px-4">Create Task</button>
                 </div>
             </form>
         </div>
@@ -217,6 +217,29 @@
 
 @push('scripts')
 <script>
+const CSRF = () => document.querySelector('meta[name=csrf-token]').content;
+
+// Submit kanban create-task form via AJAX so the JSON response doesn't render raw
+document.getElementById('kanbanCreateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('kanbanCreateBtn');
+    btn.disabled = true;
+    fetch(this.action, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF() },
+        body: new FormData(this)
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('createTaskModal')).hide();
+            APP.toast('Task created!');
+            setTimeout(() => location.reload(), 800);
+        } else {
+            btn.disabled = false;
+            APP.toast(data.message || 'Error creating task.', 'error');
+        }
+    }).catch(() => { btn.disabled = false; APP.toast('Network error.', 'error'); });
+});
+
 const prioColors = { low:'#16a34a', medium:'#f59e0b', high:'#dc2626', urgent:'#7f1d1d' };
 const statusLabels = { pending:'Pending', assigned:'Assigned', in_progress:'In Progress', review:'In Review', completed:'Completed', cancelled:'Cancelled' };
 const statusPillColors = { pending:'#9ca3af', assigned:'#0ea5e9', in_progress:'#6366f1', review:'#f59e0b', completed:'#16a34a', cancelled:'#dc2626' };
