@@ -39,7 +39,7 @@ class EmployeeLifecycleController extends Controller
     public function show(Employee $employee)
     {
         $this->authorizeEmployee($employee);
-        $employee->load('user', 'department', 'branch', 'designation');
+        $employee->load('user', 'department', 'branch', 'designationModel');
 
         $events = EmployeeLifecycleEvent::where('employee_id', $employee->id)
             ->with('triggeredBy')

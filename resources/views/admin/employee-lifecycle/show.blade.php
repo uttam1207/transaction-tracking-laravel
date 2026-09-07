@@ -9,7 +9,7 @@
         <p class="page-hero-sub mb-0">
             {{ $employee->employee_id ?? '' }}
             @if($employee->department) &nbsp;·&nbsp; {{ $employee->department->name }} @endif
-            @if($employee->designation) &nbsp;·&nbsp; {{ $employee->designation->name }} @endif
+            @if($employee->display_designation !== '—') &nbsp;·&nbsp; {{ $employee->display_designation }} @endif
         </p>
     </div>
     <a href="{{ route('admin.employee-lifecycle.index') }}" class="btn btn-outline-secondary btn-sm">
@@ -80,7 +80,7 @@
                     <dt class="col-6 text-muted">Branch</dt>
                     <dd class="col-6">{{ $employee->branch->name ?? '—' }}</dd>
                     <dt class="col-6 text-muted">Designation</dt>
-                    <dd class="col-6">{{ $employee->designation->name ?? '—' }}</dd>
+                    <dd class="col-6">{{ $employee->display_designation }}</dd>
                     <dt class="col-6 text-muted">Status</dt>
                     <dd class="col-6">
                         <span class="badge bg-{{ $employee->status === 'active' ? 'success' : 'secondary' }}">
