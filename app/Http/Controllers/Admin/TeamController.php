@@ -44,7 +44,7 @@ class TeamController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'department_id' => 'required|exists:departments,id',
+            'department_id' => 'nullable|exists:departments,id',
             'name'          => 'required|string|max:255',
             'code'          => 'required|string|max:50|unique:teams,code',
             'description'   => 'nullable|string',
@@ -61,7 +61,7 @@ class TeamController extends Controller
     public function update(Request $request, Team $team)
     {
         $data = $request->validate([
-            'department_id' => 'required|exists:departments,id',
+            'department_id' => 'nullable|exists:departments,id',
             'name'          => 'required|string|max:255',
             'code'          => 'required|string|max:50|unique:teams,code,' . $team->id,
             'description'   => 'nullable|string',
@@ -78,10 +78,10 @@ class TeamController extends Controller
     public function destroy(Team $team)
     {
         if ($team->members()->count() > 0) {
-            return back()->with('error', 'Cannot delete a team that has members. Remove all members first.');
+            return response()->json(['success' => false, 'message' => 'Cannot delete a team that has members. Remove all members first.']);
         }
         $team->delete();
-        return back()->with('success', 'Team deleted.');
+        return response()->json(['success' => true]);
     }
 
     /** Add one or more employees to a team. */
