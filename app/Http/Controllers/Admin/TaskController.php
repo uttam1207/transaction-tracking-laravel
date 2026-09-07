@@ -153,7 +153,13 @@ class TaskController extends Controller
             $tasks[$status] = $q->latest()->get();
         }
 
-        return view('admin.tasks.kanban', compact('tasks'));
+        $empQuery = Employee::with('user')->active();
+        if ($empIds !== null) {
+            $empQuery->whereIn('id', $empIds);
+        }
+        $employees = $empQuery->orderBy('id')->get();
+
+        return view('admin.tasks.kanban', compact('tasks', 'employees'));
     }
 
     public function approve(Request $request, Task $task)
