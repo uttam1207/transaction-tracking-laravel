@@ -2,7 +2,7 @@
 @section('title', 'Profit & Loss Statement')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('admin.finance.accounts.index') }}">Finance</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.finance.coa.index') }}">Finance</a></li>
     <li class="breadcrumb-item">Reports</li>
     <li class="breadcrumb-item active">Profit &amp; Loss</li>
 @endsection

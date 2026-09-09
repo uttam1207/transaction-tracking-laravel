@@ -2,7 +2,7 @@
 @section('title', 'Trial Balance')
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="{{ route('admin.finance.accounts.index') }}">Finance</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('admin.finance.coa.index') }}">Finance</a></li>
     <li class="breadcrumb-item">Reports</li>
     <li class="breadcrumb-item active">Trial Balance</li>
 @endsection
