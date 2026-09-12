@@ -314,7 +314,7 @@
                                 <td>
                                     <form action="{{ route('admin.feed.groups.destroy', $ag) }}" method="POST">
                                         @csrf @method('DELETE')
-                                        <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete group {{ addslashes($ag->name) }} and all its feed plans?', () => this.closest(\'form\').submit())">
+                                        <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete group {{ addslashes($ag->name) }} and all its feed plans?', () => this.closest('form').submit())">
                                             <i class="bi bi-trash3"></i>
                                         </button>
                                     </form>
@@ -444,7 +444,7 @@
                                     <td>
                                         <form action="{{ route('admin.feed.plans.item.destroy', $fp) }}" method="POST">
                                             @csrf @method('DELETE')
-                                            <button type="button" class="act-btn act-delete" title="Remove" onclick="APP.confirm('Delete', 'Remove {{ addslashes($fp->feed_item_name) }} from {{ addslashes($ag->name) }} feed plan?', () => this.closest(\'form\').submit())">
+                                            <button type="button" class="act-btn act-delete" title="Remove" onclick="APP.confirm('Delete', 'Remove {{ addslashes($fp->feed_item_name) }} from {{ addslashes($ag->name) }} feed plan?', () => this.closest('form').submit())">
                                                 <i class="bi bi-trash3"></i>
                                             </button>
                                         </form>
