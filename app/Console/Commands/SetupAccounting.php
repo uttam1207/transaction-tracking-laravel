@@ -6,7 +6,6 @@ use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\Transaction;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SetupAccounting extends Command
@@ -123,8 +122,6 @@ class SetupAccounting extends Command
         $this->info('');
         $this->info('=== Posting Existing Transactions to Ledger ===');
 
-        Auth::loginUsingId($adminId);
-
         $bankId    = ChartOfAccount::where('code', '1010')->value('id');
         $revenueId = ChartOfAccount::where('code', '4000')->value('id');
         $expenseId = ChartOfAccount::where('code', '5000')->value('id');
@@ -161,7 +158,7 @@ class SetupAccounting extends Command
         }
         $this->info("  Assigned accounts to {$debitTxns->count()} debit (expense) transactions");
 
-        // Now post them all via the observer
+        // Post directly — bypass the observer to avoid auth()->id() being null in CLI context
         $pending = Transaction::where('status', 'success')
             ->whereNotNull('debit_account_id')
             ->whereNotNull('credit_account_id')
@@ -172,23 +169,68 @@ class SetupAccounting extends Command
 
         $posted = 0;
         $failed = 0;
+        $ledger = app(\App\Services\LedgerBalanceService::class);
 
         foreach ($pending as $tx) {
             try {
-                // Temporarily set to pending in DB so observer detects status change
-                DB::table('transactions')->where('id', $tx->id)->update(['status' => 'pending']);
-                $tx->refresh();
-                $tx->status = 'success';
-                $tx->save(); // Fires TransactionObserver::updated()
-                $tx->refresh();
+                $entryDate = $tx->processed_at
+                    ? \Carbon\Carbon::parse($tx->processed_at)->toDateString()
+                    : $tx->created_at->toDateString();
 
-                if ($tx->journal_entry_id) {
-                    $this->line("  <info>✓</info> {$tx->transaction_id}  →  JE #{$tx->journal_entry_id}");
-                    $posted++;
-                } else {
-                    $this->warn("  ✗ {$tx->transaction_id}  — no journal entry created (check period coverage)");
-                    $failed++;
-                }
+                // Find financial period covering this date
+                $periodId = FinancialPeriod::where('start_date', '<=', $entryDate)
+                    ->where('end_date', '>=', $entryDate)
+                    ->whereIn('status', ['open', 'closed'])
+                    ->orderBy('start_date', 'desc')
+                    ->value('id');
+
+                $amount = (float) $tx->net_amount;
+
+                DB::transaction(function () use ($tx, $entryDate, $periodId, $amount, $adminId, $ledger) {
+                    $entry = \App\Models\JournalEntry::create([
+                        'entry_number' => \App\Models\JournalEntry::generateNumber(),
+                        'period_id'    => $periodId,
+                        'entry_date'   => $entryDate,
+                        'reference'    => $tx->transaction_id,
+                        'type'         => 'general',
+                        'description'  => ucfirst($tx->category) . ' — ' . $tx->transaction_id,
+                        'total_debit'  => $amount,
+                        'total_credit' => $amount,
+                        'status'       => 'posted',
+                        'created_by'   => $adminId,
+                        'posted_by'    => $adminId,
+                        'posted_at'    => now(),
+                    ]);
+
+                    \App\Models\JournalEntryLine::create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id'       => $tx->debit_account_id,
+                        'debit'            => $amount,
+                        'credit'           => 0,
+                        'description'      => $tx->transaction_id,
+                    ]);
+
+                    \App\Models\JournalEntryLine::create([
+                        'journal_entry_id' => $entry->id,
+                        'account_id'       => $tx->credit_account_id,
+                        'debit'            => 0,
+                        'credit'           => $amount,
+                        'description'      => $tx->transaction_id,
+                    ]);
+
+                    // Link back to transaction without firing events
+                    Transaction::withoutEvents(fn() =>
+                        $tx->update(['journal_entry_id' => $entry->id])
+                    );
+
+                    // Update ledger balance cache
+                    $ledger->updateAfterPost($entry->load('lines'));
+                });
+
+                $tx->refresh();
+                $this->line("  <info>✓</info> {$tx->transaction_id}  →  JE #{$tx->journal_entry_id}  [{$entryDate}]");
+                $posted++;
+
             } catch (\Throwable $e) {
                 $this->error("  ✗ {$tx->transaction_id}: " . $e->getMessage());
                 $failed++;
