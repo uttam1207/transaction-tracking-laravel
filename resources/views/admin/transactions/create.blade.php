@@ -492,6 +492,58 @@ textarea.form-control { height: auto !important; }
             </div>
         </div>
 
+        {{-- Accounting / Ledger --}}
+        <div class="sidebar-info-card" style="border:2px solid #e0e7ff;">
+            <div class="form-section-header" style="background:#eef2ff;color:#4f46e5;">
+                <i class="bi bi-journal-bookmark-fill" style="color:#4f46e5;"></i>
+                Accounting (Ledger)
+            </div>
+            <div class="form-section-body">
+                <p style="font-size:.75rem;color:#6b7280;margin-bottom:12px;">
+                    When this transaction is marked <strong>Success</strong>, a journal entry is auto-created
+                    using the accounts below. Leave blank to skip ledger posting.
+                </p>
+                @if(isset($accounts) && $accounts->isNotEmpty())
+                <div class="mb-3">
+                    <label class="form-label">Debit Account <span style="font-size:.7rem;color:#9ca3af;">(Dr)</span></label>
+                    <select name="debit_account_id" class="form-select">
+                        <option value="">— None —</option>
+                        @foreach($accounts->groupBy('type') as $type => $grpAccounts)
+                        <optgroup label="{{ ucfirst($type) }}">
+                            @foreach($grpAccounts as $acc)
+                            <option value="{{ $acc->id }}" {{ old('debit_account_id') == $acc->id ? 'selected' : '' }}>
+                                {{ $acc->code }} — {{ $acc->name }}
+                            </option>
+                            @endforeach
+                        </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Credit Account <span style="font-size:.7rem;color:#9ca3af;">(Cr)</span></label>
+                    <select name="credit_account_id" class="form-select">
+                        <option value="">— None —</option>
+                        @foreach($accounts->groupBy('type') as $type => $grpAccounts)
+                        <optgroup label="{{ ucfirst($type) }}">
+                            @foreach($grpAccounts as $acc)
+                            <option value="{{ $acc->id }}" {{ old('credit_account_id') == $acc->id ? 'selected' : '' }}>
+                                {{ $acc->code }} — {{ $acc->name }}
+                            </option>
+                            @endforeach
+                        </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                @else
+                <div style="background:#fef3c7;border-radius:8px;padding:10px 14px;font-size:.78rem;color:#92400e;">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    No Chart of Accounts set up yet.
+                    <a href="{{ route('admin.finance.coa.index') }}" style="color:#4f46e5;">Create accounts</a> first.
+                </div>
+                @endif
+            </div>
+        </div>
+
         {{-- Additional Info --}}
         <div class="sidebar-info-card">
             <div class="form-section-header"><i class="bi bi-info-circle"></i>Additional Info</div>

@@ -7,6 +7,8 @@ use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\Transaction;
+use App\Observers\TransactionObserver;
 use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -377,5 +379,53 @@ class FinanceController extends Controller
         return view('admin.finance.reports.balance-sheet', compact(
             'periods', 'selectedPeriod', 'periodId', 'data'
         ));
+    }
+
+    // ── Sync Transactions → Journal Entries ──────────────────────────────────
+
+    /**
+     * Bulk-post all successful transactions that have both account IDs set
+     * but have not yet been linked to a journal entry.
+     */
+    public function syncTransactions()
+    {
+        $observer = app(TransactionObserver::class);
+
+        $pending = Transaction::where('status', 'success')
+            ->whereNotNull('debit_account_id')
+            ->whereNotNull('credit_account_id')
+            ->whereNull('journal_entry_id')
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nothing to sync — all eligible transactions are already posted.',
+                'count'   => 0,
+            ]);
+        }
+
+        $synced = 0;
+        $errors = [];
+
+        foreach ($pending as $tx) {
+            try {
+                // Simulate the observer's updated() trigger manually
+                $tx->setRawAttributes(array_merge($tx->getRawOriginal(), ['status' => 'pending']));
+                $tx->status = 'success';
+                $observer->updated($tx);
+                $synced++;
+            } catch (\Throwable $e) {
+                $errors[] = $tx->transaction_id . ': ' . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Synced {$synced} transaction(s) to journal entries."
+                . ($errors ? ' ' . count($errors) . ' failed.' : ''),
+            'count'   => $synced,
+            'errors'  => $errors,
+        ]);
     }
 }

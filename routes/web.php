@@ -523,6 +523,9 @@ Route::prefix('admin')
             Route::get('/profit-loss',    [FinanceController::class, 'profitLoss'])->name('profit-loss');
             Route::get('/balance-sheet',  [FinanceController::class, 'balanceSheet'])->name('balance-sheet');
         });
+
+        // Sync successful transactions to journal entries
+        Route::post('/sync-transactions', [FinanceController::class, 'syncTransactions'])->name('sync-transactions');
     });
 
     // Procurement V2 — Purchase Requests

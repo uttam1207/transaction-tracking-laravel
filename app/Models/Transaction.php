@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
 use App\Models\User;
 use App\Models\TransactionLog;
 use App\Models\FraudAlert;
@@ -14,7 +16,9 @@ class Transaction extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'transaction_id', 'user_id', 'category', 'type', 'amount', 'currency',
+        'transaction_id', 'user_id',
+        'debit_account_id', 'credit_account_id', 'journal_entry_id',
+        'category', 'type', 'amount', 'currency',
         'fee', 'net_amount', 'status', 'payment_method',
         'sender_name', 'sender_account', 'sender_bank', 'sender_mobile', 'sender_company',
         'receiver_name', 'receiver_account', 'receiver_bank',
@@ -54,6 +58,27 @@ class Transaction extends Model
     public function refundTransaction()
     {
         return $this->belongsTo(self::class, 'refund_transaction_id');
+    }
+
+    public function debitAccount()
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'debit_account_id');
+    }
+
+    public function creditAccount()
+    {
+        return $this->belongsTo(ChartOfAccount::class, 'credit_account_id');
+    }
+
+    public function journalEntry()
+    {
+        return $this->belongsTo(JournalEntry::class);
+    }
+
+    /** True if this transaction has been posted to the general ledger. */
+    public function getIsPostedToLedgerAttribute(): bool
+    {
+        return (bool) $this->journal_entry_id;
     }
 
     public function scopeFlagged($query)

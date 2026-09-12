@@ -7,6 +7,8 @@ use App\Listeners\LogTransactionActivity;
 use App\Listeners\NotifyAdminsOfFraud;
 use App\Listeners\SendFraudAlertNotification;
 use App\Models\Setting;
+use App\Models\Transaction;
+use App\Observers\TransactionObserver;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\View;
@@ -20,6 +22,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        // Auto-post transactions to the general ledger when they succeed
+        Transaction::observe(TransactionObserver::class);
 
         // Share fraud detection status to all transaction views so badges can be
         // hidden when the engine is disabled — data is preserved in the DB.

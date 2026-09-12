@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\TransactionsExport;
 use App\Http\Controllers\Controller;
 use App\Mail\TransactionStatusMail;
+use App\Models\ChartOfAccount;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
@@ -88,8 +89,9 @@ class TransactionController extends Controller
 
     public function create()
     {
-        $users = User::active()->orderBy('name')->get();
-        return view('admin.transactions.create', compact('users'));
+        $users    = User::active()->orderBy('name')->get();
+        $accounts = ChartOfAccount::where('is_active', true)->orderBy('code')->get();
+        return view('admin.transactions.create', compact('users', 'accounts'));
     }
 
     public function store(Request $request)
@@ -115,6 +117,8 @@ class TransactionController extends Controller
             'account_owner_mobile'     => 'nullable|string|max:20',
             'account_owner_company'    => 'nullable|string|max:255',
             'account_owner_address'    => 'nullable|string|max:500',
+            'debit_account_id'         => 'nullable|exists:chart_of_accounts,id',
+            'credit_account_id'        => 'nullable|exists:chart_of_accounts,id',
         ]);
 
         // Handle receipt upload
@@ -156,7 +160,7 @@ class TransactionController extends Controller
                 'receiver_name', 'receiver_account', 'receiver_bank',
                 'receiver_mobile', 'receiver_company', 'receiver_address',
                 'reference', 'description', 'notes', 'country', 'device_id',
-                'processed_at',
+                'processed_at', 'debit_account_id', 'credit_account_id',
             ]),
             [
                 'user_id'     => $request->user_id ?: auth()->id(),
@@ -215,7 +219,7 @@ class TransactionController extends Controller
 
     public function show(Transaction $transaction)
     {
-        $transaction->load('user', 'logs.performer', 'fraudAlerts');
+        $transaction->load('user', 'logs.performer', 'fraudAlerts', 'journalEntry.lines.account');
         return view('admin.transactions.show', compact('transaction'));
     }
 

@@ -398,6 +398,86 @@
         </div>
         @endif
 
+        {{-- Journal Entry / Ledger Link --}}
+        <div class="info-card" style="border:2px solid #e0e7ff;">
+            <div class="info-card-header" style="background:#eef2ff;color:#4f46e5;">
+                <i class="bi bi-journal-bookmark-fill"></i>
+                General Ledger
+            </div>
+            <div class="info-card-body">
+                @if($transaction->journal_entry_id)
+                    @php $je = $transaction->journalEntry; @endphp
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+                        <div>
+                            <div style="font-weight:700;font-size:.9rem;color:#1e293b;">
+                                <i class="bi bi-check-circle-fill me-1" style="color:#10b981;"></i>
+                                Posted to Journal
+                            </div>
+                            <div style="font-size:.78rem;color:#6b7280;margin-top:2px;">
+                                Entry: <strong>{{ $je->entry_number ?? '—' }}</strong>
+                                &nbsp;·&nbsp; {{ $je->entry_date ?? '—' }}
+                            </div>
+                        </div>
+                        @if($je)
+                        <a href="{{ route('admin.finance.journal.show', $je->id) }}"
+                           style="background:#4f46e5;color:#fff;padding:5px 14px;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>View Entry
+                        </a>
+                        @endif
+                    </div>
+                    @if($je && $je->lines->count())
+                    <table class="table table-sm mb-0" style="font-size:.8rem;">
+                        <thead style="background:#f8fafc;">
+                            <tr>
+                                <th style="border:none;padding:6px 10px;color:#6b7280;font-weight:600;text-transform:uppercase;font-size:.68rem;">Account</th>
+                                <th style="border:none;padding:6px 10px;color:#6b7280;font-weight:600;text-transform:uppercase;font-size:.68rem;text-align:right;">Dr</th>
+                                <th style="border:none;padding:6px 10px;color:#6b7280;font-weight:600;text-transform:uppercase;font-size:.68rem;text-align:right;">Cr</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($je->lines as $line)
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="border:none;padding:7px 10px;">
+                                    <span style="background:#f0f4ff;color:#4f46e5;padding:1px 6px;border-radius:4px;font-size:.68rem;font-weight:700;font-family:monospace;margin-right:5px;">{{ $line->account->code ?? '?' }}</span>
+                                    {{ $line->account->name ?? '—' }}
+                                </td>
+                                <td style="border:none;padding:7px 10px;text-align:right;font-weight:600;color:#1d4ed8;">
+                                    {{ $line->debit > 0 ? number_format($line->debit, 2) : '—' }}
+                                </td>
+                                <td style="border:none;padding:7px 10px;text-align:right;font-weight:600;color:#7c3aed;">
+                                    {{ $line->credit > 0 ? number_format($line->credit, 2) : '—' }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    @endif
+                @else
+                    <div style="text-align:center;padding:20px 10px;color:#9ca3af;">
+                        <i class="bi bi-journal-x" style="font-size:1.8rem;display:block;margin-bottom:8px;color:#d1d5db;"></i>
+                        <div style="font-size:.82rem;font-weight:600;color:#64748b;">Not posted to ledger</div>
+                        @if(!$transaction->debit_account_id || !$transaction->credit_account_id)
+                        <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">
+                            Set debit &amp; credit accounts on this transaction to enable auto-posting.
+                        </div>
+                        @elseif($transaction->status !== 'success')
+                        <div style="font-size:.75rem;color:#9ca3af;margin-top:4px;">
+                            Will post automatically when status is set to <strong>Success</strong>.
+                        </div>
+                        @endif
+                    </div>
+                    @if($transaction->debit_account_id && $transaction->credit_account_id && $transaction->status === 'success')
+                    <div style="text-align:center;margin-top:8px;">
+                        <button class="btn btn-sm" style="background:#4f46e5;color:#fff;border-radius:8px;font-size:.78rem;"
+                            onclick="syncOne({{ $transaction->id }}, this)">
+                            <i class="bi bi-arrow-repeat me-1"></i>Post to Ledger Now
+                        </button>
+                    </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+
         {{-- Timeline --}}
         <div class="info-card">
             <div class="info-card-header"><i class="bi bi-clock-history"></i>Activity Timeline</div>
@@ -534,6 +614,28 @@ function triggerRefund() {
                 });
         }
     );
+}
+
+function syncOne(transactionId, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Posting…';
+    APP.ajax('{{ route("admin.finance.sync-transactions") }}', 'POST', {})
+        .done(res => {
+            if (res.success) {
+                APP.toast(res.count > 0 ? 'Posted to general ledger!' : res.message, res.count > 0 ? 'success' : 'info');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                APP.toast(res.message || 'Post failed', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Post to Ledger Now';
+            }
+        })
+        .fail(xhr => {
+            const msg = xhr.responseJSON?.message || 'Post to ledger failed';
+            APP.toast(msg, 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Post to Ledger Now';
+        });
 }
 </script>
 @endpush
