@@ -63,7 +63,7 @@ class SalesModuleController extends Controller
             'sale_item_type_id' => 'required|exists:sale_item_types,id',
             'sale_date'         => 'required|date',
             'quantity'          => 'required|numeric|min:0.01',
-            'payment_status'    => 'required|in:Paid,Pending,Partial',
+            'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
         ];
 
         if ($itemType->is_milk_type) {
@@ -92,7 +92,7 @@ class SalesModuleController extends Controller
             $fatRate    = null;
         }
 
-        SalesOrder::create([
+        $sale = SalesOrder::create([
             'invoice_number'    => $validated['invoice_number'],
             'crm_customer_id'   => $validated['crm_customer_id'] ?? null,
             'item_type'         => $itemType->name,
@@ -106,7 +106,14 @@ class SalesModuleController extends Controller
             'payment_status'    => $validated['payment_status'],
         ]);
 
-        return redirect()->route('admin.sales.index')->with('success', 'Sales invoice created.');
+        $redirect = redirect()->route('admin.sales.index')
+            ->with('success', 'Sales invoice ' . $sale->invoice_number . ' created.');
+
+        if (! $sale->fresh()->journal_entry_id) {
+            $redirect = $redirect->with('warning', 'Accounting entry could not be posted — no open financial period covers ' . $validated['sale_date'] . '. Run: php artisan accounting:setup');
+        }
+
+        return $redirect;
     }
 
     public function show(SalesOrder $salesOrder)
@@ -133,7 +140,7 @@ class SalesModuleController extends Controller
             'sale_item_type_id' => 'required|exists:sale_item_types,id',
             'sale_date'         => 'required|date',
             'quantity'          => 'required|numeric|min:0.01',
-            'payment_status'    => 'required|in:Paid,Pending,Partial',
+            'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
         ];
 
         if ($itemType->is_milk_type) {

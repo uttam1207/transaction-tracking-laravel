@@ -27,10 +27,10 @@ class SalesOrderObserver
 
     public function updated(SalesOrder $salesOrder): void
     {
-        // Payment received: credit sale becomes fully paid
+        // Payment received: previously billed or unbilled sale is now fully paid
         if ($salesOrder->wasChanged('payment_status')
             && $salesOrder->payment_status === 'Paid'
-            && in_array($salesOrder->getOriginal('payment_status'), ['Pending', 'Partial'])
+            && in_array($salesOrder->getOriginal('payment_status'), ['Pending', 'Partial', 'Unbilled'])
             && $salesOrder->journal_entry_id
         ) {
             $this->postPaymentReceived($salesOrder);

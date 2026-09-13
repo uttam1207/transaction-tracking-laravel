@@ -360,16 +360,45 @@ class FinanceController extends Controller
 
     public function profitLoss(Request $request)
     {
-        $periods       = FinancialPeriod::orderByDesc('start_date')->get();
-        $periodId      = $request->period_id;
-        $dateFrom      = $request->date_from;
-        $dateTo        = $request->date_to;
+        $periods        = FinancialPeriod::orderByDesc('start_date')->get();
+        $periodId       = $request->period_id;
+        $dateFrom       = $request->date_from;
+        $dateTo         = $request->date_to;
         $selectedPeriod = $periodId ? $periods->firstWhere('id', $periodId) : null;
 
         $data = $this->ledger->profitAndLoss($periodId ?: null, $dateFrom ?: null, $dateTo ?: null);
 
+        // ── Sales Breakdown: Billed vs Unbilled ──────────────────────────────
+        $salesQ = SalesOrder::query();
+        if ($selectedPeriod) {
+            $salesQ->whereBetween('sale_date', [
+                $selectedPeriod->start_date->toDateString(),
+                $selectedPeriod->end_date->toDateString(),
+            ]);
+        } elseif ($dateFrom || $dateTo) {
+            if ($dateFrom) $salesQ->where('sale_date', '>=', $dateFrom);
+            if ($dateTo)   $salesQ->where('sale_date', '<=', $dateTo);
+        }
+
+        $billedSales   = (clone $salesQ)->whereIn('payment_status', ['Paid', 'Pending', 'Partial'])->sum('total_amount');
+        $unbilledSales = (clone $salesQ)->where('payment_status', 'Unbilled')->sum('total_amount');
+
+        $purchaseQ = PurchaseOrder::query();
+        if ($selectedPeriod) {
+            $purchaseQ->whereBetween('order_date', [
+                $selectedPeriod->start_date->toDateString(),
+                $selectedPeriod->end_date->toDateString(),
+            ]);
+        } elseif ($dateFrom || $dateTo) {
+            if ($dateFrom) $purchaseQ->where('order_date', '>=', $dateFrom);
+            if ($dateTo)   $purchaseQ->where('order_date', '<=', $dateTo);
+        }
+        $totalPurchase = $purchaseQ->sum('total_amount');
+        // ─────────────────────────────────────────────────────────────────────
+
         return view('admin.finance.reports.profit-loss', compact(
-            'periods', 'selectedPeriod', 'periodId', 'dateFrom', 'dateTo', 'data'
+            'periods', 'selectedPeriod', 'periodId', 'dateFrom', 'dateTo', 'data',
+            'billedSales', 'unbilledSales', 'totalPurchase'
         ));
     }
 

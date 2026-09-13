@@ -161,8 +161,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
                                 <select name="payment_status" class="form-select @error('payment_status') is-invalid @enderror" required>
-                                    @foreach(['Paid','Pending','Partial'] as $s)
-                                        <option value="{{ $s }}" @selected(old('payment_status', $salesOrder->payment_status) === $s)>{{ $s }}</option>
+                                    @foreach(['Paid' => 'Paid (Invoice issued & received)', 'Pending' => 'Pending (Invoice issued, not paid)', 'Partial' => 'Partial (Invoice issued, partly paid)', 'Unbilled' => 'Unbilled (Goods delivered, no invoice yet)'] as $val => $label)
+                                        <option value="{{ $val }}" @selected(old('payment_status', $salesOrder->payment_status) === $val)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                                 @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror

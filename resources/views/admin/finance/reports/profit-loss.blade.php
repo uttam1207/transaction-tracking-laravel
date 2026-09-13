@@ -410,4 +410,89 @@
 </div>
 @endif
 
+{{-- ═══════════════════════════════════════════════════════════ --}}
+{{-- MANAGEMENT SUMMARY: Billed vs Unbilled Sales Breakdown      --}}
+{{-- ═══════════════════════════════════════════════════════════ --}}
+@php
+    $totalSales    = ($billedSales ?? 0) + ($unbilledSales ?? 0);
+    $mgmtNetProfit = $totalSales - ($totalPurchase ?? 0);
+    $isNetProfit   = $mgmtNetProfit >= 0;
+@endphp
+
+<div class="stmt-wrap" style="margin-top:28px;">
+    <div class="stmt-header" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border-bottom-color:#2563eb;">
+        <div class="firm-name">MANAGEMENT SUMMARY</div>
+        <div class="stmt-title" style="color:#1d4ed8;">Sales Breakdown — Billed &amp; Unbilled</div>
+        <div class="stmt-date">{{ $periodLabel }} &nbsp;|&nbsp; {{ $dateRange }}</div>
+    </div>
+
+    {{-- SALES section --}}
+    <div class="v-section-head" style="background:#eff6ff;color:#1e40af;">
+        <span><i class="bi bi-receipt me-1"></i> SALES</span>
+        <span>Amount (&#8377;)</span>
+    </div>
+
+    <div class="v-row">
+        <span>
+            <span style="display:inline-block;background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:4px;font-size:.7rem;font-weight:700;margin-right:8px;">BILLED</span>
+            Invoiced Sales
+            <small style="color:#6b7280;font-size:.72rem;"> — invoice issued (Paid + Pending + Partial)</small>
+        </span>
+        <span style="color:#059669;font-weight:700;">{{ number_format($billedSales ?? 0, 2) }}</span>
+    </div>
+
+    <div class="v-row">
+        <span>
+            <span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:4px;font-size:.7rem;font-weight:700;margin-right:8px;">UNBILLED</span>
+            Accrued / Unbilled Sales
+            <small style="color:#6b7280;font-size:.72rem;"> — goods delivered, invoice not yet raised</small>
+        </span>
+        <span style="color:#d97706;font-weight:700;">{{ number_format($unbilledSales ?? 0, 2) }}</span>
+    </div>
+
+    <div class="v-subtotal">
+        <span>Total Sales (A)</span>
+        <span style="color:#1d4ed8;">{{ number_format($totalSales, 2) }}</span>
+    </div>
+
+    <div class="v-spacer"></div>
+
+    {{-- PURCHASE section --}}
+    <div class="v-section-head" style="background:#fff1f2;color:#991b1b;">
+        <span><i class="bi bi-cart me-1"></i> PURCHASE</span>
+        <span>Amount (&#8377;)</span>
+    </div>
+
+    <div class="v-row">
+        <span>Total Purchase</span>
+        <span style="color:#dc2626;font-weight:700;">{{ number_format($totalPurchase ?? 0, 2) }}</span>
+    </div>
+
+    <div class="v-subtotal">
+        <span>Total Purchase (B)</span>
+        <span style="color:#dc2626;">{{ number_format($totalPurchase ?? 0, 2) }}</span>
+    </div>
+
+    <div class="v-spacer"></div>
+
+    {{-- NET PROFIT --}}
+    <div class="v-net-profit"
+         style="background:{{ $isNetProfit ? 'linear-gradient(135deg,#ecfdf5,#d1fae5)' : 'linear-gradient(135deg,#fff1f2,#fee2e2)' }};">
+        <span style="color:{{ $isNetProfit ? '#065f46' : '#991b1b' }};">
+            <i class="bi bi-{{ $isNetProfit ? 'graph-up-arrow' : 'graph-down-arrow' }} me-2"></i>
+            NET {{ $isNetProfit ? 'PROFIT' : 'LOSS' }} (A &minus; B)
+        </span>
+        <span style="font-size:1.15rem;color:{{ $isNetProfit ? '#059669' : '#dc2626' }};">
+            {{ $isNetProfit ? '' : '(' }}&#8377;{{ number_format(abs($mgmtNetProfit), 2) }}{{ $isNetProfit ? '' : ')' }}
+        </span>
+    </div>
+
+    <div style="padding:12px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;font-size:.78rem;color:#6b7280;">
+        <i class="bi bi-info-circle me-1"></i>
+        <strong>Billed</strong> = invoice issued (Paid / Pending / Partial) &nbsp;&middot;&nbsp;
+        <strong>Unbilled</strong> = goods delivered, invoice not yet raised &nbsp;&middot;&nbsp;
+        <strong>Net Profit</strong> = Total Sales &minus; Total Purchase
+    </div>
+</div>
+
 @endsection

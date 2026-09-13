@@ -207,7 +207,29 @@ class JournalPostingService
             ->orderBy('start_date', 'desc')
             ->first();
 
-        if (! $period) return null;
+        // Auto-create a financial period if none exists for this date so entries
+        // always post even on a fresh installation before accounting:setup is run.
+        if (! $period) {
+            $date  = \Carbon\Carbon::parse($entryDate);
+            // Indian fiscal year: April → March
+            $fyStart = $date->month >= 4
+                ? $date->copy()->month(4)->day(1)
+                : $date->copy()->subYear()->month(4)->day(1);
+            $fyEnd  = $fyStart->copy()->addYear()->subDay();
+            $fyName = 'FY ' . $fyStart->year . '-' . substr($fyEnd->year, -2);
+            $userId = auth()->id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1;
+
+            $period = FinancialPeriod::firstOrCreate(
+                ['name' => $fyName],
+                [
+                    'type'       => 'year',
+                    'start_date' => $fyStart->toDateString(),
+                    'end_date'   => $fyEnd->toDateString(),
+                    'status'     => 'open',
+                    'created_by' => $userId,
+                ]
+            );
+        }
 
         $userId = auth()->id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1;
 

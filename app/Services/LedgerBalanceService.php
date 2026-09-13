@@ -26,6 +26,7 @@ class LedgerBalanceService
 
         DB::transaction(function () use ($entry, $reason) {
             $reversal = JournalEntry::create([
+                'entry_number' => JournalEntry::generateNumber(),
                 'period_id'    => $entry->period_id,
                 'entry_date'   => now()->toDateString(),
                 'reference'    => 'REV-' . $entry->entry_number,
@@ -33,8 +34,8 @@ class LedgerBalanceService
                 'total_debit'  => $entry->total_credit,
                 'total_credit' => $entry->total_debit,
                 'status'       => 'posted',
-                'created_by'   => Auth::id(),
-                'posted_by'    => Auth::id(),
+                'created_by'   => Auth::id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1,
+                'posted_by'    => Auth::id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1,
                 'posted_at'    => now(),
                 'reversal_of'  => $entry->id,
             ]);
