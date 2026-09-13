@@ -1383,6 +1383,10 @@
                         <span class="nav-icon"><i class="bi bi-building"></i></span>
                         <span class="nav-label">Vendors</span>
                     </a>
+                    <a href="{{ route('admin.reports.vendor-ap-ar') }}" class="sidebar-link {{ request()->routeIs('admin.reports.vendor-ap-ar') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-people"></i></span>
+                        <span class="nav-label">Vendor AP/AR</span>
+                    </a>
                     @endif
                     @if(\App\Models\ServicePermission::canAccess('sales', $svcUser))
                     <a href="{{ route('admin.sales.index') }}" class="sidebar-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">

@@ -10,6 +10,8 @@ use App\Models\Task;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\WorkReport;
+use App\Models\Vendor;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
@@ -190,5 +192,68 @@ class ReportController extends Controller
 
         $logs = $query->latest()->paginate(20)->withQueryString();
         return view('admin.reports.audit-logs', compact('logs'));
+    }
+
+    public function vendorApAr(Request $request)
+    {
+        $dateFrom = $request->date_from ? Carbon::parse($request->date_from) : null;
+        $dateTo   = $request->date_to   ? Carbon::parse($request->date_to)   : null;
+        $vendorId = $request->vendor_id;
+        $status   = $request->status;
+
+        // Per-vendor summary
+        $vendors = Vendor::withCount(['purchaseOrders as po_count' => function ($q) use ($dateFrom, $dateTo, $status) {
+                if ($dateFrom) $q->whereDate('order_date', '>=', $dateFrom);
+                if ($dateTo)   $q->whereDate('order_date', '<=', $dateTo);
+                if ($status)   $q->where('status', $status);
+            }])
+            ->withSum(['purchaseOrders as total_committed' => function ($q) use ($dateFrom, $dateTo, $status) {
+                if ($dateFrom) $q->whereDate('order_date', '>=', $dateFrom);
+                if ($dateTo)   $q->whereDate('order_date', '<=', $dateTo);
+                if ($status)   $q->where('status', $status);
+            }], 'total_amount')
+            ->withSum(['purchaseOrders as total_paid' => function ($q) use ($dateFrom, $dateTo) {
+                $q->where('status', 'Paid');
+                if ($dateFrom) $q->whereDate('order_date', '>=', $dateFrom);
+                if ($dateTo)   $q->whereDate('order_date', '<=', $dateTo);
+            }], 'total_amount')
+            ->withSum(['purchaseOrders as total_outstanding' => function ($q) use ($dateFrom, $dateTo) {
+                $q->whereIn('status', ['Draft', 'Sent', 'Received']);
+                if ($dateFrom) $q->whereDate('order_date', '>=', $dateFrom);
+                if ($dateTo)   $q->whereDate('order_date', '<=', $dateTo);
+            }], 'total_amount')
+            ->when($vendorId, fn ($q) => $q->where('id', $vendorId))
+            ->having('po_count', '>', 0)
+            ->orderByDesc('total_outstanding')
+            ->get()
+            ->each(function ($v) {
+                $v->total_committed  = (float) ($v->total_committed  ?? 0);
+                $v->total_paid       = (float) ($v->total_paid       ?? 0);
+                $v->total_outstanding = (float) ($v->total_outstanding ?? 0);
+            });
+
+        // Individual PO list
+        $orders = PurchaseOrder::with('vendor')
+            ->when($vendorId, fn ($q) => $q->where('vendor_id', $vendorId))
+            ->when($status,   fn ($q) => $q->where('status', $status))
+            ->when($dateFrom, fn ($q) => $q->whereDate('order_date', '>=', $dateFrom))
+            ->when($dateTo,   fn ($q) => $q->whereDate('order_date', '<=', $dateTo))
+            ->orderBy('order_date', 'desc')
+            ->paginate(20)
+            ->withQueryString();
+
+        // Grand totals
+        $grandCommitted   = $vendors->sum('total_committed');
+        $grandPaid        = $vendors->sum('total_paid');
+        $grandOutstanding = $vendors->sum('total_outstanding');
+
+        // Vendor list for filter dropdown
+        $allVendors = Vendor::orderBy('name')->get(['id', 'name']);
+
+        return view('admin.reports.vendor-ap-ar', compact(
+            'vendors', 'orders', 'allVendors',
+            'grandCommitted', 'grandPaid', 'grandOutstanding',
+            'dateFrom', 'dateTo', 'vendorId', 'status'
+        ));
     }
 }

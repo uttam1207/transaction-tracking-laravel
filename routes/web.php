@@ -259,6 +259,7 @@ Route::prefix('admin')
     Route::get('/reports/financial-summary', [ReportController::class, 'financialSummary'])->name('reports.financial-summary');
     Route::get('/reports/{type}/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
     Route::get('/reports/audit-logs', [ReportController::class, 'auditLogs'])->name('reports.audit-logs');
+    Route::get('/reports/vendor-ap-ar', [ReportController::class, 'vendorApAr'])->name('reports.vendor-ap-ar');
 
     // Dairy Reports (Module 17 — specific views, all self-contained with inline @php queries)
     Route::get('/reports/milk',          fn() => view('admin.reports.milk'))->name('reports.milk');
