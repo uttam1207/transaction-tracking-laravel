@@ -77,6 +77,7 @@ use App\Http\Controllers\Employee\WorkReportController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\Admin\FinanceController;
+use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\PurchaseRequestController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\CrmLeadController;
@@ -526,6 +527,29 @@ Route::prefix('admin')
 
         // Sync successful transactions to journal entries
         Route::post('/sync-transactions', [FinanceController::class, 'syncTransactions'])->name('sync-transactions');
+
+        // Business Ledgers — Bank Book, Sales/AR, Purchase/AP
+        Route::get('/ledgers', [FinanceController::class, 'ledgers'])->name('ledgers.index');
+    });
+
+    // ── Exports (Excel & PDF) ──────────────────────────────────────────────────
+    Route::prefix('export')->name('export.')->group(function () {
+        Route::get('/sales/{format}',           [ExportController::class, 'sales'])->name('sales');
+        Route::get('/procurement/{format}',     [ExportController::class, 'procurement'])->name('procurement');
+        Route::get('/transactions/{format}',    [ExportController::class, 'transactions'])->name('transactions');
+        Route::get('/expenses/{format}',        [ExportController::class, 'expenses'])->name('expenses');
+        Route::get('/journal-entries/{format}', [ExportController::class, 'journalEntries'])->name('journal-entries');
+        // Finance Reports
+        Route::get('/trial-balance/{format}',   [ExportController::class, 'trialBalance'])->name('trial-balance');
+        Route::get('/profit-loss/{format}',     [ExportController::class, 'profitLoss'])->name('profit-loss');
+        Route::get('/balance-sheet/{format}',   [ExportController::class, 'balanceSheet'])->name('balance-sheet');
+        Route::get('/general-ledger/{format}',  [ExportController::class, 'generalLedger'])->name('general-ledger');
+        // Dairy Operations Reports
+        Route::get('/milk/{format}',            [ExportController::class, 'milkReport'])->name('milk');
+        Route::get('/animals/{format}',         [ExportController::class, 'animalReport'])->name('animals');
+        Route::get('/feed/{format}',            [ExportController::class, 'feedReport'])->name('feed');
+        Route::get('/breeding/{format}',        [ExportController::class, 'breedingReport'])->name('breeding');
+        Route::get('/health/{format}',          [ExportController::class, 'healthReport'])->name('health');
     });
 
     // Procurement V2 — Purchase Requests
@@ -584,6 +608,13 @@ Route::prefix('admin')
 
     // Module 14 — Sales
     Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
+    // Sale Item Types management (AJAX CRUD)
+    Route::prefix('sales/item-types')->name('sales.item-types.')->group(function () {
+        Route::get('/',           [SalesModuleController::class, 'itemTypesIndex'])->name('index');
+        Route::post('/',          [SalesModuleController::class, 'itemTypesStore'])->name('store');
+        Route::patch('/{type}',   [SalesModuleController::class, 'itemTypesUpdate'])->name('update');
+        Route::delete('/{type}',  [SalesModuleController::class, 'itemTypesDestroy'])->name('destroy');
+    });
 
     // Module 15 — Maintenance
     Route::resource('maintenance', MaintenanceController::class)->parameters(['maintenance' => 'machineMaintenance']);

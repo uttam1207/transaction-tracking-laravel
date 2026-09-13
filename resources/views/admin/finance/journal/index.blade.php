@@ -14,7 +14,15 @@
             <h4>Journal Entries</h4>
             <p>Record and manage double-entry journal transactions</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.journal-entries', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','type','status','period_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.journal-entries', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','type','status','period_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
             <a href="{{ route('admin.finance.journal.create') }}" class="btn btn-primary-grad btn-sm px-4">
                 <i class="bi bi-plus-lg me-1"></i> New Entry
             </a>

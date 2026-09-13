@@ -1072,6 +1072,10 @@
                         <span class="nav-icon"><i class="bi bi-bar-chart-steps"></i></span>
                         <span class="nav-label">Balance Sheet</span>
                     </a>
+                    <a href="{{ route('admin.finance.ledgers.index') }}" class="sidebar-link {{ request()->routeIs('admin.finance.ledgers.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-book-half"></i></span>
+                        <span class="nav-label">Business Ledgers</span>
+                    </a>
                     @endif {{-- !isFarmer: Finance & Stock + Finance V2 --}}
                     <div class="nav-sub-title">Operations</div>
                     @if(\App\Models\ServicePermission::canAccess('maintenance', $svcUser))

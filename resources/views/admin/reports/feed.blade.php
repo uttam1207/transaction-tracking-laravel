@@ -15,7 +15,13 @@
             <h4 style="color:#fff;">Feed Requirement & Stock Report</h4>
             <p style="color:rgba(255,255,255,.75);">Daily, weekly, monthly feed requirements vs available stock</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.feed', 'excel') }}" class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.feed', 'pdf') }}" class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
             <a href="{{ route('admin.feed.calculator') }}" class="btn btn-sm btn-light px-3">
                 <i class="bi bi-calculator me-1"></i>Feed Calculator
             </a>

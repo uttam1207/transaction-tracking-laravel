@@ -20,6 +20,14 @@
         <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('admin.finance.reports.profit-loss') }}" class="btn btn-outline-success btn-sm">P&amp;L</a>
             <a href="{{ route('admin.finance.reports.balance-sheet') }}" class="btn btn-outline-primary btn-sm">Balance Sheet</a>
+            <a href="{{ route('admin.export.trial-balance', 'excel') }}?{{ http_build_query(request()->only(['period_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.trial-balance', 'pdf') }}?{{ http_build_query(request()->only(['period_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
             <button onclick="window.print()" class="btn btn-sm" style="background:#f1f5f9;color:#374151;border:1.5px solid #e2e8f0;">
                 <i class="bi bi-printer me-1"></i>Print
             </button>

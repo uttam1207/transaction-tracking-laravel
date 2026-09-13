@@ -236,21 +236,144 @@
     </div>
 @endif
 
+{{-- ── Cash & Bank Summary ── --}}
+<div class="row g-3 mb-3">
+    {{-- Cash on Hand --}}
+    <div class="col-12 col-md-4">
+        <div style="background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-left:4px solid #10b981;display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:rgba(16,185,129,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-cash-stack" style="font-size:1.3rem;color:#10b981;"></i>
+            </div>
+            <div>
+                <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Cash on Hand</div>
+                <div style="font-size:1.35rem;font-weight:800;color:#10b981;letter-spacing:-.01em;">&#8377;{{ number_format($stats['cash_balance'], 2) }}</div>
+                <div style="font-size:.72rem;color:#6b7280;">Account 1000</div>
+            </div>
+        </div>
+    </div>
+    {{-- Bank Account --}}
+    <div class="col-12 col-md-4">
+        <div style="background:#fff;border-radius:14px;padding:18px 22px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-left:4px solid #2563eb;display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:rgba(37,99,235,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-bank" style="font-size:1.3rem;color:#2563eb;"></i>
+            </div>
+            <div>
+                <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">Bank Account</div>
+                <div style="font-size:1.35rem;font-weight:800;color:#2563eb;letter-spacing:-.01em;">&#8377;{{ number_format($stats['bank_balance'], 2) }}</div>
+                <div style="font-size:.72rem;color:#6b7280;">Account 1010</div>
+            </div>
+        </div>
+    </div>
+    {{-- Total Cash & Bank --}}
+    <div class="col-12 col-md-4">
+        <div style="background:linear-gradient(135deg,#1e293b,#334155);border-radius:14px;padding:18px 22px;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;align-items:center;gap:16px;">
+            <div style="width:46px;height:46px;background:rgba(255,255,255,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="bi bi-wallet2" style="font-size:1.3rem;color:#fff;"></i>
+            </div>
+            <div>
+                <div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em;">Total Cash &amp; Bank</div>
+                <div style="font-size:1.35rem;font-weight:800;color:#fff;letter-spacing:-.01em;">&#8377;{{ number_format($stats['cash_bank_total'], 2) }}</div>
+                <div style="font-size:.72rem;color:rgba(255,255,255,.5);">Combined liquid funds</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ── Money Flow: Credit In / Debit Out ── --}}
+<div class="card-glass mb-4 overflow-hidden">
+    <div style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:14px 22px 10px;">
+        <div class="d-flex align-items-center justify-content-between">
+            <span style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.1em;">Money Flow — Business Transactions</span>
+            <span style="font-size:.7rem;color:rgba(255,255,255,.35);">All time &nbsp;|&nbsp; This month in brackets</span>
+        </div>
+    </div>
+    <div class="row g-0" style="border-top:1px solid rgba(255,255,255,.04);">
+
+        {{-- Credit In — Sales --}}
+        <div class="col-12 col-md-4" style="border-right:1px solid #f1f5f9;padding:20px 24px;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;background:rgba(16,185,129,.12);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-arrow-down-circle-fill" style="font-size:1.2rem;color:#10b981;"></i>
+                </div>
+                <div>
+                    <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">
+                        Credit In &nbsp;<span style="background:#dcfce7;color:#15803d;border-radius:4px;padding:1px 6px;">Sales Revenue</span>
+                    </div>
+                    <div style="font-size:1.4rem;font-weight:800;color:#059669;letter-spacing:-.01em;">
+                        &#8377;{{ number_format($stats['sales_credit_in'], 2) }}
+                    </div>
+                    <div style="font-size:.72rem;color:#6b7280;">
+                        This month: <strong style="color:#059669;">&#8377;{{ number_format($stats['sales_credit_in_month'], 2) }}</strong>
+                        &nbsp;&bull;&nbsp;
+                        Receivable: <strong style="color:#dc2626;">&#8377;{{ number_format($stats['pending_receivable'], 2) }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Debit Out — Purchases --}}
+        <div class="col-12 col-md-4" style="border-right:1px solid #f1f5f9;padding:20px 24px;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;background:rgba(220,38,38,.1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-arrow-up-circle-fill" style="font-size:1.2rem;color:#dc2626;"></i>
+                </div>
+                <div>
+                    <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">
+                        Debit Out &nbsp;<span style="background:#fee2e2;color:#b91c1c;border-radius:4px;padding:1px 6px;">Purchases Paid</span>
+                    </div>
+                    <div style="font-size:1.4rem;font-weight:800;color:#dc2626;letter-spacing:-.01em;">
+                        &#8377;{{ number_format($stats['purchase_debit_out'], 2) }}
+                    </div>
+                    <div style="font-size:.72rem;color:#6b7280;">
+                        This month: <strong style="color:#dc2626;">&#8377;{{ number_format($stats['purchase_debit_out_month'], 2) }}</strong>
+                        &nbsp;&bull;&nbsp;
+                        Payable: <strong style="color:#d97706;">&#8377;{{ number_format($stats['pending_payable'], 2) }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Net Flow --}}
+        @php $netFlow = $stats['sales_credit_in'] - $stats['purchase_debit_out']; @endphp
+        <div class="col-12 col-md-4" style="padding:20px 24px;background:{{ $netFlow >= 0 ? '#f0fdf4' : '#fff1f2' }};">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;background:{{ $netFlow >= 0 ? 'rgba(5,150,105,.15)' : 'rgba(220,38,38,.12)' }};border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-{{ $netFlow >= 0 ? 'graph-up-arrow' : 'graph-down-arrow' }}" style="font-size:1.2rem;color:{{ $netFlow >= 0 ? '#059669' : '#dc2626' }};"></i>
+                </div>
+                <div>
+                    <div style="font-size:.68rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;">
+                        Net Flow &nbsp;<span style="background:{{ $netFlow >= 0 ? '#bbf7d0' : '#fecaca' }};color:{{ $netFlow >= 0 ? '#166534' : '#991b1b' }};border-radius:4px;padding:1px 6px;">{{ $netFlow >= 0 ? 'Profit' : 'Loss' }}</span>
+                    </div>
+                    <div style="font-size:1.4rem;font-weight:800;color:{{ $netFlow >= 0 ? '#059669' : '#dc2626' }};letter-spacing:-.01em;">
+                        &#8377;{{ number_format(abs($netFlow), 2) }}
+                    </div>
+                    <div style="font-size:.72rem;color:#6b7280;">
+                        Credit In − Debit Out
+                        &nbsp;&bull;&nbsp;
+                        <a href="{{ route('admin.finance.reports.profit-loss') }}" style="color:var(--primary);font-size:.7rem;">View P&amp;L &rsaquo;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
 {{-- ── KPI Cards ── --}}
 <div class="row g-3 mb-4">
-    {{-- Wallet Balance --}}
+    {{-- Bank Balance --}}
     <div class="col-6 col-md-3">
         <div class="kpi-card green">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="kpi-label">Wallet Balance</div>
-                    <div class="kpi-value text-success">₹{{ number_format($stats['wallet_balance'], 0) }}</div>
+                    <div class="kpi-label">Bank Balance</div>
+                    <div class="kpi-value text-success">&#8377;{{ number_format($stats['bank_balance'], 0) }}</div>
                     <div class="kpi-sub text-success">
-                        <i class="bi bi-arrow-up-short"></i>Today txns: ₹{{ number_format($stats['today_transactions_amount'], 0) }}
+                        <i class="bi bi-cash-stack me-1"></i>Cash: &#8377;{{ number_format($stats['cash_balance'], 0) }}
                     </div>
                 </div>
                 <div class="kpi-icon" style="background:rgba(16,185,129,.12); color:#10b981;">
-                    <i class="bi bi-wallet2"></i>
+                    <i class="bi bi-bank"></i>
                 </div>
             </div>
         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
@@ -13,27 +14,21 @@ class TransactionObserver
 {
     public function __construct(protected LedgerBalanceService $ledger) {}
 
-    /**
-     * When a transaction is updated, check if the status changed to/from 'success'
-     * and create or reverse the corresponding journal entry.
-     */
     public function updated(Transaction $transaction): void
     {
         $statusChanged = $transaction->wasChanged('status');
 
-        // ── Posting: transaction just became 'success' ────────────────────
+        // Posting: transaction just became 'success'
         if ($statusChanged
             && $transaction->status === 'success'
             && $transaction->getOriginal('status') !== 'success'
-            && $transaction->debit_account_id
-            && $transaction->credit_account_id
-            && ! $transaction->journal_entry_id          // not already posted
+            && ! $transaction->journal_entry_id
         ) {
             $this->postToLedger($transaction);
             return;
         }
 
-        // ── Reversal: transaction just became 'reversed' ──────────────────
+        // Reversal: transaction just became 'reversed'
         if ($statusChanged
             && $transaction->status === 'reversed'
             && $transaction->getOriginal('status') === 'success'
@@ -43,16 +38,9 @@ class TransactionObserver
         }
     }
 
-    /**
-     * When a transaction is created directly with status='success' and accounts set,
-     * post it immediately.
-     */
     public function created(Transaction $transaction): void
     {
-        if ($transaction->status === 'success'
-            && $transaction->debit_account_id
-            && $transaction->credit_account_id
-        ) {
+        if ($transaction->status === 'success') {
             $this->postToLedger($transaction);
         }
     }
@@ -61,16 +49,19 @@ class TransactionObserver
 
     private function postToLedger(Transaction $transaction): void
     {
+        // Resolve debit/credit accounts — use manually set or auto-assign from category
+        [$debitId, $creditId] = $this->resolveAccounts($transaction);
+        if (! $debitId || ! $creditId) return;
+
         $entryDate = $transaction->processed_at
             ? $transaction->processed_at->toDateString()
             : $transaction->created_at->toDateString();
 
         $periodId = $this->resolvePeriodId($entryDate);
+        $amount   = (float) $transaction->net_amount;
+        $type     = $this->resolveJournalType($transaction->category);
 
-        $amount = (float) $transaction->net_amount;
-        $type   = $this->resolveJournalType($transaction->category);
-
-        DB::transaction(function () use ($transaction, $entryDate, $periodId, $amount, $type) {
+        DB::transaction(function () use ($transaction, $entryDate, $periodId, $amount, $type, $debitId, $creditId) {
             $entry = JournalEntry::create([
                 'entry_number' => JournalEntry::generateNumber(),
                 'period_id'    => $periodId,
@@ -89,7 +80,7 @@ class TransactionObserver
 
             JournalEntryLine::create([
                 'journal_entry_id' => $entry->id,
-                'account_id'       => $transaction->debit_account_id,
+                'account_id'       => $debitId,
                 'debit'            => $amount,
                 'credit'           => 0,
                 'description'      => $transaction->description ?: $transaction->transaction_id,
@@ -97,7 +88,7 @@ class TransactionObserver
 
             JournalEntryLine::create([
                 'journal_entry_id' => $entry->id,
-                'account_id'       => $transaction->credit_account_id,
+                'account_id'       => $creditId,
                 'debit'            => 0,
                 'credit'           => $amount,
                 'description'      => $transaction->description ?: $transaction->transaction_id,
@@ -153,7 +144,51 @@ class TransactionObserver
         });
     }
 
-    /** Find the open financial period that covers the given date, or null. */
+    /**
+     * Resolve debit and credit account IDs.
+     * Uses manually set accounts if available, otherwise auto-assigns from category/type.
+     */
+    private function resolveAccounts(Transaction $transaction): array
+    {
+        if ($transaction->debit_account_id && $transaction->credit_account_id) {
+            return [$transaction->debit_account_id, $transaction->credit_account_id];
+        }
+
+        // Auto-assign account codes based on category and transaction type
+        $codes = match(true) {
+            // Credit transactions (money received)
+            $transaction->type === 'credit' && $transaction->category === 'deposit'    => ['1010', '4000'],
+            $transaction->type === 'credit' && $transaction->category === 'investment' => ['1010', '3000'],
+            $transaction->type === 'credit' && $transaction->category === 'loan'       => ['1010', '2500'],
+            $transaction->type === 'credit' && $transaction->category === 'refund'     => ['1010', '5000'],
+            $transaction->type === 'credit' && $transaction->category === 'transfer'   => ['1010', '4900'],
+            // Debit transactions (money paid out)
+            $transaction->type === 'debit'  && $transaction->category === 'salary'     => ['5100', '1010'],
+            $transaction->type === 'debit'  && $transaction->category === 'purchase'   => ['5000', '1010'],
+            $transaction->type === 'debit'  && $transaction->category === 'payment'    => ['2000', '1010'],
+            $transaction->type === 'debit'  && $transaction->category === 'withdrawal' => ['3200', '1010'],
+            // Fallbacks
+            $transaction->type === 'credit' => ['1010', '4900'],
+            $transaction->type === 'debit'  => ['5950', '1010'],
+            default                         => [null, null],
+        };
+
+        if (! $codes[0] || ! $codes[1]) return [null, null];
+
+        $debitId  = ChartOfAccount::where('code', $codes[0])->value('id');
+        $creditId = ChartOfAccount::where('code', $codes[1])->value('id');
+
+        if (! $debitId || ! $creditId) return [null, null];
+
+        // Persist the resolved accounts for future reference
+        Transaction::withoutEvents(fn() =>
+            $transaction->update(['debit_account_id' => $debitId, 'credit_account_id' => $creditId])
+        );
+
+        return [$debitId, $creditId];
+    }
+
+    /** Find the financial period that covers the given date. */
     private function resolvePeriodId(string $date): ?int
     {
         $period = FinancialPeriod::where('start_date', '<=', $date)

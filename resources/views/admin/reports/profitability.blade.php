@@ -61,8 +61,8 @@
     $dateTo   = request('date_to', now()->toDateString());
 
     // ── Revenue (Sales Orders) ──
-    $salesRevenue = SalesOrder::whereBetween('order_date', [$dateFrom, $dateTo])
-        ->whereIn('status', ['Delivered', 'Paid', 'Completed'])
+    $salesRevenue = SalesOrder::whereBetween('sale_date', [$dateFrom, $dateTo])
+        ->whereIn('payment_status', ['Paid', 'Partial'])
         ->sum('total_amount');
 
     // ── Expenses ──
@@ -86,12 +86,12 @@
 
     // ── Monthly breakdown (last 12 months) ──
     $monthlyRevenue = SalesOrder::select(
-            DB::raw('YEAR(order_date) as yr'),
-            DB::raw('MONTH(order_date) as mo'),
+            DB::raw('YEAR(sale_date) as yr'),
+            DB::raw('MONTH(sale_date) as mo'),
             DB::raw('SUM(total_amount) as revenue')
         )
-        ->whereBetween('order_date', [$dateFrom, $dateTo])
-        ->whereIn('status', ['Delivered', 'Paid', 'Completed'])
+        ->whereBetween('sale_date', [$dateFrom, $dateTo])
+        ->whereIn('payment_status', ['Paid', 'Partial'])
         ->groupBy('yr', 'mo')
         ->orderBy('yr')->orderBy('mo')
         ->get();

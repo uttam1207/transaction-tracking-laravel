@@ -138,12 +138,35 @@
                             </div>
                         </div>
                     </div>
+                    @if($milkEntry->fat_rate)
+                    <div class="col-sm-4">
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-tag me-1"></i>Fat Rate (&#8377;)</div>
+                            <div class="fw-bold" style="color:#1f2937;">&#8377;{{ number_format($milkEntry->fat_rate,2) }}</div>
+                            <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">per fat point per litre</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div style="background:#ecfdf5;border-radius:10px;padding:14px 16px;border:1px solid #d1fae5;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-currency-rupee me-1"></i>Milk Amount</div>
+                            <div class="fw-bold" style="color:#059669;font-size:1.1rem;">&#8377;{{ number_format($milkEntry->milk_amount,2) }}</div>
+                            <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">Qty &times; Fat% &times; Fat Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-clock me-1"></i>Recorded At</div>
+                            <div style="color:#6b7280;font-size:.85rem;">{{ $milkEntry->created_at->format('d M Y, H:i') }}</div>
+                        </div>
+                    </div>
+                    @else
                     <div class="col-sm-6">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-clock me-1"></i>Recorded At</div>
                             <div style="color:#6b7280;font-size:.85rem;">{{ $milkEntry->created_at->format('d M Y, H:i') }}</div>
                         </div>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

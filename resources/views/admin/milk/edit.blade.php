@@ -204,7 +204,7 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold">Fat <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="1" max="15" name="fat_percentage"
+                                <input type="number" step="0.01" min="1" max="15" name="fat_percentage" id="milkFatPct"
                                     class="form-control @error('fat_percentage') is-invalid @enderror"
                                     value="{{ old('fat_percentage', $milkEntry->fat_percentage) }}">
                                 @error('fat_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -231,6 +231,31 @@
                                     @endforeach
                                 </select>
                                 @error('quality_rating')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3 opacity-25">
+
+                    {{-- Section C: Pricing (Optional) --}}
+                    <div class="mb-4">
+                        <h6 class="form-section-label">C — Pricing <span style="font-weight:400;color:#9ca3af;font-size:.75rem;">(Optional)</span></h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    Fat Rate (&#8377;)
+                                    <span class="ms-1" style="font-size:.72rem;color:#6b7280;font-weight:400;">per fat point per litre</span>
+                                </label>
+                                <input type="number" step="0.01" min="0" name="fat_rate" id="milkFatRate"
+                                    class="form-control @error('fat_rate') is-invalid @enderror"
+                                    placeholder="e.g. 6.50"
+                                    value="{{ old('fat_rate', $milkEntry->fat_rate) }}">
+                                @error('fat_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold" style="color:#059669;">Calculated Amount</label>
+                                <div class="form-control" id="milkAmountPreview" style="background:#f0fdf4;color:#059669;font-weight:700;">—</div>
+                                <div style="font-size:.7rem;color:#6b7280;margin-top:3px;">Qty &times; Fat% &times; Fat Rate</div>
                             </div>
                         </div>
                     </div>
@@ -268,6 +293,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const current = document.getElementById('entryTypeInput').value || 'per_animal';
     setMode(current);
 });
+
+// Milk amount preview
+(function () {
+    const qtyEl     = document.querySelector('[name="quantity_liters"]');
+    const fatPctEl  = document.getElementById('milkFatPct');
+    const fatRateEl = document.getElementById('milkFatRate');
+    const previewEl = document.getElementById('milkAmountPreview');
+
+    function calcAmount() {
+        const qty    = parseFloat(qtyEl?.value)     || 0;
+        const fat    = parseFloat(fatPctEl?.value)  || 0;
+        const rate   = parseFloat(fatRateEl?.value) || 0;
+        const amount = qty * fat * rate;
+        previewEl.textContent = (rate > 0 && amount > 0) ? '₹' + amount.toFixed(2) : '—';
+    }
+
+    [qtyEl, fatPctEl, fatRateEl].forEach(el => el?.addEventListener('input', calcAmount));
+    calcAmount(); // Show saved value on page load
+})();
 </script>
 @endpush
 

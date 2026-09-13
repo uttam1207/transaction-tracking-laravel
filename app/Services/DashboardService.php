@@ -10,6 +10,9 @@ use App\Models\Employee;
 use App\Models\Attendance;
 use App\Models\FraudAlert;
 use App\Models\Transaction;
+use App\Models\SalesOrder;
+use App\Models\PurchaseOrder;
+use App\Models\ChartOfAccount;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 
@@ -20,11 +23,34 @@ class DashboardService
         $today = today();
         $thisMonth = now();
 
+        // Cash & Bank balances from journal entries (asset: balance = DR − CR)
+        $cashId = ChartOfAccount::where('code', '1000')->value('id');
+        $bankId = ChartOfAccount::where('code', '1010')->value('id');
+        $cashBalance = $cashId ? $this->ledgerBalance($cashId) : 0.0;
+        $bankBalance = $bankId ? $this->ledgerBalance($bankId) : (float) Wallet::company()->balance;
+
         return [
             'total_transactions' => Transaction::count(),
             'today_transactions' => Transaction::whereDate('created_at', $today)->count(),
-            'wallet_balance' => (float) Wallet::company()->balance,
+            'wallet_balance'     => (float) Wallet::company()->balance,
+            'bank_balance'       => $bankBalance,
+            'cash_balance'       => $cashBalance,
+            'cash_bank_total'    => $cashBalance + $bankBalance,
             'today_transactions_amount' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('net_amount'),
+
+            // ── Money Flow: Credit In (Sales) vs Debit Out (Purchases) ──
+            'sales_credit_in'          => (float) SalesOrder::where('payment_status', 'Paid')->sum('total_amount'),
+            'sales_credit_in_month'    => (float) SalesOrder::where('payment_status', 'Paid')
+                                            ->whereMonth('sale_date', $thisMonth->month)
+                                            ->whereYear('sale_date',  $thisMonth->year)
+                                            ->sum('total_amount'),
+            'purchase_debit_out'       => (float) PurchaseOrder::where('status', 'Paid')->sum('total_amount'),
+            'purchase_debit_out_month' => (float) PurchaseOrder::where('status', 'Paid')
+                                            ->whereMonth('order_date', $thisMonth->month)
+                                            ->whereYear('order_date',  $thisMonth->year)
+                                            ->sum('total_amount'),
+            'pending_receivable'       => (float) SalesOrder::whereIn('payment_status', ['Pending', 'Partial'])->sum('total_amount'),
+            'pending_payable'          => (float) PurchaseOrder::where('status', 'Received')->sum('total_amount'),
             'fraud_alerts' => FraudAlert::count(),
             'fraud_alerts_open' => FraudAlert::open()->count(),
             'fraud_alerts_critical' => FraudAlert::critical()->open()->count(),
@@ -114,10 +140,14 @@ class DashboardService
 
     public function getMonthlyRevenue(): array
     {
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $yearExpr  = $isSqlite ? "CAST(strftime('%Y', created_at) AS INTEGER)" : 'YEAR(created_at)';
+        $monthExpr = $isSqlite ? "CAST(strftime('%m', created_at) AS INTEGER)" : 'MONTH(created_at)';
+
         $data = Transaction::select(
-            DB::raw('YEAR(created_at) as year'),
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('SUM(CASE WHEN status = "success" THEN amount ELSE 0 END) as revenue')
+            DB::raw("$yearExpr as year"),
+            DB::raw("$monthExpr as month"),
+            DB::raw("SUM(CASE WHEN status = 'success' THEN amount ELSE 0 END) as revenue")
         )
             ->where('created_at', '>=', now()->subMonths(12))
             ->groupBy('year', 'month')
@@ -155,5 +185,21 @@ class DashboardService
             'performance_score' => $employee->performance_score,
             'pending_reports' => \App\Models\WorkReport::where('employee_id', $employeeId)->where('status', 'draft')->count(),
         ];
+    }
+
+    /**
+     * Net balance for an asset account from posted journal entry lines.
+     * Asset normal balance = Debit − Credit.
+     */
+    private function ledgerBalance(int $accountId): float
+    {
+        $result = DB::table('journal_entry_lines')
+            ->join('journal_entries', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
+            ->where('journal_entries.status', 'posted')
+            ->where('journal_entry_lines.account_id', $accountId)
+            ->selectRaw('COALESCE(SUM(debit), 0) - COALESCE(SUM(credit), 0) as balance')
+            ->value('balance');
+
+        return (float) ($result ?? 0);
     }
 }

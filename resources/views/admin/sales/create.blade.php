@@ -12,7 +12,7 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>Create Sales Invoice</h4>
-            <p>Issue a new sales invoice for milk, animal, feed or franchise royalty</p>
+            <p>Issue a new sales invoice</p>
         </div>
         <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-outline-secondary px-4">
             <i class="bi bi-arrow-left me-1"></i>Back to Sales
@@ -47,9 +47,10 @@
                     </div>
                 @endif
 
-                <form action="{{ route('admin.sales.store') }}" method="POST">
+                <form action="{{ route('admin.sales.store') }}" method="POST" id="saleForm">
                     @csrf
 
+                    {{-- A — Invoice Details --}}
                     <div class="mb-4">
                         <h6 class="form-section-label">A — Invoice Details</h6>
                         <div class="row g-3">
@@ -76,36 +77,81 @@
                                 @error('crm_customer_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-12">
-                                <label class="form-label fw-semibold">Sale Item Type <span class="text-danger">*</span></label>
-                                <select name="item_type" class="form-select @error('item_type') is-invalid @enderror" required>
-                                    @foreach(['Milk Sales','Animal Sales','Feed Sales','Dung Sales','Franchise Royalty'] as $t)
-                                        <option value="{{ $t }}" @selected(old('item_type')===$t)>{{ $t }}</option>
+                                <label class="form-label fw-semibold">Sale Item Type <span class="text-danger">*</span>
+                                    <a href="{{ route('admin.sales.item-types.index') }}" class="ms-2" style="font-size:.75rem;font-weight:400;" target="_blank">
+                                        <i class="bi bi-gear-fill me-1"></i>Manage Types
+                                    </a>
+                                </label>
+                                <select name="sale_item_type_id" id="saleItemType" class="form-select @error('sale_item_type_id') is-invalid @enderror" required>
+                                    <option value="">— Select Type —</option>
+                                    @foreach($itemTypes as $t)
+                                        <option value="{{ $t->id }}"
+                                            data-milk="{{ $t->is_milk_type ? 'true' : 'false' }}"
+                                            @selected(old('sale_item_type_id') == $t->id)>
+                                            {{ $t->name }}
+                                        </option>
                                     @endforeach
                                 </select>
-                                @error('item_type')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                @error('sale_item_type_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
 
                     <hr class="my-3 opacity-25">
 
+                    {{-- B — Pricing --}}
                     <div class="mb-4">
                         <h6 class="form-section-label">B — Pricing</h6>
                         <div class="row g-3">
+
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Quantity <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0.01" name="quantity"
+                                <label class="form-label fw-semibold">Quantity (Litres) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0.01" name="quantity" id="saleQty"
                                     class="form-control @error('quantity') is-invalid @enderror"
                                     placeholder="e.g. 100" value="{{ old('quantity') }}" required>
                                 @error('quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Rate (&#8377;) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" min="0.01" name="rate"
+
+                            {{-- Regular rate (non-milk) --}}
+                            <div class="col-md-6" id="rateRow">
+                                <label class="form-label fw-semibold">Rate (&#8377;/unit) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0.01" name="rate" id="saleRate"
                                     class="form-control @error('rate') is-invalid @enderror"
-                                    placeholder="e.g. 60" value="{{ old('rate') }}" required>
+                                    placeholder="e.g. 60" value="{{ old('rate') }}">
                                 @error('rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
+                            {{-- Milk-specific: Fat % --}}
+                            <div class="col-md-4 d-none" id="fatRow">
+                                <label class="form-label fw-semibold">
+                                    Fat % <span class="text-danger">*</span>
+                                    <span class="ms-1" style="font-size:.72rem;color:#6b7280;font-weight:400;">(e.g. 3.5)</span>
+                                </label>
+                                <input type="number" step="0.01" min="0.01" max="100" name="fat_percentage" id="saleFat"
+                                    class="form-control @error('fat_percentage') is-invalid @enderror"
+                                    placeholder="3.5" value="{{ old('fat_percentage') }}">
+                                @error('fat_percentage')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Milk-specific: Fat Rate --}}
+                            <div class="col-md-4 d-none" id="fatRateRow">
+                                <label class="form-label fw-semibold">
+                                    Fat Rate (&#8377;) <span class="text-danger">*</span>
+                                    <span class="ms-1" style="font-size:.72rem;color:#6b7280;font-weight:400;">(per fat point/L)</span>
+                                </label>
+                                <input type="number" step="0.01" min="0.01" name="fat_rate" id="saleFatRate"
+                                    class="form-control @error('fat_rate') is-invalid @enderror"
+                                    placeholder="10" value="{{ old('fat_rate') }}">
+                                @error('fat_rate')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Computed total (read-only preview) --}}
+                            <div class="col-md-4 d-none" id="milkTotalPreviewRow">
+                                <label class="form-label fw-semibold" style="color:#059669;">Calculated Amount</label>
+                                <div class="form-control" id="milkTotalPreview" style="background:#f0fdf4;color:#059669;font-weight:700;">—</div>
+                                <div style="font-size:.7rem;color:#6b7280;margin-top:3px;">Qty &times; Fat% &times; Fat Rate</div>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
                                 <select name="payment_status" class="form-select @error('payment_status') is-invalid @enderror">
@@ -115,6 +161,7 @@
                                 </select>
                                 @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+
                         </div>
                     </div>
 
@@ -129,5 +176,63 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const typeSelect    = document.getElementById('saleItemType');
+    const rateRow       = document.getElementById('rateRow');
+    const fatRow        = document.getElementById('fatRow');
+    const fatRateRow    = document.getElementById('fatRateRow');
+    const previewRow    = document.getElementById('milkTotalPreviewRow');
+    const previewEl     = document.getElementById('milkTotalPreview');
+    const qtyInput      = document.getElementById('saleQty');
+    const rateInput     = document.getElementById('saleRate');
+    const fatInput      = document.getElementById('saleFat');
+    const fatRateInput  = document.getElementById('saleFatRate');
+
+    function isMilk() {
+        const opt = typeSelect.options[typeSelect.selectedIndex];
+        return opt && opt.dataset.milk === 'true';
+    }
+
+    function toggleFields() {
+        const milk = isMilk();
+        rateRow.classList.toggle('d-none', milk);
+        fatRow.classList.toggle('d-none', !milk);
+        fatRateRow.classList.toggle('d-none', !milk);
+        previewRow.classList.toggle('d-none', !milk);
+
+        // Required attributes
+        rateInput.required   = !milk;
+        fatInput.required    = milk;
+        fatRateInput.required = milk;
+
+        if (!milk) {
+            fatInput.value    = '';
+            fatRateInput.value = '';
+        }
+        recalc();
+    }
+
+    function recalc() {
+        if (!isMilk()) return;
+        const qty     = parseFloat(qtyInput.value)     || 0;
+        const fat     = parseFloat(fatInput.value)     || 0;
+        const fatRate = parseFloat(fatRateInput.value) || 0;
+        const total   = qty * fat * fatRate;
+        previewEl.textContent = total > 0 ? '₹' + total.toFixed(2) : '—';
+    }
+
+    typeSelect.addEventListener('change', toggleFields);
+    qtyInput.addEventListener('input', recalc);
+    fatInput.addEventListener('input', recalc);
+    fatRateInput.addEventListener('input', recalc);
+
+    // On page load, run once (handles old() repopulation after validation error)
+    toggleFields();
+})();
+</script>
+@endpush
 
 @endsection

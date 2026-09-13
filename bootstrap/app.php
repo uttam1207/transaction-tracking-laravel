@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
             }
+            return redirect()->guest(route('login'));
         });
 
         $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, \Illuminate\Http\Request $request) {

@@ -4,7 +4,15 @@ namespace App\Console\Commands;
 
 use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
+use App\Models\PurchaseOrder;
+use App\Models\SalesOrder;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
+use App\Services\LedgerBalanceService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -133,30 +141,64 @@ class SetupAccounting extends Command
 
         $this->line("  Bank Account: #{$bankId}  |  Revenue: #{$revenueId}  |  Expense: #{$expenseId}");
 
-        // Assign accounts to unlinked success transactions
-        $creditTxns = Transaction::where('status', 'success')
-            ->where('type', 'credit')
-            ->whereNull('debit_account_id')
-            ->get();
+        // Load all relevant account IDs indexed by code
+        $accts = ChartOfAccount::whereIn('code', [
+            '1010','2000','2500','3000','3100','3200',
+            '4000','4900','5000','5100','5200','5950',
+        ])->pluck('id', 'code');
 
-        foreach ($creditTxns as $tx) {
-            Transaction::withoutEvents(function () use ($tx, $bankId, $revenueId) {
-                $tx->update(['debit_account_id' => $bankId, 'credit_account_id' => $revenueId]);
-            });
+        // Category-aware account mapping (debit_code, credit_code)
+        $categoryMap = [
+            ['type' => 'credit', 'category' => 'deposit',    'dr' => '1010', 'cr' => '4000'],
+            ['type' => 'credit', 'category' => 'investment',  'dr' => '1010', 'cr' => '3000'],
+            ['type' => 'credit', 'category' => 'loan',        'dr' => '1010', 'cr' => '2500'],
+            ['type' => 'credit', 'category' => 'refund',      'dr' => '1010', 'cr' => '5000'],
+            ['type' => 'credit', 'category' => 'transfer',    'dr' => '1010', 'cr' => '4900'],
+            ['type' => 'debit',  'category' => 'salary',      'dr' => '5100', 'cr' => '1010'],
+            ['type' => 'debit',  'category' => 'purchase',    'dr' => '5000', 'cr' => '1010'],
+            ['type' => 'debit',  'category' => 'payment',     'dr' => '2000', 'cr' => '1010'],
+            ['type' => 'debit',  'category' => 'withdrawal',  'dr' => '3200', 'cr' => '1010'],
+        ];
+
+        $assigned = 0;
+        foreach ($categoryMap as $map) {
+            $drId = $accts[$map['dr']] ?? null;
+            $crId = $accts[$map['cr']] ?? null;
+            if (! $drId || ! $crId) continue;
+
+            $txns = Transaction::where('status', 'success')
+                ->where('type', $map['type'])
+                ->where('category', $map['category'])
+                ->whereNull('debit_account_id')
+                ->get();
+
+            foreach ($txns as $tx) {
+                Transaction::withoutEvents(fn() =>
+                    $tx->update(['debit_account_id' => $drId, 'credit_account_id' => $crId])
+                );
+                $assigned++;
+            }
         }
-        $this->info("  Assigned accounts to {$creditTxns->count()} credit (income) transactions");
 
-        $debitTxns = Transaction::where('status', 'success')
-            ->where('type', 'debit')
-            ->whereNull('debit_account_id')
-            ->get();
-
-        foreach ($debitTxns as $tx) {
-            Transaction::withoutEvents(function () use ($tx, $expenseId, $bankId) {
-                $tx->update(['debit_account_id' => $expenseId, 'credit_account_id' => $bankId]);
-            });
+        // Fallback: remaining credit → Bank / Other Income
+        $fallbackTxns = Transaction::where('status', 'success')->where('type', 'credit')->whereNull('debit_account_id')->get();
+        foreach ($fallbackTxns as $tx) {
+            Transaction::withoutEvents(fn() =>
+                $tx->update(['debit_account_id' => $accts['1010'] ?? null, 'credit_account_id' => $accts['4900'] ?? null])
+            );
+            $assigned++;
         }
-        $this->info("  Assigned accounts to {$debitTxns->count()} debit (expense) transactions");
+
+        // Fallback: remaining debit → Misc Expense / Bank
+        $fallbackDebit = Transaction::where('status', 'success')->where('type', 'debit')->whereNull('debit_account_id')->get();
+        foreach ($fallbackDebit as $tx) {
+            Transaction::withoutEvents(fn() =>
+                $tx->update(['debit_account_id' => $accts['5950'] ?? null, 'credit_account_id' => $accts['1010'] ?? null])
+            );
+            $assigned++;
+        }
+
+        $this->info("  Assigned accounts to {$assigned} transactions (category-aware)");
 
         // Post directly — bypass the observer to avoid auth()->id() being null in CLI context
         $pending = Transaction::where('status', 'success')
@@ -240,15 +282,260 @@ class SetupAccounting extends Command
         $this->info('');
         $this->info("  Posted: {$posted}  |  Failed: {$failed}");
 
+        // ── 4. Post existing Sales Orders to ledger ──────────────────────
+        $this->info('');
+        $this->info('=== Backfilling Sales Orders → Ledger ===');
+
+        $accts = ChartOfAccount::whereIn('code', ['1010','1100','2000','4000','4010','4020','4100','4900','5000'])
+            ->pluck('id', 'code');
+
+        $pendingSales = SalesOrder::whereNull('journal_entry_id')->get();
+        $this->info("  Sales orders to post: {$pendingSales->count()}");
+        $salesPosted = 0;
+        $salesFailed = 0;
+
+        foreach ($pendingSales as $sale) {
+            try {
+                $amount = (float) $sale->total_amount;
+                if ($amount <= 0) { $salesFailed++; continue; }
+
+                $revenueCode = match (true) {
+                    stripos($sale->item_type, 'milk')      !== false => '4000',
+                    stripos($sale->item_type, 'animal')    !== false => '4010',
+                    stripos($sale->item_type, 'feed')      !== false => '4020',
+                    stripos($sale->item_type, 'franchise') !== false => '4100',
+                    default                                          => '4900',
+                };
+                $debitCode   = $sale->payment_status === 'Paid' ? '1010' : '1100';
+                $debitId     = $accts[$debitCode] ?? null;
+                $creditId    = $accts[$revenueCode] ?? null;
+                if (! $debitId || ! $creditId) { $salesFailed++; continue; }
+
+                $entryDate = $sale->sale_date->toDateString();
+                $periodId  = FinancialPeriod::where('start_date', '<=', $entryDate)
+                    ->where('end_date', '>=', $entryDate)
+                    ->whereIn('status', ['open', 'closed'])
+                    ->orderBy('start_date', 'desc')
+                    ->value('id');
+
+                if (! $periodId) { $salesFailed++; continue; }
+
+                DB::transaction(function () use ($sale, $entryDate, $periodId, $amount, $debitId, $creditId, $adminId, $ledger) {
+                    $entry = JournalEntry::create([
+                        'entry_number' => JournalEntry::generateNumber(),
+                        'period_id'    => $periodId,
+                        'entry_date'   => $entryDate,
+                        'reference'    => $sale->invoice_number,
+                        'type'         => $sale->payment_status === 'Paid' ? 'receipt' : 'general',
+                        'description'  => 'Sale Invoice: ' . $sale->invoice_number . ' — ' . $sale->item_type,
+                        'total_debit'  => $amount,
+                        'total_credit' => $amount,
+                        'status'       => 'posted',
+                        'created_by'   => $adminId,
+                        'posted_by'    => $adminId,
+                        'posted_at'    => now(),
+                    ]);
+                    JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $debitId,  'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
+                    JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $creditId, 'debit' => 0, 'credit' => $amount, 'description' => $sale->invoice_number]);
+                    SalesOrder::withoutEvents(fn() => $sale->update(['journal_entry_id' => $entry->id]));
+                    $ledger->updateAfterPost($entry->load('lines'));
+                });
+
+                $this->line("  <info>✓</info> {$sale->invoice_number}  →  JE posted  [{$entryDate}]");
+                $salesPosted++;
+            } catch (\Throwable $e) {
+                $this->error("  ✗ {$sale->invoice_number}: " . $e->getMessage());
+                $salesFailed++;
+            }
+        }
+        $this->info("  Posted: {$salesPosted}  |  Failed: {$salesFailed}");
+
+        // ── 5. Post existing Purchase Orders to ledger ───────────────────
+        $this->info('');
+        $this->info('=== Backfilling Purchase Orders → Ledger ===');
+
+        $pendingPos = PurchaseOrder::whereNull('journal_entry_id')
+            ->whereIn('status', ['Received', 'Paid'])
+            ->get();
+        $this->info("  Purchase orders to post: {$pendingPos->count()}");
+        $poPosted = 0;
+        $poFailed = 0;
+
+        foreach ($pendingPos as $po) {
+            try {
+                $amount = (float) $po->total_amount;
+                if ($amount <= 0) { $poFailed++; continue; }
+
+                $entryDate = $po->order_date->toDateString();
+                $periodId  = FinancialPeriod::where('start_date', '<=', $entryDate)
+                    ->where('end_date', '>=', $entryDate)
+                    ->whereIn('status', ['open', 'closed'])
+                    ->orderBy('start_date', 'desc')
+                    ->value('id');
+
+                if (! $periodId) { $poFailed++; continue; }
+
+                $cogsId = $accts['5000'] ?? null;
+                $apId   = $accts['2000'] ?? null;
+                $bankId = $accts['1010'] ?? null;
+                if (! $cogsId || ! $apId || ! $bankId) { $poFailed++; continue; }
+
+                $vendor = $po->vendor?->name ?? 'Vendor';
+
+                if ($po->status === 'Received') {
+                    // DR Purchases, CR AP
+                    DB::transaction(function () use ($po, $entryDate, $periodId, $amount, $cogsId, $apId, $adminId, $ledger, $vendor) {
+                        $entry = JournalEntry::create([
+                            'entry_number' => JournalEntry::generateNumber(), 'period_id' => $periodId,
+                            'entry_date' => $entryDate, 'reference' => $po->po_number, 'type' => 'purchase',
+                            'description' => "Goods Received: {$po->po_number} — {$vendor}",
+                            'total_debit' => $amount, 'total_credit' => $amount, 'status' => 'posted',
+                            'created_by' => $adminId, 'posted_by' => $adminId, 'posted_at' => now(),
+                        ]);
+                        JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cogsId, 'debit' => $amount, 'credit' => 0, 'description' => $po->po_number]);
+                        JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $apId,   'debit' => 0, 'credit' => $amount, 'description' => $po->po_number]);
+                        PurchaseOrder::withoutEvents(fn() => $po->update(['journal_entry_id' => $entry->id]));
+                        $ledger->updateAfterPost($entry->load('lines'));
+                    });
+                } else {
+                    // Paid: DR Purchases, CR Bank (direct purchase)
+                    DB::transaction(function () use ($po, $entryDate, $periodId, $amount, $cogsId, $bankId, $adminId, $ledger, $vendor) {
+                        $entry = JournalEntry::create([
+                            'entry_number' => JournalEntry::generateNumber(), 'period_id' => $periodId,
+                            'entry_date' => $entryDate, 'reference' => $po->po_number, 'type' => 'purchase',
+                            'description' => "Direct Purchase: {$po->po_number} — {$vendor}",
+                            'total_debit' => $amount, 'total_credit' => $amount, 'status' => 'posted',
+                            'created_by' => $adminId, 'posted_by' => $adminId, 'posted_at' => now(),
+                        ]);
+                        JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $cogsId, 'debit' => $amount, 'credit' => 0, 'description' => $po->po_number]);
+                        JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $bankId, 'debit' => 0, 'credit' => $amount, 'description' => $po->po_number]);
+                        PurchaseOrder::withoutEvents(fn() => $po->update(['journal_entry_id' => $entry->id]));
+                        $ledger->updateAfterPost($entry->load('lines'));
+                    });
+                }
+
+                $this->line("  <info>✓</info> {$po->po_number} ({$po->status})  →  JE posted  [{$entryDate}]");
+                $poPosted++;
+            } catch (\Throwable $e) {
+                $this->error("  ✗ {$po->po_number}: " . $e->getMessage());
+                $poFailed++;
+            }
+        }
+        $this->info("  Posted: {$poPosted}  |  Failed: {$poFailed}");
+
+        // ── 6. Sync Wallet Balance with Sales + POs ──────────────────────
+        $this->info('');
+        $this->info('=== Syncing Wallet Balance ===');
+
+        $wallet        = Wallet::company();
+        $walletSynced  = 0;
+        $walletSkipped = 0;
+
+        // Already-reflected references (by reference field in wallet_transactions)
+        $reflected = WalletTransaction::whereNotNull('reference')->pluck('reference')->flip();
+
+        // Sales invoices paid in cash — credit wallet
+        $paidSales = SalesOrder::where('payment_status', 'Paid')
+            ->whereNotNull('journal_entry_id')
+            ->get();
+
+        foreach ($paidSales as $sale) {
+            $ref = $sale->invoice_number;
+            if (isset($reflected[$ref])) { $walletSkipped++; continue; }
+            try {
+                $before = (float) $wallet->balance;
+                $after  = $before + (float) $sale->total_amount;
+                $wallet->transactions()->create([
+                    'type'           => 'credit',
+                    'amount'         => $sale->total_amount,
+                    'balance_before' => $before,
+                    'balance_after'  => $after,
+                    'description'    => 'Sale: ' . $ref,
+                    'reference'      => $ref,
+                    'performed_by'   => $adminId,
+                ]);
+                $wallet->update(['balance' => $after]);
+                $wallet->balance = $after;
+                $reflected->put($ref, true);
+                $walletSynced++;
+            } catch (\Throwable $e) {
+                $this->warn("  Wallet skip {$ref}: " . $e->getMessage());
+            }
+        }
+
+        // Payment-received invoices (Pending→Paid) — reference PMT-INV-xxx
+        // These are only future; existing paid sales covered above.
+
+        // POs paid directly or via vendor payment — debit wallet
+        $paidPos = PurchaseOrder::whereIn('status', ['Paid'])->whereNotNull('journal_entry_id')->get();
+
+        foreach ($paidPos as $po) {
+            $ref = $po->po_number; // direct purchase reference
+            if (isset($reflected[$ref])) { $walletSkipped++; continue; }
+            try {
+                $before = (float) $wallet->balance;
+                $after  = $before - (float) $po->total_amount;
+                $wallet->transactions()->create([
+                    'type'           => 'debit',
+                    'amount'         => $po->total_amount,
+                    'balance_before' => $before,
+                    'balance_after'  => $after,
+                    'description'    => 'Direct Purchase: ' . $po->po_number,
+                    'reference'      => $ref,
+                    'performed_by'   => $adminId,
+                ]);
+                $wallet->update(['balance' => $after]);
+                $wallet->balance = $after;
+                $reflected->put($ref, true);
+                $walletSynced++;
+            } catch (\Throwable $e) {
+                $this->warn("  Wallet skip {$po->po_number}: " . $e->getMessage());
+            }
+        }
+
+        // POs that were Received then had separate payment JE
+        $paymentPos = PurchaseOrder::where('status', 'Paid')
+            ->whereNotNull('payment_journal_entry_id')
+            ->get();
+
+        foreach ($paymentPos as $po) {
+            $ref = 'PAY-' . $po->po_number;
+            if (isset($reflected[$ref])) { $walletSkipped++; continue; }
+            try {
+                $before = (float) $wallet->balance;
+                $after  = $before - (float) $po->total_amount;
+                $wallet->transactions()->create([
+                    'type'           => 'debit',
+                    'amount'         => $po->total_amount,
+                    'balance_before' => $before,
+                    'balance_after'  => $after,
+                    'description'    => 'Vendor Payment: ' . $po->po_number,
+                    'reference'      => $ref,
+                    'performed_by'   => $adminId,
+                ]);
+                $wallet->update(['balance' => $after]);
+                $wallet->balance = $after;
+                $reflected->put($ref, true);
+                $walletSynced++;
+            } catch (\Throwable $e) {
+                $this->warn("  Wallet skip PAY-{$po->po_number}: " . $e->getMessage());
+            }
+        }
+
+        $wallet->refresh();
+        $this->info("  Synced: {$walletSynced}  |  Already reflected: {$walletSkipped}");
+        $this->info("  Wallet Balance after sync: ₹" . number_format($wallet->balance, 2));
+
         // ── Summary ──────────────────────────────────────────────────────
         $this->info('');
         $this->info('=== Summary ===');
         $this->info('  Chart of Accounts : ' . ChartOfAccount::count() . ' accounts');
         $this->info('  Financial Periods : ' . FinancialPeriod::count() . ' periods');
-        $this->info('  Journal Entries   : ' . \App\Models\JournalEntry::count() . ' entries');
-        $this->info('  Journal Lines     : ' . \App\Models\JournalEntryLine::count() . ' lines');
+        $this->info('  Journal Entries   : ' . JournalEntry::count() . ' entries');
+        $this->info('  Journal Lines     : ' . JournalEntryLine::count() . ' lines');
+        $this->info('  Wallet Balance    : ₹' . number_format(Wallet::company()->balance, 2));
         $this->info('');
-        $this->info('Balance Sheet and P&L reports are now ready.');
+        $this->info('Balance Sheet, P&L, Ledger, and Wallet are now in sync.');
 
         return self::SUCCESS;
     }

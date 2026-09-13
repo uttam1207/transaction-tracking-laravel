@@ -13,9 +13,22 @@
             <h4>Sales & Invoicing</h4>
             <p>Milk Sales, Animal Sales, Feed Sales, Online Orders, Invoices & Outstanding Payments</p>
         </div>
-        <a href="{{ route('admin.sales.create') }}" class="btn btn-primary-grad btn-sm px-4">
-            <i class="bi bi-plus-lg me-1"></i>Create Invoice
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.sales', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','payment_status','item_type'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.sales', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','payment_status','item_type'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
+            <a href="{{ route('admin.sales.item-types.index') }}" class="btn btn-sm btn-outline-secondary px-3">
+                <i class="bi bi-gear me-1"></i>Item Types
+            </a>
+            <a href="{{ route('admin.sales.create') }}" class="btn btn-primary-grad btn-sm px-4">
+                <i class="bi bi-plus-lg me-1"></i>Create Invoice
+            </a>
+        </div>
     </div>
 </div>
 
@@ -72,8 +85,8 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Item Type</label>
             <select name="item_type" class="form-select" onchange="this.form.submit()">
                 <option value="">All Types</option>
-                @foreach(['Milk Sales','Animal Sales','Feed Sales','Dung Sales','Franchise Royalty'] as $t)
-                    <option value="{{ $t }}" @selected(request('item_type')===$t)>{{ $t }}</option>
+                @foreach($itemTypes as $t)
+                    <option value="{{ $t->name }}" @selected(request('item_type')===$t->name)>{{ $t->name }}</option>
                 @endforeach
             </select>
         </div>

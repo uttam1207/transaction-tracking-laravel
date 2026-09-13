@@ -34,9 +34,19 @@
                 <div class="l">Total Records</div>
             </div>
         </div>
-        <a href="{{ route('admin.expenses.create') }}" class="btn btn-sm btn-primary-grad px-4" style="border-radius:9px;">
-            <i class="bi bi-plus-lg me-1"></i>Add Expense
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.expenses', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','status','category_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.expenses', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','status','category_id'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
+            <a href="{{ route('admin.expenses.create') }}" class="btn btn-sm btn-primary-grad px-4" style="border-radius:9px;">
+                <i class="bi bi-plus-lg me-1"></i>Add Expense
+            </a>
+        </div>
     </div>
 </div>
 

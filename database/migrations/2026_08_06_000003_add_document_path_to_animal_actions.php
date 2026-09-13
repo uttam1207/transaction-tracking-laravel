@@ -10,7 +10,10 @@ return new class extends Migration
     public function up(): void
     {
         // Change action_type column from ENUM to VARCHAR so it can hold any ActionType name
-        DB::statement("ALTER TABLE animal_actions MODIFY COLUMN action_type VARCHAR(100) NOT NULL");
+        // SQLite already stores columns as TEXT; MODIFY COLUMN is MySQL-only
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE animal_actions MODIFY COLUMN action_type VARCHAR(100) NOT NULL");
+        }
 
         Schema::table('animal_actions', function (Blueprint $table) {
             $table->string('document_path')->nullable()->after('notes')
@@ -24,10 +27,11 @@ return new class extends Migration
             $table->dropColumn('document_path');
         });
 
-        // Restore the original ENUM — values that no longer match will need manual cleanup
-        DB::statement("ALTER TABLE animal_actions MODIFY COLUMN action_type ENUM(
-            'Vaccination','Deworming','Heat Detection','AI',
-            'Pregnancy Check','Calving','Dry Off','Sale','Death'
-        ) NOT NULL");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE animal_actions MODIFY COLUMN action_type ENUM(
+                'Vaccination','Deworming','Heat Detection','AI',
+                'Pregnancy Check','Calving','Dry Off','Sale','Death'
+            ) NOT NULL");
+        }
     }
 };

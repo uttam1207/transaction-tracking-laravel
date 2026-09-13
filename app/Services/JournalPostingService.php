@@ -9,6 +9,8 @@ use App\Models\FinancialPeriod;
 use App\Models\FixedAsset;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\User;
+use App\Services\LedgerBalanceService;
 use Illuminate\Support\Facades\DB;
 
 class JournalPostingService
@@ -177,6 +179,75 @@ class JournalPostingService
             ]);
 
             if ($period) $this->ledger->updateAfterPost($entry->load('lines'));
+
+            return $entry;
+        });
+    }
+
+    // ── Generic double-entry post ─────────────────────────────────────────────
+
+    /**
+     * Post a balanced journal entry with explicit debit/credit accounts.
+     * Returns null when no financial period covers the given date.
+     */
+    public function postEntry(
+        string $reference,
+        string $description,
+        float  $amount,
+        int    $debitAccountId,
+        int    $creditAccountId,
+        string $entryDate,
+        string $type = 'general'
+    ): ?JournalEntry {
+        if ($amount <= 0) return null;
+
+        $period = FinancialPeriod::where('start_date', '<=', $entryDate)
+            ->where('end_date', '>=', $entryDate)
+            ->whereIn('status', ['open', 'closed'])
+            ->orderBy('start_date', 'desc')
+            ->first();
+
+        if (! $period) return null;
+
+        $userId = auth()->id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1;
+
+        return DB::transaction(function () use (
+            $reference, $description, $amount,
+            $debitAccountId, $creditAccountId,
+            $entryDate, $type, $period, $userId
+        ) {
+            $entry = JournalEntry::create([
+                'entry_number' => JournalEntry::generateNumber(),
+                'period_id'    => $period->id,
+                'entry_date'   => $entryDate,
+                'reference'    => $reference,
+                'type'         => $type,
+                'description'  => $description,
+                'total_debit'  => $amount,
+                'total_credit' => $amount,
+                'status'       => 'posted',
+                'created_by'   => $userId,
+                'posted_by'    => $userId,
+                'posted_at'    => now(),
+            ]);
+
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $debitAccountId,
+                'debit'            => $amount,
+                'credit'           => 0,
+                'description'      => $description,
+            ]);
+
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $creditAccountId,
+                'debit'            => 0,
+                'credit'           => $amount,
+                'description'      => $description,
+            ]);
+
+            $this->ledger->updateAfterPost($entry->load('lines'));
 
             return $entry;
         });

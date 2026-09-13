@@ -104,6 +104,7 @@ class MilkController extends Controller
             'entry_type'       => 'required|in:per_animal,per_shed,entire_farm',
             'quantity_liters'  => 'required|numeric|min:0.1',
             'fat_percentage'   => 'required|numeric|min:1|max:15',
+            'fat_rate'         => 'nullable|numeric|min:0',
             'snf_percentage'   => 'required|numeric|min:1|max:15',
             'clr_value'        => 'nullable|numeric|min:0|max:50',
             'quality_rating'   => 'required|string',
@@ -123,6 +124,13 @@ class MilkController extends Controller
 
         $validated = $request->validate($rules);
         $validated['recorded_by'] = auth()->id();
+
+        // Calculate milk_amount when fat_rate is provided
+        $fatRate = isset($validated['fat_rate']) && $validated['fat_rate'] > 0
+            ? (float) $validated['fat_rate'] : null;
+        $validated['milk_amount'] = $fatRate
+            ? round((float) $validated['quantity_liters'] * (float) $validated['fat_percentage'] * $fatRate, 2)
+            : null;
 
         // Clear irrelevant fields
         if ($entryType !== 'per_animal') {
@@ -164,6 +172,7 @@ class MilkController extends Controller
             'entry_type'      => 'required|in:per_animal,per_shed,entire_farm',
             'quantity_liters' => 'required|numeric|min:0.1',
             'fat_percentage'  => 'required|numeric|min:1|max:15',
+            'fat_rate'        => 'nullable|numeric|min:0',
             'snf_percentage'  => 'required|numeric|min:1|max:15',
             'clr_value'       => 'nullable|numeric|min:0|max:50',
             'quality_rating'  => 'required|string',
@@ -182,6 +191,13 @@ class MilkController extends Controller
         }
 
         $validated = $request->validate($rules);
+
+        // Recalculate milk_amount
+        $fatRate = isset($validated['fat_rate']) && $validated['fat_rate'] > 0
+            ? (float) $validated['fat_rate'] : null;
+        $validated['milk_amount'] = $fatRate
+            ? round((float) $validated['quantity_liters'] * (float) $validated['fat_percentage'] * $fatRate, 2)
+            : null;
 
         if ($entryType !== 'per_animal') {
             $validated['animal_id'] = null;

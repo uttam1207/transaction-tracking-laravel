@@ -100,6 +100,35 @@
                             <div class="fw-bold" style="color:#1f2937;font-size:1rem;">{{ number_format($salesOrder->quantity,2) }}</div>
                         </div>
                     </div>
+                    @if($salesOrder->fat_percentage)
+                    {{-- Milk-type sale: show Fat %, Fat Rate, Effective Rate, Total --}}
+                    <div class="col-sm-3">
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-droplet-half me-1"></i>Fat %</div>
+                            <div class="fw-bold" style="color:#1f2937;">{{ number_format($salesOrder->fat_percentage,2) }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-tag me-1"></i>Fat Rate (&#8377;)</div>
+                            <div class="fw-bold" style="color:#1f2937;">&#8377;{{ number_format($salesOrder->fat_rate,2) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-calculator me-1"></i>Eff. Rate (&#8377;/L)</div>
+                            <div class="fw-bold" style="color:#1f2937;">&#8377;{{ number_format($salesOrder->rate,2) }}</div>
+                            <div style="font-size:.68rem;color:#9ca3af;margin-top:2px;">Fat% &times; Fat Rate</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-3">
+                        <div style="background:#ecfdf5;border-radius:10px;padding:14px 16px;border:1px solid #d1fae5;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-currency-rupee me-1"></i>Total Amount</div>
+                            <div class="fw-bold" style="color:#059669;font-size:1.1rem;">&#8377;{{ number_format($salesOrder->total_amount,2) }}</div>
+                        </div>
+                    </div>
+                    @else
+                    {{-- Non-milk sale --}}
                     <div class="col-sm-4">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-tag me-1"></i>Rate</div>
@@ -112,6 +141,7 @@
                             <div class="fw-bold" style="color:#059669;font-size:1.1rem;">&#8377;{{ number_format($salesOrder->total_amount,2) }}</div>
                         </div>
                     </div>
+                    @endif
                     <div class="col-sm-4">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-clock me-1"></i>Created At</div>

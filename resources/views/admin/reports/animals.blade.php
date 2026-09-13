@@ -15,7 +15,13 @@
             <h4 style="color:#fff;">Animal & Population Report</h4>
             <p style="color:rgba(255,255,255,.75);">Herd breakdown by type, reproductive status, health, lactation cycle</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.animals', 'excel') }}" class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.animals', 'pdf') }}" class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
             <a href="{{ route('admin.animals.index') }}" class="btn btn-sm btn-light px-3">
                 <i class="bi bi-plus-lg me-1"></i>Manage Herd
             </a>

@@ -7,6 +7,8 @@ use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\PurchaseOrder;
+use App\Models\SalesOrder;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use App\Services\LedgerBalanceService;
@@ -335,17 +337,20 @@ class FinanceController extends Controller
 
     public function generalLedger(Request $request)
     {
-        $accounts = ChartOfAccount::active()->orderBy('code')->get();
-        $accountId = $request->account_id;
+        $accounts  = ChartOfAccount::active()->orderBy('code')->get();
         $dateFrom  = $request->date_from;
         $dateTo    = $request->date_to;
 
-        $data = null;
+        // Default to Bank Account (1010) if no account selected
+        $accountId = $request->account_id
+            ?? ChartOfAccount::where('code', '1010')->value('id');
+
         $selectedAccount = null;
+        $data            = null;
 
         if ($accountId) {
             $selectedAccount = ChartOfAccount::find($accountId);
-            $data = $this->ledger->generalLedger((int) $accountId, $dateFrom, $dateTo);
+            $data            = $this->ledger->generalLedger((int) $accountId, $dateFrom, $dateTo);
         }
 
         return view('admin.finance.reports.general-ledger', compact(
@@ -427,5 +432,71 @@ class FinanceController extends Controller
             'count'   => $synced,
             'errors'  => $errors,
         ]);
+    }
+
+    // ── Business Ledgers (Bank / Sales AR / Purchase AP) ─────────────────────
+
+    /**
+     * Three-in-one ledger hub:
+     *   Tab "bank"     — Bank Book (GL for account 1010)
+     *   Tab "sales"    — Sales / Accounts-Receivable Ledger + customer-wise AR
+     *   Tab "purchase" — Purchase / Accounts-Payable Ledger + vendor-wise AP
+     */
+    public function ledgers(Request $request)
+    {
+        $tab      = $request->tab ?? 'bank';
+        $dateFrom = $request->date_from;
+        $dateTo   = $request->date_to;
+
+        // ── Bank Book ────────────────────────────────────────────────────
+        $bankAccount = ChartOfAccount::where('code', '1010')->first();
+        $bankData    = $bankAccount
+            ? $this->ledger->generalLedger($bankAccount->id, $dateFrom ?: null, $dateTo ?: null)
+            : ['account' => null, 'rows' => [], 'closing_balance' => 0];
+
+        // ── Sales / AR Ledger ────────────────────────────────────────────
+        $arAccount = ChartOfAccount::where('code', '1100')->first();
+        $arData    = $arAccount
+            ? $this->ledger->generalLedger($arAccount->id, $dateFrom ?: null, $dateTo ?: null)
+            : ['account' => null, 'rows' => [], 'closing_balance' => 0];
+
+        // Customer-wise outstanding AR (unpaid/partial invoices)
+        $customerAR = SalesOrder::with('customer')
+            ->whereIn('payment_status', ['Pending', 'Partial'])
+            ->selectRaw('crm_customer_id, SUM(total_amount) as outstanding, COUNT(*) as invoice_count')
+            ->groupBy('crm_customer_id')
+            ->get();
+
+        // Recent sales invoices
+        $salesQuery = SalesOrder::with('customer', 'saleItemType')->latest('sale_date');
+        if ($dateFrom) $salesQuery->whereDate('sale_date', '>=', $dateFrom);
+        if ($dateTo)   $salesQuery->whereDate('sale_date', '<=', $dateTo);
+        $salesOrders = $salesQuery->paginate(25, ['*'], 'sales_page')->withQueryString();
+
+        // ── Purchase / AP Ledger ─────────────────────────────────────────
+        $apAccount = ChartOfAccount::where('code', '2000')->first();
+        $apData    = $apAccount
+            ? $this->ledger->generalLedger($apAccount->id, $dateFrom ?: null, $dateTo ?: null)
+            : ['account' => null, 'rows' => [], 'closing_balance' => 0];
+
+        // Vendor-wise outstanding AP (received but not yet paid)
+        $vendorAP = PurchaseOrder::with('vendor')
+            ->where('status', 'Received')
+            ->selectRaw('vendor_id, SUM(total_amount) as outstanding, COUNT(*) as po_count')
+            ->groupBy('vendor_id')
+            ->get();
+
+        // Recent purchase orders
+        $poQuery = PurchaseOrder::with('vendor')->latest('order_date');
+        if ($dateFrom) $poQuery->whereDate('order_date', '>=', $dateFrom);
+        if ($dateTo)   $poQuery->whereDate('order_date', '<=', $dateTo);
+        $purchaseOrders = $poQuery->paginate(25, ['*'], 'po_page')->withQueryString();
+
+        return view('admin.finance.ledgers.index', compact(
+            'tab', 'dateFrom', 'dateTo',
+            'bankAccount', 'bankData',
+            'arAccount', 'arData', 'salesOrders', 'customerAR',
+            'apAccount', 'apData', 'purchaseOrders', 'vendorAP'
+        ));
     }
 }

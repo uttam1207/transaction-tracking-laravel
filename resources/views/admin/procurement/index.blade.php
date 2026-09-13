@@ -13,9 +13,19 @@
             <h4>Procurement & Vendor Management</h4>
             <p>Purchase orders (PO), vendor management, quotations, GRN, bills & payments</p>
         </div>
-        <a href="{{ route('admin.procurement.create') }}" class="btn btn-primary-grad btn-sm px-4">
-            <i class="bi bi-plus-lg me-1"></i>Create PO
-        </a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.procurement', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','status'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.procurement', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','status'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
+            <a href="{{ route('admin.procurement.create') }}" class="btn btn-primary-grad btn-sm px-4">
+                <i class="bi bi-plus-lg me-1"></i>Create PO
+            </a>
+        </div>
     </div>
 </div>
 

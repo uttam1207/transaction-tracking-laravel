@@ -10,7 +10,10 @@ return new class extends Migration
     public function up(): void
     {
         // Change category from ENUM to VARCHAR(100) so it can be admin-managed
-        DB::statement("ALTER TABLE inventory_items MODIFY COLUMN category VARCHAR(100) NOT NULL DEFAULT 'Feed'");
+        // SQLite stores TEXT natively; MODIFY COLUMN is MySQL-only
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE inventory_items MODIFY COLUMN category VARCHAR(100) NOT NULL DEFAULT 'Feed'");
+        }
 
         // Add item_type column for sub-classification
         Schema::table('inventory_items', function (Blueprint $table) {
@@ -24,8 +27,10 @@ return new class extends Migration
             $table->dropColumn('item_type');
         });
 
-        DB::statement("ALTER TABLE inventory_items MODIFY COLUMN category
-            ENUM('Medicine','Feed','Equipment','Consumables','Stationery','Uniforms','Cleaning Material','Miscellaneous')
-            NOT NULL DEFAULT 'Feed'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE inventory_items MODIFY COLUMN category
+                ENUM('Medicine','Feed','Equipment','Consumables','Stationery','Uniforms','Cleaning Material','Miscellaneous')
+                NOT NULL DEFAULT 'Feed'");
+        }
     }
 };

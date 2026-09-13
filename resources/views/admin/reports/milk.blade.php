@@ -16,6 +16,14 @@
             <p style="color:rgba(255,255,255,.75);">Shift-wise yield, fat/SNF analysis, rejection tracking</p>
         </div>
         <div class="d-flex gap-2 flex-wrap">
+            <a href="{{ route('admin.export.milk', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','shift'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-excel me-1"></i>Excel
+            </a>
+            <a href="{{ route('admin.export.milk', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','shift'])) }}"
+               class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
             <a href="{{ route('admin.reports.center') }}" class="btn btn-sm btn-light px-3">
                 <i class="bi bi-grid-3x3-gap me-1"></i>All Reports
             </a>

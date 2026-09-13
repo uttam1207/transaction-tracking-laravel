@@ -84,9 +84,12 @@ class DashboardController extends Controller
             ->get();
 
         // ── ASDairy: Monthly Revenue vs Expenses (last 6 months) ──
+        $isSqlite    = DB::connection()->getDriverName() === 'sqlite';
+        $yrExpr      = $isSqlite ? "CAST(strftime('%Y', expense_date) AS INTEGER)" : 'YEAR(expense_date)';
+        $moExpr      = $isSqlite ? "CAST(strftime('%m', expense_date) AS INTEGER)" : 'MONTH(expense_date)';
         $monthlyExpenses = Expense::select(
-                DB::raw('YEAR(expense_date) as yr'),
-                DB::raw('MONTH(expense_date) as mo'),
+                DB::raw("$yrExpr as yr"),
+                DB::raw("$moExpr as mo"),
                 DB::raw('SUM(amount) as total')
             )
             ->where('expense_date', '>=', now()->subMonths(5)->startOfMonth())

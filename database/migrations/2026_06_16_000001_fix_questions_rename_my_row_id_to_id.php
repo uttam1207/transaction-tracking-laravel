@@ -21,7 +21,9 @@ return new class extends Migration
                 'views', 'created_at', 'updated_at', 'deleted_at',
             ]);
 
-            DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            if (DB::connection()->getDriverName() === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+            }
             Schema::dropIfExists('answers');
             Schema::dropIfExists('questions');
 
@@ -37,7 +39,9 @@ return new class extends Migration
                 $table->softDeletes();
             });
 
-            DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+            if (DB::connection()->getDriverName() === 'mysql') {
+                DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+            }
 
             foreach ($existing as $q) {
                 DB::table('questions')->insert((array) $q);

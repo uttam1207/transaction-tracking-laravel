@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('phone')->nullable()->after('email');
             $table->string('avatar')->nullable()->after('phone');
             $table->enum('status', ['active', 'inactive', 'suspended', 'pending'])->default('pending')->after('avatar');
-            $table->enum('role', ['super_admin', 'admin', 'manager', 'employee', 'auditor', 'viewer'])->default('employee')->after('status');
+            $table->string('role', 50)->default('employee')->after('status');
             $table->unsignedBigInteger('department_id')->nullable()->after('role');
             $table->string('timezone')->default('UTC')->after('department_id');
             $table->string('language')->default('en')->after('timezone');

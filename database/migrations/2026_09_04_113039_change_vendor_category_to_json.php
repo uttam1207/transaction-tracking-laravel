@@ -19,14 +19,17 @@ return new class extends Migration
             }
         });
 
-        // Step 2 — change the column type to JSON
-        DB::statement('ALTER TABLE vendors MODIFY COLUMN category JSON NULL');
+        // Step 2 — change the column type to JSON (MySQL only; SQLite stores JSON as TEXT)
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE vendors MODIFY COLUMN category JSON NULL');
+        }
     }
 
     public function down(): void
     {
-        // Revert: change back to VARCHAR and collapse array to first element
-        DB::statement('ALTER TABLE vendors MODIFY COLUMN category VARCHAR(80) NULL');
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE vendors MODIFY COLUMN category VARCHAR(80) NULL');
+        }
 
         DB::table('vendors')->whereNotNull('category')->get()->each(function ($vendor) {
             $arr = json_decode($vendor->category, true);

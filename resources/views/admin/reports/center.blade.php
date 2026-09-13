@@ -32,9 +32,17 @@
                     <div class="text-muted" style="font-size:.72rem;">Shift-wise yield, fat/SNF, rejection</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.milk') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.milk') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.milk', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.milk', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -49,9 +57,17 @@
                     <div class="text-muted" style="font-size:.72rem;">Herd breakdown, health, lactation</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.animals') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.animals') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.animals', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.animals', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -66,9 +82,17 @@
                     <div class="text-muted" style="font-size:.72rem;">Daily/weekly/monthly needs vs stock</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.feed') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.feed') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.feed', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.feed', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -83,9 +107,17 @@
                     <div class="text-muted" style="font-size:.72rem;">AI success rate, expected calving</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.breeding') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.breeding') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.breeding', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.breeding', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -100,9 +132,17 @@
                     <div class="text-muted" style="font-size:.72rem;">Vaccination, treatment, disease</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.health') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.health') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.health', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.health', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -119,9 +159,14 @@
             </div>
             <div class="d-flex gap-2 mt-auto">
                 <a href="{{ route('admin.reports.inventory') }}" class="btn btn-sm btn-primary-grad flex-fill">
-                    <i class="bi bi-arrow-right me-1"></i>Open
+                    <i class="bi bi-eye me-1"></i>View
                 </a>
-                <a href="{{ route('admin.stock.export.excel') }}" class="btn btn-sm btn-outline-success" style="min-width:50px;text-align:center;">Excel</a>
+                <a href="{{ route('admin.stock.export.excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.stock.export.pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -143,8 +188,15 @@
                 </div>
             </div>
             <div class="d-flex gap-2 mt-auto">
-                <a href="{{ route('admin.expenses.export.pdf') }}" class="btn btn-sm btn-outline-secondary flex-fill">PDF</a>
-                <a href="{{ route('admin.expenses.export.excel') }}" class="btn btn-sm btn-outline-success flex-fill">Excel</a>
+                <a href="{{ route('admin.expenses.index') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.expenses', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.expenses', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -156,15 +208,95 @@
                     <i class="bi bi-graph-up-arrow" style="font-size:1.2rem;color:#fff;"></i>
                 </div>
                 <div>
-                    <div class="fw-bold" style="font-size:.88rem;">Financial P&L Summary</div>
+                    <div class="fw-bold" style="font-size:.88rem;">Profit & Loss</div>
                     <div class="text-muted" style="font-size:.72rem;">Revenue vs expenses</div>
                 </div>
             </div>
             <div class="d-flex gap-2 mt-auto">
-                <a href="{{ route('admin.reports.profitability') }}" class="btn btn-sm btn-primary-grad flex-fill">
-                    <i class="bi bi-arrow-right me-1"></i>P&L Report
+                <a href="{{ route('admin.finance.reports.profit-loss') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
                 </a>
-                <a href="{{ route('admin.reports.financial-summary') }}" class="btn btn-sm btn-outline-secondary" style="min-width:70px;text-align:center;">Transactions</a>
+                <a href="{{ route('admin.export.profit-loss', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.profit-loss', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#9333ea);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-calculator-fill" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">Trial Balance</div>
+                    <div class="text-muted" style="font-size:.72rem;">Debit & credit totals</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.finance.reports.trial-balance') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.trial-balance', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.trial-balance', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#1e40af,#3b82f6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-journal-bookmark-fill" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">Balance Sheet</div>
+                    <div class="text-muted" style="font-size:.72rem;">Assets, liabilities & equity</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.finance.reports.balance-sheet') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.balance-sheet', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.balance-sheet', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#0d9488,#2dd4bf);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-book-fill" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">General Ledger</div>
+                    <div class="text-muted" style="font-size:.72rem;">Account-wise transaction history</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.finance.reports.general-ledger') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.general-ledger', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.general-ledger', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
             </div>
         </div>
     </div>
@@ -180,9 +312,17 @@
                     <div class="text-muted" style="font-size:.72rem;">Milk sales, animal sales</div>
                 </div>
             </div>
-            <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-outline-secondary mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>View Sales
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.sales', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.sales', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -197,8 +337,83 @@
                     <div class="text-muted" style="font-size:.72rem;">Purchase orders, vendors</div>
                 </div>
             </div>
-            <a href="{{ route('admin.procurement.index') }}" class="btn btn-sm btn-outline-secondary mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>View Procurement
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.procurement.index') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.procurement', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.procurement', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#4f46e5,#818cf8);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-arrow-left-right" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">Transactions</div>
+                    <div class="text-muted" style="font-size:.72rem;">All financial transactions</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.transactions.index') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.transactions', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.transactions', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#9333ea);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-journal-text" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">Journal Entries</div>
+                    <div class="text-muted" style="font-size:.72rem;">Double-entry accounting</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.finance.journal.index') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-eye me-1"></i>View
+                </a>
+                <a href="{{ route('admin.export.journal-entries', 'excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+                <a href="{{ route('admin.export.journal-entries', 'pdf') }}" class="btn btn-sm btn-outline-secondary" title="PDF">
+                    <i class="bi bi-file-earmark-pdf"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 col-lg-3">
+        <div class="card-glass p-4 h-100 d-flex flex-column">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="bi bi-graph-up-arrow" style="font-size:1.2rem;color:#fff;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:.88rem;">Profitability Report</div>
+                    <div class="text-muted" style="font-size:.72rem;">Revenue vs costs, P&L trend</div>
+                </div>
+            </div>
+            <a href="{{ route('admin.reports.profitability') }}" class="btn btn-sm btn-primary-grad mt-auto">
+                <i class="bi bi-arrow-right me-1"></i>Open Report
             </a>
         </div>
     </div>
@@ -218,9 +433,14 @@
                     <div class="text-muted" style="font-size:.72rem;">Staff list, performance</div>
                 </div>
             </div>
-            <a href="{{ route('admin.reports.employees') }}" class="btn btn-sm btn-primary-grad mt-auto">
-                <i class="bi bi-arrow-right me-1"></i>Open Report
-            </a>
+            <div class="d-flex gap-2 mt-auto">
+                <a href="{{ route('admin.reports.employees') }}" class="btn btn-sm btn-primary-grad flex-fill">
+                    <i class="bi bi-arrow-right me-1"></i>Open
+                </a>
+                <a href="{{ route('admin.employees.export.excel') }}" class="btn btn-sm btn-outline-success" title="Excel">
+                    <i class="bi bi-file-earmark-excel"></i>
+                </a>
+            </div>
         </div>
     </div>
     <div class="col-md-4 col-lg-3">

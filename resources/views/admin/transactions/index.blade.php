@@ -200,7 +200,7 @@
             <h4 class="mb-1 fw-800" style="font-weight:800; letter-spacing:-.4px;">Transactions</h4>
             <p class="mb-0" style="opacity:.7; font-size:.85rem;">Monitor, filter and manage all financial transactions</p>
         </div>
-        <div class="d-flex align-items-center gap-4">
+        <div class="d-flex align-items-center gap-4 flex-wrap">
             @foreach(['total'=>['Total','bi-arrow-left-right'],'success'=>['Success','bi-check-circle'],'failed'=>['Failed','bi-x-circle'],'flagged'=>['Flagged','bi-flag-fill']] as $k=>$v)
             <div class="hero-stat">
                 <div class="val">{{ number_format($summary[$k]) }}</div>
@@ -208,6 +208,17 @@
             </div>
             @if(!$loop->last)<div class="hero-divider"></div>@endif
             @endforeach
+            <div class="hero-divider"></div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('admin.export.transactions', 'excel') }}?{{ http_build_query(request()->only(['date_from','date_to','type','status','category'])) }}"
+                   class="btn btn-sm btn-outline-light px-3">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Excel
+                </a>
+                <a href="{{ route('admin.export.transactions', 'pdf') }}?{{ http_build_query(request()->only(['date_from','date_to','type','status','category'])) }}"
+                   class="btn btn-sm btn-outline-light px-3">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                </a>
+            </div>
         </div>
     </div>
 </div>

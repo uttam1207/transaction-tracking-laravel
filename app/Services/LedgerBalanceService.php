@@ -158,7 +158,7 @@ class LedgerBalanceService
             $rows[] = [
                 'date'         => $line->journalEntry->entry_date,
                 'entry_number' => $line->journalEntry->entry_number,
-                'description'  => $line->description ?: $line->journalEntry->description,
+                'description'  => $line->journalEntry->description ?: $line->description,
                 'debit'        => $debit,
                 'credit'       => $credit,
                 'balance'      => $balance,
@@ -193,11 +193,15 @@ class LedgerBalanceService
         $liabilities = $this->sumByType('liability', $periodId);
         $equity      = $this->sumByType('equity',    $periodId);
 
+        // Current-period net income is part of equity (retained earnings not yet closed)
+        $plData    = $this->profitAndLoss($periodId);
+        $netIncome = $plData['netIncome'];
+
         $totalAssets      = $assets->sum('net');
         $totalLiabilities = $liabilities->sum('net');
-        $totalEquity      = $equity->sum('net');
+        $totalEquity      = $equity->sum('net') + $netIncome;
 
-        return compact('assets', 'liabilities', 'equity', 'totalAssets', 'totalLiabilities', 'totalEquity');
+        return compact('assets', 'liabilities', 'equity', 'totalAssets', 'totalLiabilities', 'totalEquity', 'netIncome');
     }
 
     /**

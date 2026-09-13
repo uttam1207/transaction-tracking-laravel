@@ -26,9 +26,10 @@ return new class extends Migration
         });
 
         // Migrate existing department_id data into employee_departments
+        // Use CURRENT_TIMESTAMP which works on both MySQL and SQLite
         DB::statement("
             INSERT INTO employee_departments (employee_id, department_id, is_primary, started_at, created_at, updated_at)
-            SELECT id, department_id, 1, joining_date, NOW(), NOW()
+            SELECT id, department_id, 1, joining_date, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
             FROM employees
             WHERE department_id IS NOT NULL
         ");
