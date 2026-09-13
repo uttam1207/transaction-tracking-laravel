@@ -401,50 +401,49 @@ class TransactionController extends Controller
 
         foreach ($transactions as $transaction) {
             $oldStatus = $transaction->status;
-            $transaction->update(['status' => $request->status]);
 
-            if ($request->status === 'success' && $oldStatus !== 'success') {
-                $wallet = Wallet::company();
-                if ($wallet->status === 'active') {
-                    $desc = 'Transaction ' . $transaction->transaction_id;
-                    try {
-                        $transaction->type === 'credit'
-                            ? $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
-                            : $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
-                    } catch (\RuntimeException $e) {
-                        // Insufficient balance — revert this transaction back to its old status
-                        $transaction->update(['status' => $oldStatus]);
-                        $updated--;
-                        continue;
+            try {
+                // Wrap status update + journal (via observer) + wallet in a single atomic transaction.
+                // If wallet throws (e.g. insufficient balance), everything for this item rolls back.
+                DB::transaction(function () use ($transaction, $request, $oldStatus, &$updated) {
+                    $transaction->update(['status' => $request->status]);
+
+                    if ($request->status === 'success' && $oldStatus !== 'success') {
+                        $wallet = Wallet::company();
+                        if ($wallet->status === 'active') {
+                            $desc = 'Transaction ' . $transaction->transaction_id;
+                            $transaction->type === 'credit'
+                                ? $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
+                                : $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                        }
                     }
-                }
-            }
 
-            // Reverse wallet when a previously-success transaction is batch-reversed
-            if ($request->status === 'reversed' && $oldStatus === 'success') {
-                $wallet = Wallet::company();
-                if ($wallet->status === 'active') {
-                    $desc = 'Batch reversal: ' . $transaction->transaction_id;
-                    try {
-                        $transaction->type === 'credit'
-                            ? $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
-                            : $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
-                    } catch (\RuntimeException $e) {
-                        // Skip reversal if insufficient balance (edge case)
+                    // Reverse wallet when a previously-success transaction is batch-reversed
+                    if ($request->status === 'reversed' && $oldStatus === 'success') {
+                        $wallet = Wallet::company();
+                        if ($wallet->status === 'active') {
+                            $desc = 'Batch reversal: ' . $transaction->transaction_id;
+                            $transaction->type === 'credit'
+                                ? $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id)
+                                : $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $transaction->transaction_id);
+                        }
                     }
-                }
-            }
 
-            TransactionLog::create([
-                'transaction_id' => $transaction->id,
-                'action'         => 'status_changed',
-                'from_status'    => $oldStatus,
-                'to_status'      => $request->status,
-                'performed_by'   => auth()->id(),
-                'notes'          => 'Batch status update.',
-                'ip_address'     => $request->ip(),
-            ]);
-            $updated++;
+                    TransactionLog::create([
+                        'transaction_id' => $transaction->id,
+                        'action'         => 'status_changed',
+                        'from_status'    => $oldStatus,
+                        'to_status'      => $request->status,
+                        'performed_by'   => auth()->id(),
+                        'notes'          => 'Batch status update.',
+                        'ip_address'     => request()->ip(),
+                    ]);
+                    $updated++;
+                });
+            } catch (\RuntimeException) {
+                // Insufficient balance — this item's changes were atomically rolled back; continue with others
+                continue;
+            }
         }
 
         return response()->json([

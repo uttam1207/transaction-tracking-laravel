@@ -97,7 +97,7 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Payment</label>
             <select name="payment_status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                @foreach(['Paid','Pending','Partial'] as $s)
+                @foreach(['Paid','Pending','Partial','Unbilled'] as $s)
                     <option value="{{ $s }}" @selected(request('payment_status')===$s)>{{ $s }}</option>
                 @endforeach
             </select>

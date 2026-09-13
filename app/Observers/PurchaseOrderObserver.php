@@ -3,11 +3,13 @@
 namespace App\Observers;
 
 use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
 use App\Models\PurchaseOrder;
 use App\Models\Wallet;
-use App\Models\WalletTransaction;
 use App\Models\User;
 use App\Services\JournalPostingService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Double-entry rules for Purchase Orders (bahikhata — vendor/payable side):
@@ -63,57 +65,81 @@ class PurchaseOrderObserver
         $cogsId  = ChartOfAccount::where('code', '5000')->value('id');
         $apId    = ChartOfAccount::where('code', '2000')->value('id');
 
-        if (! $cogsId || ! $apId || $amount <= 0) return;
+        if (! $cogsId || ! $apId || $amount <= 0) {
+            Log::warning('PurchaseOrderObserver: COGS/AP account not found — goods received not posted.', [
+                'po_number' => $purchaseOrder->po_number,
+                'cogsId'    => $cogsId,
+                'apId'      => $apId,
+            ]);
+            return;
+        }
 
         $vendor = $purchaseOrder->vendor?->name ?? 'Vendor';
 
-        $entry = $this->poster->postEntry(
-            reference: $purchaseOrder->po_number,
-            description: "Goods Received: {$purchaseOrder->po_number} — {$vendor}",
-            amount: $amount,
-            debitAccountId: $cogsId,
-            creditAccountId: $apId,
-            entryDate: $purchaseOrder->order_date->toDateString(),
-            type: 'purchase'
-        );
-
-        if ($entry) {
-            PurchaseOrder::withoutEvents(fn () =>
-                $purchaseOrder->update(['journal_entry_id' => $entry->id])
+        // Atomic: journal entry and model update together.
+        DB::transaction(function () use ($purchaseOrder, $amount, $cogsId, $apId, $vendor) {
+            $entry = $this->poster->postEntry(
+                reference: $purchaseOrder->po_number,
+                description: "Goods Received: {$purchaseOrder->po_number} — {$vendor}",
+                amount: $amount,
+                debitAccountId: $cogsId,
+                creditAccountId: $apId,
+                entryDate: $purchaseOrder->order_date->toDateString(),
+                type: 'purchase'
             );
-            // No wallet movement — cash has not left yet (still payable)
-        }
+
+            if ($entry) {
+                PurchaseOrder::withoutEvents(fn () =>
+                    $purchaseOrder->update(['journal_entry_id' => $entry->id])
+                );
+                // No wallet movement — cash has not left yet (still payable)
+            }
+        });
     }
 
     /** DR Accounts Payable (2000), CR Bank (1010) — cash leaves bank */
     private function postVendorPayment(PurchaseOrder $purchaseOrder): void
     {
+        // Idempotency: skip if payment JE already exists
+        if ($purchaseOrder->payment_journal_entry_id) return;
+
         $amount = (float) $purchaseOrder->total_amount;
         $apId   = ChartOfAccount::where('code', '2000')->value('id');
         $bankId = ChartOfAccount::where('code', '1010')->value('id');
 
-        if (! $apId || ! $bankId || $amount <= 0) return;
+        if (! $apId || ! $bankId || $amount <= 0) {
+            Log::warning('PurchaseOrderObserver: AP/Bank account not found — vendor payment not posted.', [
+                'po_number' => $purchaseOrder->po_number,
+                'apId'      => $apId,
+                'bankId'    => $bankId,
+            ]);
+            return;
+        }
 
         $vendor = $purchaseOrder->vendor?->name ?? 'Vendor';
         $ref    = 'PAY-' . $purchaseOrder->po_number;
 
-        $entry = $this->poster->postEntry(
-            reference: $ref,
-            description: "Vendor Payment: {$purchaseOrder->po_number} — {$vendor}",
-            amount: $amount,
-            debitAccountId: $apId,
-            creditAccountId: $bankId,
-            entryDate: now()->toDateString(),
-            type: 'payment'
-        );
-
-        if ($entry) {
-            PurchaseOrder::withoutEvents(fn () =>
-                $purchaseOrder->update(['payment_journal_entry_id' => $entry->id])
+        // Atomic: journal entry and wallet debit succeed or both roll back.
+        DB::transaction(function () use ($purchaseOrder, $amount, $apId, $bankId, $vendor, $ref) {
+            $entry = $this->poster->postEntry(
+                reference: $ref,
+                description: "Vendor Payment: {$purchaseOrder->po_number} — {$vendor}",
+                amount: $amount,
+                debitAccountId: $apId,
+                creditAccountId: $bankId,
+                entryDate: now()->toDateString(),
+                type: 'payment'
             );
-            // Cash left bank — debit wallet
-            $this->debitWallet($amount, "Vendor Payment: {$purchaseOrder->po_number} — {$vendor}", $ref);
-        }
+
+            if ($entry) {
+                PurchaseOrder::withoutEvents(fn () =>
+                    $purchaseOrder->update(['payment_journal_entry_id' => $entry->id])
+                );
+                // Cash left bank — debit wallet
+                $userId = auth()->id() ?? User::where('role', 'super_admin')->value('id') ?? 1;
+                Wallet::company()->debit($amount, "Vendor Payment: {$purchaseOrder->po_number} — {$vendor}", $userId, $ref);
+            }
+        });
     }
 
     /** DR Purchases (5000), CR Bank (1010) — single-step cash purchase */
@@ -125,40 +151,37 @@ class PurchaseOrderObserver
         $cogsId  = ChartOfAccount::where('code', '5000')->value('id');
         $bankId  = ChartOfAccount::where('code', '1010')->value('id');
 
-        if (! $cogsId || ! $bankId || $amount <= 0) return;
+        if (! $cogsId || ! $bankId || $amount <= 0) {
+            Log::warning('PurchaseOrderObserver: COGS/Bank account not found — direct purchase not posted.', [
+                'po_number' => $purchaseOrder->po_number,
+                'cogsId'    => $cogsId,
+                'bankId'    => $bankId,
+            ]);
+            return;
+        }
 
         $vendor = $purchaseOrder->vendor?->name ?? 'Vendor';
 
-        $entry = $this->poster->postEntry(
-            reference: $purchaseOrder->po_number,
-            description: "Direct Purchase: {$purchaseOrder->po_number} — {$vendor}",
-            amount: $amount,
-            debitAccountId: $cogsId,
-            creditAccountId: $bankId,
-            entryDate: $purchaseOrder->order_date->toDateString(),
-            type: 'purchase'
-        );
-
-        if ($entry) {
-            PurchaseOrder::withoutEvents(fn () =>
-                $purchaseOrder->update(['journal_entry_id' => $entry->id])
+        // Atomic: journal entry and wallet debit succeed or both roll back.
+        DB::transaction(function () use ($purchaseOrder, $amount, $cogsId, $bankId, $vendor) {
+            $entry = $this->poster->postEntry(
+                reference: $purchaseOrder->po_number,
+                description: "Direct Purchase: {$purchaseOrder->po_number} — {$vendor}",
+                amount: $amount,
+                debitAccountId: $cogsId,
+                creditAccountId: $bankId,
+                entryDate: $purchaseOrder->order_date->toDateString(),
+                type: 'purchase'
             );
-            // Cash left bank — debit wallet
-            $this->debitWallet($amount, "Direct Purchase: {$purchaseOrder->po_number} — {$vendor}", $purchaseOrder->po_number);
-        }
-    }
 
-    /** Debit company wallet; skip silently if reference already reflected or balance insufficient. */
-    private function debitWallet(float $amount, string $desc, string $reference): void
-    {
-        try {
-            $alreadyDone = WalletTransaction::where('reference', $reference)->exists();
-            if ($alreadyDone) return;
-
-            $userId = auth()->id() ?? User::where('role', 'super_admin')->value('id') ?? 1;
-            Wallet::company()->debit($amount, $desc, $userId, $reference);
-        } catch (\Throwable) {
-            // wallet sync is non-critical — journal entry was already posted
-        }
+            if ($entry) {
+                PurchaseOrder::withoutEvents(fn () =>
+                    $purchaseOrder->update(['journal_entry_id' => $entry->id])
+                );
+                // Cash left bank — debit wallet
+                $userId = auth()->id() ?? User::where('role', 'super_admin')->value('id') ?? 1;
+                Wallet::company()->debit($amount, "Direct Purchase: {$purchaseOrder->po_number} — {$vendor}", $userId, $purchaseOrder->po_number);
+            }
+        });
     }
 }

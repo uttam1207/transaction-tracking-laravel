@@ -160,12 +160,22 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
-                                <select name="payment_status" class="form-select @error('payment_status') is-invalid @enderror" required>
+                                <select name="payment_status" id="paymentStatus" class="form-select @error('payment_status') is-invalid @enderror" required onchange="toggleAmountPaid()">
                                     @foreach(['Paid' => 'Paid (Invoice issued & received)', 'Pending' => 'Pending (Invoice issued, not paid)', 'Partial' => 'Partial (Invoice issued, partly paid)', 'Unbilled' => 'Unbilled (Goods delivered, no invoice yet)'] as $val => $label)
                                         <option value="{{ $val }}" @selected(old('payment_status', $salesOrder->payment_status) === $val)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                                 @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Amount paid (only shown when Partial) --}}
+                            <div class="col-md-6 d-none" id="amountPaidRow">
+                                <label class="form-label fw-semibold">Amount Already Received (&#8377;) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaid"
+                                    class="form-control @error('amount_paid') is-invalid @enderror"
+                                    placeholder="0.00" value="{{ old('amount_paid', $salesOrder->amount_paid) }}">
+                                <div style="font-size:.7rem;color:#6b7280;margin-top:3px;">How much has been received so far</div>
+                                @error('amount_paid')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
 
                         </div>
@@ -251,6 +261,18 @@
         toggleFields();
     }
 })();
+
+// Show amount_paid input only when Partial is selected
+function toggleAmountPaid() {
+    const status = document.getElementById('paymentStatus').value;
+    const row    = document.getElementById('amountPaidRow');
+    if (status === 'Partial') {
+        row.classList.remove('d-none');
+    } else {
+        row.classList.add('d-none');
+    }
+}
+toggleAmountPaid();
 </script>
 @endpush
 

@@ -57,7 +57,34 @@ class CrmController extends Controller
     public function show(CrmCustomer $crmCustomer)
     {
         $crmCustomer->load('salesOrders');
-        return view('admin.crm.show', compact('crmCustomer'));
+
+        $orders = $crmCustomer->salesOrders;
+        $today  = now()->startOfDay();
+
+        // AR aging: age from sale_date (no due_date column; assume invoice-date aging)
+        $openOrders = $orders->whereIn('payment_status', ['Pending', 'Partial']);
+        $aging = ['current' => 0.0, 'd30' => 0.0, 'd60' => 0.0, 'd90' => 0.0, 'd90plus' => 0.0];
+        foreach ($openOrders as $o) {
+            $outstanding = max(0, (float) $o->total_amount - (float) $o->amount_paid);
+            if ($outstanding <= 0) continue;
+            $days = (int) $o->sale_date->diffInDays($today, true);
+            if      ($days <= 30)  $aging['current'] += $outstanding;
+            elseif  ($days <= 60)  $aging['d30']     += $outstanding;
+            elseif  ($days <= 90)  $aging['d60']     += $outstanding;
+            elseif  ($days <= 120) $aging['d90']     += $outstanding;
+            else                   $aging['d90plus']  += $outstanding;
+        }
+
+        $arStats = [
+            'total_invoiced' => $orders->whereNotIn('payment_status', ['Unbilled'])->sum('total_amount'),
+            'total_paid'     => $orders->sum('amount_paid'),
+            'outstanding'    => $openOrders->sum(fn ($o) => max(0, (float) $o->total_amount - (float) $o->amount_paid)),
+            'open_invoices'  => $openOrders->count(),
+            'last_sale_date' => $orders->sortByDesc('sale_date')->first()?->sale_date,
+            'aging'          => $aging,
+        ];
+
+        return view('admin.crm.show', compact('crmCustomer', 'arStats'));
     }
 
     public function edit(CrmCustomer $crmCustomer)

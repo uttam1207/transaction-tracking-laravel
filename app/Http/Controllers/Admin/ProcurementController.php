@@ -178,8 +178,23 @@ class ProcurementController extends Controller
     {
         $purchaseOrder = PurchaseOrder::onlyTrashed()->findOrFail($id);
         $po = $purchaseOrder->po_number;
+
+        // Reverse any posted journal entries so the ledger stays balanced on permanent delete
+        if ($purchaseOrder->journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $purchaseOrder->journal_entry_id,
+                'Force Delete PO: ' . $po
+            );
+        }
+        if ($purchaseOrder->payment_journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $purchaseOrder->payment_journal_entry_id,
+                'Force Delete PO Payment: ' . $po
+            );
+        }
+
         $purchaseOrder->forceDelete();
         return redirect()->route('admin.procurement.trash')
-            ->with('success', "Purchase order {$po} permanently deleted.");
+            ->with('success', "Purchase order {$po} permanently deleted. Ledger reversed.");
     }
 }

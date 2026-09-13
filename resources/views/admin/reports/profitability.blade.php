@@ -60,10 +60,14 @@
     $dateFrom = request('date_from', now()->startOfYear()->toDateString());
     $dateTo   = request('date_to', now()->toDateString());
 
-    // ── Revenue (Sales Orders) ──
+    // ── Revenue: cash collected (amount_paid) in the selected period ──
+    // Paid invoices → amount_paid = total_amount
+    // Partial invoices → amount_paid = portion received
+    // Unbilled/Pending are excluded (no cash received)
     $salesRevenue = SalesOrder::whereBetween('sale_date', [$dateFrom, $dateTo])
         ->whereIn('payment_status', ['Paid', 'Partial'])
-        ->sum('total_amount');
+        ->selectRaw('COALESCE(SUM(amount_paid), 0) as collected')
+        ->value('collected') ?? 0;
 
     // ── Expenses ──
     $totalExpenses = Expense::whereBetween('expense_date', [$dateFrom, $dateTo])->sum('amount');
@@ -88,7 +92,7 @@
     $monthlyRevenue = SalesOrder::select(
             DB::raw('YEAR(sale_date) as yr'),
             DB::raw('MONTH(sale_date) as mo'),
-            DB::raw('SUM(total_amount) as revenue')
+            DB::raw('COALESCE(SUM(amount_paid), 0) as revenue')
         )
         ->whereBetween('sale_date', [$dateFrom, $dateTo])
         ->whereIn('payment_status', ['Paid', 'Partial'])
@@ -161,9 +165,17 @@
     {{-- P&L Summary --}}
     <div class="col-md-5">
         <div class="card-glass p-4 h-100">
-            <h6 class="fw-bold mb-3" style="font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;">
-                <i class="bi bi-calculator-fill me-1 text-primary"></i>P&L Summary
-            </h6>
+            <div class="d-flex align-items-start justify-content-between mb-3">
+                <h6 class="fw-bold mb-0" style="font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;">
+                    <i class="bi bi-calculator-fill me-1 text-primary"></i>P&L Summary
+                </h6>
+                <a href="{{ route('admin.finance.reports.profit-loss') }}" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:.7rem;" title="GL-based accounting P&L">
+                    <i class="bi bi-link-45deg me-1"></i>Accounting P&L
+                </a>
+            </div>
+            <div class="mb-2 p-2" style="background:#fffbeb;border-radius:6px;border:1px solid #fde68a;">
+                <span style="font-size:.68rem;color:#92400e;"><i class="bi bi-info-circle me-1"></i>Revenue = cash collected (amount_paid). For GL-posted revenue see Accounting P&L.</span>
+            </div>
 
             {{-- Revenue --}}
             <div class="mb-3">

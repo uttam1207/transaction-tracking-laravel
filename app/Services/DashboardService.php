@@ -38,18 +38,25 @@ class DashboardService
             'cash_bank_total'    => $cashBalance + $bankBalance,
             'today_transactions_amount' => Transaction::where('status', 'success')->whereDate('created_at', $today)->sum('net_amount'),
 
-            // ── Money Flow: Credit In (Sales) vs Debit Out (Purchases) ──
-            'sales_credit_in'          => (float) SalesOrder::where('payment_status', 'Paid')->sum('total_amount'),
-            'sales_credit_in_month'    => (float) SalesOrder::where('payment_status', 'Paid')
+            // ── Money Flow: Cash actually received / paid (not invoice totals) ──
+            // sales_credit_in  = SUM(amount_paid) across Paid + Partial invoices
+            // pending_receivable = SUM(total_amount - amount_paid) for open invoices
+            'sales_credit_in'          => (float) SalesOrder::whereIn('payment_status', ['Paid', 'Partial'])
+                                            ->selectRaw('COALESCE(SUM(amount_paid), 0) as collected')
+                                            ->value('collected'),
+            'sales_credit_in_month'    => (float) SalesOrder::whereIn('payment_status', ['Paid', 'Partial'])
                                             ->whereMonth('sale_date', $thisMonth->month)
                                             ->whereYear('sale_date',  $thisMonth->year)
-                                            ->sum('total_amount'),
+                                            ->selectRaw('COALESCE(SUM(amount_paid), 0) as collected')
+                                            ->value('collected'),
             'purchase_debit_out'       => (float) PurchaseOrder::where('status', 'Paid')->sum('total_amount'),
             'purchase_debit_out_month' => (float) PurchaseOrder::where('status', 'Paid')
                                             ->whereMonth('order_date', $thisMonth->month)
                                             ->whereYear('order_date',  $thisMonth->year)
                                             ->sum('total_amount'),
-            'pending_receivable'       => (float) SalesOrder::whereIn('payment_status', ['Pending', 'Partial'])->sum('total_amount'),
+            'pending_receivable'       => (float) SalesOrder::whereIn('payment_status', ['Pending', 'Partial'])
+                                            ->selectRaw('COALESCE(SUM(total_amount - COALESCE(amount_paid, 0)), 0) as outstanding')
+                                            ->value('outstanding'),
             'pending_payable'          => (float) PurchaseOrder::where('status', 'Received')->sum('total_amount'),
             'fraud_alerts' => FraudAlert::count(),
             'fraud_alerts_open' => FraudAlert::open()->count(),

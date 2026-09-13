@@ -56,9 +56,17 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Invoice Number <span class="text-danger">*</span></label>
-                                <input type="text" name="invoice_number" class="form-control @error('invoice_number') is-invalid @enderror"
-                                    placeholder="e.g. INV-2026-010" value="{{ old('invoice_number') }}" required>
-                                @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="input-group">
+                                    <input type="text" name="invoice_number" id="invoiceNumberInput"
+                                        class="form-control @error('invoice_number') is-invalid @enderror"
+                                        placeholder="e.g. INV-2026-000001"
+                                        value="{{ old('invoice_number', $suggestedInvoiceNumber) }}" required>
+                                    <button type="button" class="btn btn-outline-secondary" id="regenInvBtn" title="Generate next available number">
+                                        <i class="bi bi-arrow-clockwise" id="regenIcon"></i>
+                                    </button>
+                                    @error('invoice_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div style="font-size:.7rem;color:#6b7280;margin-top:3px;">Auto-generated — edit only if needed</div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Sale Date <span class="text-danger">*</span></label>
@@ -154,12 +162,22 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
-                                <select name="payment_status" class="form-select @error('payment_status') is-invalid @enderror">
+                                <select name="payment_status" id="paymentStatus" class="form-select @error('payment_status') is-invalid @enderror" onchange="toggleAmountPaid()">
                                     @foreach(['Paid' => 'Paid (Invoice issued & received)', 'Pending' => 'Pending (Invoice issued, not paid)', 'Partial' => 'Partial (Invoice issued, partly paid)', 'Unbilled' => 'Unbilled (Goods delivered, no invoice yet)'] as $val => $label)
                                         <option value="{{ $val }}" @selected(old('payment_status','Paid')===$val)>{{ $label }}</option>
                                     @endforeach
                                 </select>
                                 @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Amount paid (only shown when Partial) --}}
+                            <div class="col-md-6 d-none" id="amountPaidRow">
+                                <label class="form-label fw-semibold">Amount Already Received (&#8377;) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaid"
+                                    class="form-control @error('amount_paid') is-invalid @enderror"
+                                    placeholder="0.00" value="{{ old('amount_paid', 0) }}">
+                                <div style="font-size:.7rem;color:#6b7280;margin-top:3px;">How much has been received so far</div>
+                                @error('amount_paid')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
 
                         </div>
@@ -232,6 +250,36 @@
     // On page load, run once (handles old() repopulation after validation error)
     toggleFields();
 })();
+
+// Show amount_paid input only when Partial is selected
+function toggleAmountPaid() {
+    const status = document.getElementById('paymentStatus').value;
+    const row    = document.getElementById('amountPaidRow');
+    if (status === 'Partial') {
+        row.classList.remove('d-none');
+    } else {
+        row.classList.add('d-none');
+    }
+}
+// Run on page load (handles validation repopulation)
+toggleAmountPaid();
+
+// Regenerate invoice number button
+document.getElementById('regenInvBtn').addEventListener('click', function () {
+    const btn  = this;
+    const icon = document.getElementById('regenIcon');
+    btn.disabled = true;
+    icon.style.transition = 'transform .4s';
+    icon.style.transform  = 'rotate(360deg)';
+    fetch('{{ route("admin.sales.next-number") }}')
+        .then(r => r.json())
+        .then(d => { document.getElementById('invoiceNumberInput').value = d.number; })
+        .catch(() => {})
+        .finally(() => {
+            btn.disabled       = false;
+            icon.style.transform = 'rotate(0deg)';
+        });
+});
 </script>
 @endpush
 

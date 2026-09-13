@@ -142,6 +142,21 @@
                         </div>
                     </div>
                     @endif
+                    {{-- Amount paid / outstanding — only meaningful when Partial --}}
+                    @if(in_array($salesOrder->payment_status, ['Partial', 'Pending']))
+                    <div class="col-sm-4">
+                        <div style="background:#fff7ed;border-radius:10px;padding:14px 16px;border:1px solid #fed7aa;">
+                            <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-wallet2 me-1"></i>Paid / Outstanding</div>
+                            <div class="fw-bold" style="color:#c2410c;font-size:1rem;">
+                                &#8377;{{ number_format($salesOrder->amount_paid, 2) }}
+                                <span style="font-weight:400;font-size:.8rem;color:#9ca3af;"> paid</span>
+                            </div>
+                            <div style="font-size:.8rem;color:#b45309;margin-top:2px;">
+                                &#8377;{{ number_format($salesOrder->outstanding, 2) }} outstanding
+                            </div>
+                        </div>
+                    </div>
+                    @endif
                     <div class="col-sm-4">
                         <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;">
                             <div style="font-size:.7rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;"><i class="bi bi-clock me-1"></i>Created At</div>

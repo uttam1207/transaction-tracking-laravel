@@ -616,6 +616,7 @@ Route::prefix('admin')
 
     // Module 14 — Sales
     Route::get('/sales/trash',            [SalesModuleController::class, 'trash'])->name('sales.trash');
+    Route::get('/sales/next-number',      [SalesModuleController::class, 'nextNumber'])->name('sales.next-number');
     Route::post('/sales/{id}/restore',    [SalesModuleController::class, 'restore'])->name('sales.restore');
     Route::delete('/sales/{id}/force',    [SalesModuleController::class, 'forceDelete'])->name('sales.force-delete');
     Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);

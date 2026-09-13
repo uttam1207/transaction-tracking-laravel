@@ -106,7 +106,90 @@
         </div>
     </div>
 
-    <div class="col-lg-5">
+    <div class="col-lg-5 d-flex flex-column gap-4">
+
+        {{-- AR Outstanding Summary --}}
+        <div class="card-glass overflow-hidden">
+            <div style="background:linear-gradient(135deg,#b45309,#dc2626);padding:18px 24px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;background:rgba(255,255,255,.08);border-radius:50%;pointer-events:none;"></div>
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:42px;height:42px;background:rgba(255,255,255,.18);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="bi bi-wallet2" style="font-size:1.1rem;color:#fff;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.68rem;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;">Accounts Receivable</div>
+                        <div style="font-size:1rem;font-weight:800;color:#fff;">AR Balance</div>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3">
+                <div class="row g-2">
+                    <div class="col-6">
+                        <div style="background:#f8fafc;border-radius:9px;padding:12px 14px;">
+                            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Total Invoiced</div>
+                            <div class="fw-bold" style="color:#1f2937;font-size:.95rem;">&#8377;{{ number_format($arStats['total_invoiced'], 0) }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div style="background:#ecfdf5;border-radius:9px;padding:12px 14px;border:1px solid #d1fae5;">
+                            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Total Collected</div>
+                            <div class="fw-bold" style="color:#059669;font-size:.95rem;">&#8377;{{ number_format($arStats['total_paid'], 0) }}</div>
+                        </div>
+                    </div>
+                    @if($arStats['outstanding'] > 0)
+                    <div class="col-12">
+                        <div style="background:#fff7ed;border-radius:9px;padding:12px 14px;border:1px solid #fed7aa;">
+                            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;"><i class="bi bi-exclamation-triangle me-1 text-warning"></i>Outstanding (AR)</div>
+                            <div class="fw-bold" style="color:#c2410c;font-size:1.15rem;">&#8377;{{ number_format($arStats['outstanding'], 0) }}</div>
+                            <div style="font-size:.72rem;color:#b45309;margin-top:2px;">{{ $arStats['open_invoices'] }} open invoice{{ $arStats['open_invoices'] !== 1 ? 's' : '' }} pending payment</div>
+                        </div>
+                    </div>
+
+                    {{-- AR Aging Buckets --}}
+                    <div class="col-12">
+                        <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;padding:0 2px;">
+                            <i class="bi bi-hourglass-split me-1"></i>AR Aging (from invoice date)
+                        </div>
+                        @php
+                            $agingRows = [
+                                ['label' => '0–30 days',  'key' => 'current', 'color' => '#059669'],
+                                ['label' => '31–60 days', 'key' => 'd30',     'color' => '#d97706'],
+                                ['label' => '61–90 days', 'key' => 'd60',     'color' => '#ea580c'],
+                                ['label' => '91–120 days','key' => 'd90',     'color' => '#dc2626'],
+                                ['label' => '120+ days',  'key' => 'd90plus', 'color' => '#9f1239'],
+                            ];
+                        @endphp
+                        <div style="border:1px solid #fed7aa;border-radius:8px;overflow:hidden;">
+                            @foreach($agingRows as $row)
+                            @if($arStats['aging'][$row['key']] > 0)
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2" style="border-bottom:1px solid #fef3c7;background:#fffbeb;">
+                                <span style="font-size:.75rem;font-weight:600;color:#92400e;">{{ $row['label'] }}</span>
+                                <span class="fw-bold" style="font-size:.8rem;color:{{ $row['color'] }};">&#8377;{{ number_format($arStats['aging'][$row['key']], 0) }}</span>
+                            </div>
+                            @endif
+                            @endforeach
+                        </div>
+                    </div>
+                    @else
+                    <div class="col-12">
+                        <div style="background:#ecfdf5;border-radius:9px;padding:12px 14px;border:1px solid #d1fae5;">
+                            <div style="font-size:.65rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Outstanding (AR)</div>
+                            <div class="fw-bold" style="color:#059669;">&#8377;0 — Fully Settled</div>
+                        </div>
+                    </div>
+                    @endif
+                    @if($arStats['last_sale_date'])
+                    <div class="col-12">
+                        <div style="font-size:.72rem;color:#9ca3af;padding:2px 4px;">
+                            <i class="bi bi-calendar3 me-1"></i>Last sale: {{ $arStats['last_sale_date']->format('d M Y') }}
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Recent Sales Orders --}}
         <div class="card-glass">
             <div class="d-flex align-items-center gap-3 px-4 py-3 border-bottom">
                 <div style="width:36px;height:36px;background:linear-gradient(135deg,#059669,#0d9488);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -116,14 +199,26 @@
             </div>
             <div class="px-4 pb-3">
                 @forelse($crmCustomer->salesOrders->sortByDesc('sale_date')->take(6) as $order)
+                    @php
+                        $pBadge = match($order->payment_status) {
+                            'Paid'     => 'spill-success',
+                            'Pending'  => 'spill-warning',
+                            'Partial'  => 'spill-info',
+                            'Unbilled' => 'spill-secondary',
+                            default    => 'spill-secondary',
+                        };
+                    @endphp
                     <div class="d-flex justify-content-between align-items-start py-3 border-bottom">
                         <div>
-                            <div class="fw-bold" style="font-size:.84rem;color:var(--primary);">{{ $order->invoice_number }}</div>
+                            <a href="{{ route('admin.sales.show', $order) }}" class="fw-bold" style="font-size:.84rem;color:var(--primary);text-decoration:none;">{{ $order->invoice_number }}</a>
                             <div style="font-size:.76rem;color:#9ca3af;">{{ $order->item_type }} &mdash; {{ $order->sale_date->format('d M Y') }}</div>
                         </div>
                         <div class="text-end">
                             <div class="fw-bold text-success" style="font-size:.84rem;">&#8377;{{ number_format($order->total_amount,0) }}</div>
-                            <span class="spill {{ $order->payment_status==='Paid' ? 'spill-success' : ($order->payment_status==='Pending' ? 'spill-warning' : 'spill-info') }}" style="font-size:.7rem;">{{ $order->payment_status }}</span>
+                            @if(in_array($order->payment_status, ['Pending','Partial']))
+                                <div style="font-size:.72rem;color:#c2410c;">&#8377;{{ number_format($order->outstanding,0) }} due</div>
+                            @endif
+                            <span class="spill {{ $pBadge }}" style="font-size:.7rem;">{{ $order->payment_status }}</span>
                         </div>
                     </div>
                 @empty

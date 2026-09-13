@@ -9,6 +9,7 @@ use App\Models\SaleItemType;
 use App\Models\SalesOrder;
 use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SalesModuleController extends Controller
 {
@@ -50,7 +51,14 @@ class SalesModuleController extends Controller
     {
         $customers = CrmCustomer::orderBy('name')->get();
         $itemTypes = SaleItemType::activeOrdered();
-        return view('admin.sales.create', compact('customers', 'itemTypes'));
+        $suggestedInvoiceNumber = DB::transaction(fn () => SalesOrder::generateNumber());
+        return view('admin.sales.create', compact('customers', 'itemTypes', 'suggestedInvoiceNumber'));
+    }
+
+    public function nextNumber(): \Illuminate\Http\JsonResponse
+    {
+        $number = DB::transaction(fn () => SalesOrder::generateNumber());
+        return response()->json(['number' => $number]);
     }
 
     public function store(Request $request)
@@ -64,6 +72,7 @@ class SalesModuleController extends Controller
             'sale_date'         => 'required|date',
             'quantity'          => 'required|numeric|min:0.01',
             'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
+            'amount_paid'       => 'nullable|numeric|min:0',
         ];
 
         if ($itemType->is_milk_type) {
@@ -92,6 +101,13 @@ class SalesModuleController extends Controller
             $fatRate    = null;
         }
 
+        // amount_paid: Paid = full amount, Partial = what was entered, otherwise 0
+        $amountPaid = match ($validated['payment_status']) {
+            'Paid'    => $total,
+            'Partial' => min((float) ($validated['amount_paid'] ?? 0), $total),
+            default   => 0,
+        };
+
         $sale = SalesOrder::create([
             'invoice_number'    => $validated['invoice_number'],
             'crm_customer_id'   => $validated['crm_customer_id'] ?? null,
@@ -103,6 +119,7 @@ class SalesModuleController extends Controller
             'fat_percentage'    => $fat,
             'fat_rate'          => $fatRate,
             'total_amount'      => $total,
+            'amount_paid'       => $amountPaid,
             'payment_status'    => $validated['payment_status'],
         ]);
 
@@ -141,6 +158,7 @@ class SalesModuleController extends Controller
             'sale_date'         => 'required|date',
             'quantity'          => 'required|numeric|min:0.01',
             'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
+            'amount_paid'       => 'nullable|numeric|min:0',
         ];
 
         if ($itemType->is_milk_type) {
@@ -169,6 +187,13 @@ class SalesModuleController extends Controller
             $fatRate    = null;
         }
 
+        // amount_paid: Paid = full amount, Partial = keep user-entered value, otherwise 0
+        $amountPaid = match ($validated['payment_status']) {
+            'Paid'    => $total,
+            'Partial' => min((float) ($validated['amount_paid'] ?? $salesOrder->amount_paid), $total),
+            default   => 0,
+        };
+
         $salesOrder->update([
             'invoice_number'    => $validated['invoice_number'],
             'crm_customer_id'   => $validated['crm_customer_id'] ?? null,
@@ -180,6 +205,7 @@ class SalesModuleController extends Controller
             'fat_percentage'    => $fat,
             'fat_rate'          => $fatRate,
             'total_amount'      => $total,
+            'amount_paid'       => $amountPaid,
             'payment_status'    => $validated['payment_status'],
         ]);
 
@@ -254,9 +280,18 @@ class SalesModuleController extends Controller
     {
         $salesOrder = SalesOrder::onlyTrashed()->findOrFail($id);
         $inv = $salesOrder->invoice_number;
+
+        // Reverse any posted journal entry so the ledger stays balanced on permanent delete
+        if ($salesOrder->journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $salesOrder->journal_entry_id,
+                'Force Delete Sale: ' . $inv
+            );
+        }
+
         $salesOrder->forceDelete();
         return redirect()->route('admin.sales.trash')
-            ->with('success', "Sales invoice {$inv} permanently deleted.");
+            ->with('success', "Sales invoice {$inv} permanently deleted. Ledger reversed.");
     }
 
     // ── Sale Item Types CRUD (AJAX) ────────────────────────────────────────────
