@@ -117,7 +117,7 @@
                             </a>
                             <form action="{{ route('admin.stock-items.destroy', $item) }}" method="POST" class="d-inline">
                                 @csrf @method('DELETE')
-                                <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete {{ addslashes($item->name) }}? This cannot be undone.', () => this.closest(\'form\').submit())">
+                                <button type="button" class="act-btn act-delete" title="Delete" onclick="APP.confirm('Delete', 'Delete {{ addslashes($item->name) }}? This cannot be undone.', () => this.closest('form').submit())">
                                     <i class="bi bi-trash3"></i>
                                 </button>
                             </form>

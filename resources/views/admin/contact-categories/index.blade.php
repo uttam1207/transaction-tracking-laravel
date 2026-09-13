@@ -72,7 +72,7 @@
                 <form method="POST" action="{{ route('admin.contact-categories.destroy', $cat) }}">
                     @csrf @method('DELETE')
                     <button type="button" class="btn btn-sm btn-outline-danger" {{ $cat->contacts_count > 0 ? 'disabled title=\'Has contacts — cannot delete\'' : '' }}
-                        onclick="APP.confirm('Delete', 'Delete category {{ addslashes($cat->name) }}? This cannot be undone.', () => this.closest(\'form\').submit())">
+                        onclick="APP.confirm('Delete', 'Delete category {{ addslashes($cat->name) }}? This cannot be undone.', () => this.closest('form').submit())">
                         <i class="bi bi-trash"></i>
                     </button>
                 </form>

@@ -108,7 +108,7 @@
                 <input type="hidden" name="year" value="{{ $year }}">
                 <input type="hidden" name="month" value="{{ $month }}">
                 <button type="button" class="btn btn-sm btn-outline-primary px-3"
-                    onclick="APP.confirm('Generate Salaries', 'Auto-generate salaries for all active employees for {{ date(\'F\', mktime(0,0,0,$month,1)) }} {{ $year }}?', () => this.closest(\'form\').submit())"
+                    onclick="APP.confirm('Generate Salaries', 'Auto-generate salaries for all active employees for {{ date('F', mktime(0,0,0,$month,1)) }} {{ $year }}?', () => this.closest('form').submit())"
                     title="Bulk generate from employee base salary">
                     <i class="bi bi-lightning-charge me-1"></i>Bulk Gen
                 </button>
