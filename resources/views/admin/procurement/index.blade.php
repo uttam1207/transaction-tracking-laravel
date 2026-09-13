@@ -22,6 +22,9 @@
                class="btn btn-sm btn-outline-light px-3">
                 <i class="bi bi-file-earmark-pdf me-1"></i>PDF
             </a>
+            <a href="{{ route('admin.procurement.trash') }}" class="btn btn-sm btn-outline-light px-3">
+                <i class="bi bi-trash3 me-1"></i>Trash
+            </a>
             <a href="{{ route('admin.procurement.create') }}" class="btn btn-primary-grad btn-sm px-4">
                 <i class="bi bi-plus-lg me-1"></i>Create PO
             </a>

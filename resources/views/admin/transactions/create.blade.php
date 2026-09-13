@@ -262,9 +262,17 @@ textarea.form-control { height: auto !important; }
                         <select name="user_id" id="ownerCompanySelect" class="form-select">
                             <option value="">None — not linked</option>
                             @foreach($users as $user)
-                                <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
+                                <option value="{{ $user->id }}"
+                                    data-name="{{ $user->name }}"
+                                    data-phone="{{ $user->phone ?? '' }}"
+                                    data-email="{{ $user->email }}">
+                                    {{ $user->name }} ({{ $user->email }})
+                                </option>
                             @endforeach
                         </select>
+                        <div id="ownerAutofillHint" style="display:none;margin-top:5px;font-size:.72rem;color:#4f46e5;">
+                            <i class="bi bi-lightning-charge-fill"></i> Receiver fields auto-filled — you can still edit them.
+                        </div>
                         {{-- External Person inputs --}}
                         <div id="ownerExternalFields" style="display:none;">
                             <input type="text" name="account_owner_name" class="form-control mb-2"
@@ -651,5 +659,28 @@ function updateSummary() {
 amountInput.addEventListener('input', updateSummary);
 paymentMethod.addEventListener('change', updateSummary);
 typeSelect.addEventListener('change', updateSummary);
+
+// Auto-fill Receiver fields when a Company User (employee) is selected as Account Owner
+document.getElementById('ownerCompanySelect').addEventListener('change', function () {
+    const hint  = document.getElementById('ownerAutofillHint');
+    const opt   = this.options[this.selectedIndex];
+
+    if (this.value) {
+        document.querySelector('[name="receiver_name"]').value   = opt.dataset.name  || '';
+        document.querySelector('[name="receiver_mobile"]').value = opt.dataset.phone || '';
+        // Highlight auto-filled fields briefly
+        ['receiver_name', 'receiver_mobile'].forEach(n => {
+            const el = document.querySelector('[name="' + n + '"]');
+            el.style.borderColor = '#4f46e5';
+            setTimeout(() => { el.style.borderColor = ''; }, 2000);
+        });
+        hint.style.display = 'block';
+    } else {
+        // Clear fields only if they still match what was auto-filled (avoid wiping manual edits)
+        document.querySelector('[name="receiver_name"]').value   = '';
+        document.querySelector('[name="receiver_mobile"]').value = '';
+        hint.style.display = 'none';
+    }
+});
 </script>
 @endpush

@@ -368,6 +368,14 @@
                onmouseout="this.style.background='#d1fae5'">
                 <i class="bi bi-filetype-csv"></i>Import CSV
             </a>
+            <a href="{{ route('admin.transactions.trash') }}"
+               style="display:inline-flex;align-items:center;gap:5px;font-size:.82rem;font-weight:700;
+                      padding:7px 14px;border-radius:9px;border:1.5px solid #fca5a5;
+                      background:#fef2f2;color:#991b1b;text-decoration:none;transition:background .15s;"
+               onmouseover="this.style.background='#fee2e2'"
+               onmouseout="this.style.background='#fef2f2'">
+                <i class="bi bi-trash3"></i>Trash
+            </a>
             <a href="{{ route('admin.transactions.create') }}" class="btn-new-tx">
                 <i class="bi bi-plus-lg"></i>New Transaction
             </a>

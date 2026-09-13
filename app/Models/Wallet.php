@@ -47,14 +47,17 @@ class Wallet extends Model
         });
     }
 
-    public function debit(float $amount, string $description, int $performedBy, ?string $reference = null): WalletTransaction
+    /**
+     * @param  bool $force  Skip the insufficient-balance check (use for admin corrections/reversals).
+     */
+    public function debit(float $amount, string $description, int $performedBy, ?string $reference = null, bool $force = false): WalletTransaction
     {
-        return DB::transaction(function () use ($amount, $description, $performedBy, $reference) {
+        return DB::transaction(function () use ($amount, $description, $performedBy, $reference, $force) {
             // Refresh inside the transaction to prevent race conditions
             $this->refresh();
             $before = (float) $this->balance;
 
-            if ($before < $amount) {
+            if (!$force && $before < $amount) {
                 throw new \RuntimeException(
                     'Insufficient wallet balance. Available: ₹' . number_format($before, 2) .
                     ', Required: ₹' . number_format($amount, 2)

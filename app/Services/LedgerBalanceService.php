@@ -7,9 +7,53 @@ use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use App\Models\LedgerBalance;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class LedgerBalanceService
 {
+    /**
+     * Reverse a posted journal entry and update ledger balances.
+     * Creates a mirror entry with debit/credit lines swapped, marks the original as 'reversed',
+     * and recalculates ledger balances for all affected accounts.
+     */
+    public function reverseEntry(int $journalEntryId, string $reason): void
+    {
+        $entry = JournalEntry::with('lines')->find($journalEntryId);
+        if (!$entry || $entry->status !== 'posted') {
+            return;
+        }
+
+        DB::transaction(function () use ($entry, $reason) {
+            $reversal = JournalEntry::create([
+                'period_id'    => $entry->period_id,
+                'entry_date'   => now()->toDateString(),
+                'reference'    => 'REV-' . $entry->entry_number,
+                'type'         => $entry->type,
+                'total_debit'  => $entry->total_credit,
+                'total_credit' => $entry->total_debit,
+                'status'       => 'posted',
+                'created_by'   => Auth::id(),
+                'posted_by'    => Auth::id(),
+                'posted_at'    => now(),
+                'reversal_of'  => $entry->id,
+            ]);
+
+            foreach ($entry->lines as $line) {
+                $reversal->lines()->create([
+                    'account_id'     => $line->account_id,
+                    'debit'          => $line->credit,
+                    'credit'         => $line->debit,
+                    'description'    => 'Reversal: ' . ($line->description ?? $reason),
+                    'cost_center_id' => $line->cost_center_id,
+                ]);
+            }
+
+            $entry->update(['status' => 'reversed']);
+            $this->updateAfterPost($reversal->load('lines'));
+        });
+    }
+
     /**
      * Recalculate ledger balances for all accounts that have posted entries in a period.
      */

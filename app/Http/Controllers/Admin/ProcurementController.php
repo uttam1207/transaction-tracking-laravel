@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\PurchaseOrder;
 use App\Models\Vendor;
+use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProcurementController extends Controller
 {
+    public function __construct(private LedgerBalanceService $ledger) {}
+
     public function index(Request $request)
     {
         $query = PurchaseOrder::with('vendor');
@@ -100,8 +104,82 @@ class ProcurementController extends Controller
 
     public function destroy(PurchaseOrder $purchaseOrder)
     {
-        $purchaseOrder->delete();
+        // Reverse any posted journal entries so the ledger stays balanced
+        if ($purchaseOrder->journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $purchaseOrder->journal_entry_id,
+                'Deleted PO: ' . $purchaseOrder->po_number
+            );
+        }
+        if ($purchaseOrder->payment_journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $purchaseOrder->payment_journal_entry_id,
+                'Deleted PO payment: ' . $purchaseOrder->po_number
+            );
+        }
+
+        AuditLog::create([
+            'user_id'        => auth()->id(),
+            'event'          => 'deleted',
+            'auditable_type' => PurchaseOrder::class,
+            'auditable_id'   => $purchaseOrder->id,
+            'old_values'     => $purchaseOrder->toArray(),
+            'new_values'     => null,
+            'ip_address'     => request()->ip(),
+            'module'         => 'procurement',
+            'description'    => 'Purchase order ' . $purchaseOrder->po_number . ' permanently deleted.',
+        ]);
+
+        $purchaseOrder->delete(); // soft delete
         return redirect()->route('admin.procurement.index')
-            ->with('success', 'Purchase order deleted.');
+            ->with('success', 'Purchase order ' . $purchaseOrder->po_number . ' moved to trash. Ledger reversed.');
+    }
+
+    public function trash()
+    {
+        $orders = PurchaseOrder::onlyTrashed()->with('vendor')->latest('deleted_at')->paginate(20);
+        return view('admin.procurement.trash', compact('orders'));
+    }
+
+    public function restore(int $id)
+    {
+        $purchaseOrder = PurchaseOrder::onlyTrashed()->findOrFail($id);
+
+        // Reverse the reversal entries to restore ledger balances
+        foreach (['journal_entry_id', 'payment_journal_entry_id'] as $field) {
+            if ($purchaseOrder->$field) {
+                $reversal = \App\Models\JournalEntry::where('reversal_of', $purchaseOrder->$field)
+                    ->where('status', 'posted')->latest()->first();
+                if ($reversal) {
+                    $this->ledger->reverseEntry($reversal->id, 'Restored PO: ' . $purchaseOrder->po_number);
+                }
+            }
+        }
+
+        $purchaseOrder->restore();
+
+        AuditLog::create([
+            'user_id'        => auth()->id(),
+            'event'          => 'restored',
+            'auditable_type' => PurchaseOrder::class,
+            'auditable_id'   => $purchaseOrder->id,
+            'old_values'     => null,
+            'new_values'     => $purchaseOrder->toArray(),
+            'ip_address'     => request()->ip(),
+            'module'         => 'procurement',
+            'description'    => 'Purchase order ' . $purchaseOrder->po_number . ' restored from trash.',
+        ]);
+
+        return redirect()->route('admin.procurement.trash')
+            ->with('success', 'Purchase order ' . $purchaseOrder->po_number . ' restored.');
+    }
+
+    public function forceDelete(int $id)
+    {
+        $purchaseOrder = PurchaseOrder::onlyTrashed()->findOrFail($id);
+        $po = $purchaseOrder->po_number;
+        $purchaseOrder->forceDelete();
+        return redirect()->route('admin.procurement.trash')
+            ->with('success', "Purchase order {$po} permanently deleted.");
     }
 }

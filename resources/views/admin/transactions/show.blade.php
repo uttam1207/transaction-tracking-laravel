@@ -211,13 +211,13 @@
               background:#fee2e2;color:#dc2626;cursor:pointer;transition:background .15s;"
        onmouseover="this.style.background='#fecaca'"
        onmouseout="this.style.background='#fee2e2'">
-        <i class="bi bi-arrow-counterclockwise"></i>Refund
+        <i class="bi bi-arrow-counterclockwise"></i>Reverse Transaction
     </button>
     @endif
     @if($transaction->is_refunded)
     <span style="display:inline-flex;align-items:center;gap:6px;font-size:.82rem;font-weight:600;
                  padding:6px 14px;border-radius:8px;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;">
-        <i class="bi bi-check-circle"></i>Refunded
+        <i class="bi bi-check-circle"></i>Reversed
     </span>
     @endif
 </div>
@@ -600,16 +600,16 @@ function updateStatus() {
 
 function triggerRefund() {
     APP.confirm(
-        'Process Refund?',
-        'This will create a reverse transaction for ₹{{ number_format($transaction->net_amount, 2) }} and mark this transaction as reversed. This cannot be undone.',
+        'Reverse Transaction?',
+        'This will create a counter-entry for ₹{{ number_format($transaction->net_amount, 2) }}, reverse the journal entry in the ledger, and mark this transaction as reversed. This cannot be undone.',
         () => {
             APP.ajax('/admin/transactions/{{ $transaction->id }}/refund', 'POST', {})
                 .done(res => {
                     if (res.success) { APP.toast(res.message); setTimeout(() => location.reload(), 1500); }
-                    else { APP.toast(res.message || 'Refund failed', 'error'); }
+                    else { APP.toast(res.message || 'Reversal failed', 'error'); }
                 })
                 .fail(xhr => {
-                    const msg = xhr.responseJSON?.message || 'Refund failed';
+                    const msg = xhr.responseJSON?.message || 'Reversal failed';
                     APP.toast(msg, 'error');
                 });
         }

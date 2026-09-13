@@ -219,6 +219,10 @@ Route::prefix('admin')
     Route::get('/transactions/import',     [TransactionController::class, 'importForm'])->name('transactions.import');
     Route::post('/transactions/import',    [TransactionController::class, 'processImport'])->name('transactions.import.process');
     Route::get('/transactions/sample-csv', [TransactionController::class, 'sampleCsv'])->name('transactions.sample-csv');
+    // Trash management (before resource to avoid {transaction} catch-all)
+    Route::get('/transactions/trash',           [TransactionController::class, 'trash'])->name('transactions.trash');
+    Route::post('/transactions/{id}/restore',   [TransactionController::class, 'restore'])->name('transactions.restore');
+    Route::delete('/transactions/{id}/force',   [TransactionController::class, 'forceDelete'])->name('transactions.force-delete');
     Route::resource('transactions', TransactionController::class);
     Route::post('/transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.status');
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'downloadPdf'])->name('transactions.receipt');
@@ -592,6 +596,9 @@ Route::prefix('admin')
     });
 
     // Module 13 — Procurement
+    Route::get('/procurement/trash',             [ProcurementController::class, 'trash'])->name('procurement.trash');
+    Route::post('/procurement/{id}/restore',     [ProcurementController::class, 'restore'])->name('procurement.restore');
+    Route::delete('/procurement/{id}/force',     [ProcurementController::class, 'forceDelete'])->name('procurement.force-delete');
     Route::resource('procurement', ProcurementController::class)->parameters(['procurement' => 'purchaseOrder']);
 
     // Vendor Management (sub-resource of Procurement)
@@ -608,6 +615,9 @@ Route::prefix('admin')
     Route::post('/salaries/{salary}/mark-paid', [SalaryController::class, 'markPaid'])->name('salaries.mark-paid');
 
     // Module 14 — Sales
+    Route::get('/sales/trash',            [SalesModuleController::class, 'trash'])->name('sales.trash');
+    Route::post('/sales/{id}/restore',    [SalesModuleController::class, 'restore'])->name('sales.restore');
+    Route::delete('/sales/{id}/force',    [SalesModuleController::class, 'forceDelete'])->name('sales.force-delete');
     Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
     // Sale Item Types management (AJAX CRUD)
     Route::prefix('sales/item-types')->name('sales.item-types.')->group(function () {

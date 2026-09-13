@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\CrmCustomer;
 use App\Models\SaleItemType;
 use App\Models\SalesOrder;
+use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
 
 class SalesModuleController extends Controller
 {
+    public function __construct(private LedgerBalanceService $ledger) {}
+
     // ── Sales Orders ──────────────────────────────────────────────────────────
 
     public function index(Request $request)
@@ -177,8 +181,75 @@ class SalesModuleController extends Controller
 
     public function destroy(SalesOrder $salesOrder)
     {
-        $salesOrder->delete();
-        return redirect()->route('admin.sales.index')->with('success', 'Sales invoice deleted.');
+        // Reverse any posted journal entry so the ledger stays balanced
+        if ($salesOrder->journal_entry_id) {
+            $this->ledger->reverseEntry(
+                $salesOrder->journal_entry_id,
+                'Deleted Sale: ' . $salesOrder->invoice_number
+            );
+        }
+
+        AuditLog::create([
+            'user_id'        => auth()->id(),
+            'event'          => 'deleted',
+            'auditable_type' => SalesOrder::class,
+            'auditable_id'   => $salesOrder->id,
+            'old_values'     => $salesOrder->toArray(),
+            'new_values'     => null,
+            'ip_address'     => request()->ip(),
+            'module'         => 'sales',
+            'description'    => 'Sales invoice ' . $salesOrder->invoice_number . ' permanently deleted.',
+        ]);
+
+        $salesOrder->delete(); // soft delete
+        return redirect()->route('admin.sales.index')
+            ->with('success', 'Sales invoice ' . $salesOrder->invoice_number . ' moved to trash. Ledger reversed.');
+    }
+
+    public function trash()
+    {
+        $sales = SalesOrder::onlyTrashed()->with('customer')->latest('deleted_at')->paginate(20);
+        return view('admin.sales.trash', compact('sales'));
+    }
+
+    public function restore(int $id)
+    {
+        $salesOrder = SalesOrder::onlyTrashed()->findOrFail($id);
+
+        // Reverse the reversal entry to restore ledger balances
+        if ($salesOrder->journal_entry_id) {
+            $reversal = \App\Models\JournalEntry::where('reversal_of', $salesOrder->journal_entry_id)
+                ->where('status', 'posted')->latest()->first();
+            if ($reversal) {
+                $this->ledger->reverseEntry($reversal->id, 'Restored Sale: ' . $salesOrder->invoice_number);
+            }
+        }
+
+        $salesOrder->restore();
+
+        AuditLog::create([
+            'user_id'        => auth()->id(),
+            'event'          => 'restored',
+            'auditable_type' => SalesOrder::class,
+            'auditable_id'   => $salesOrder->id,
+            'old_values'     => null,
+            'new_values'     => $salesOrder->toArray(),
+            'ip_address'     => request()->ip(),
+            'module'         => 'sales',
+            'description'    => 'Sales invoice ' . $salesOrder->invoice_number . ' restored from trash.',
+        ]);
+
+        return redirect()->route('admin.sales.trash')
+            ->with('success', 'Sales invoice ' . $salesOrder->invoice_number . ' restored.');
+    }
+
+    public function forceDelete(int $id)
+    {
+        $salesOrder = SalesOrder::onlyTrashed()->findOrFail($id);
+        $inv = $salesOrder->invoice_number;
+        $salesOrder->forceDelete();
+        return redirect()->route('admin.sales.trash')
+            ->with('success', "Sales invoice {$inv} permanently deleted.");
     }
 
     // ── Sale Item Types CRUD (AJAX) ────────────────────────────────────────────

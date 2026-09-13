@@ -6,14 +6,17 @@ use App\Exports\TransactionsExport;
 use App\Http\Controllers\Controller;
 use App\Mail\TransactionStatusMail;
 use App\Models\ChartOfAccount;
+use App\Models\JournalEntry;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Services\FraudDetectionService;
+use App\Services\LedgerBalanceService;
 use App\Services\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -21,8 +24,17 @@ class TransactionController extends Controller
 {
     public function __construct(
         private FraudDetectionService $fraudService,
-        private NotificationService $notificationService
+        private NotificationService $notificationService,
+        private LedgerBalanceService $ledger
     ) {
+    }
+
+    /**
+     * Delegate to LedgerBalanceService::reverseEntry().
+     */
+    private function reverseJournalEntry(int $journalEntryId, string $reason): void
+    {
+        $this->ledger->reverseEntry($journalEntryId, $reason);
     }
 
     public function index(Request $request)
@@ -479,15 +491,11 @@ class TransactionController extends Controller
         $wallet = Wallet::company();
         if ($wallet->status === 'active') {
             $desc = 'Refund: ' . $transaction->transaction_id;
-            try {
-                // Original debit → refund credits back; original credit → refund debits back
-                if ($transaction->type === 'debit') {
-                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id);
-                } else {
-                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id);
-                }
-            } catch (\RuntimeException $e) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            // force=true bypasses the insufficient-balance guard for reversal corrections
+            if ($transaction->type === 'debit') {
+                $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id);
+            } else {
+                $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), $refundTx->transaction_id, true);
             }
         }
 
@@ -500,6 +508,14 @@ class TransactionController extends Controller
             'notes'          => 'Refund processed → ' . $refundTx->transaction_id,
             'ip_address'     => $request->ip(),
         ]);
+
+        // Reverse journal entry so ledger/dashboard balances are corrected
+        if ($transaction->journal_entry_id) {
+            $this->reverseJournalEntry(
+                $transaction->journal_entry_id,
+                'Refund for transaction: ' . $transaction->transaction_id
+            );
+        }
 
         return response()->json([
             'success' => true,
@@ -838,28 +854,117 @@ class TransactionController extends Controller
             abort(403, 'Only super admins can delete transactions.');
         }
 
-        // Reverse wallet balance for success transactions
+        // Reverse wallet balance + journal entry for success transactions
         if ($transaction->status === 'success') {
             $wallet = Wallet::company();
             if ($wallet->status === 'active') {
                 $desc = 'Deleted transaction: ' . $transaction->transaction_id;
-                try {
-                    if ($transaction->type === 'credit') {
-                        $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), null);
-                    } else {
-                        $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), null);
-                    }
-                } catch (\RuntimeException $e) {
-                    // Proceed even if wallet reversal fails (e.g. insufficient balance)
+                // force=true bypasses the insufficient-balance guard for admin corrections
+                if ($transaction->type === 'credit') {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), null, true);
+                } else {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), null);
+                }
+            }
+
+            // Reverse journal entry so ledger/dashboard balances are corrected
+            if ($transaction->journal_entry_id) {
+                $this->reverseJournalEntry(
+                    $transaction->journal_entry_id,
+                    'Deleted transaction: ' . $transaction->transaction_id
+                );
+            }
+        }
+
+        // Audit log before soft-delete
+        TransactionLog::create([
+            'transaction_id' => $transaction->id,
+            'action'         => 'deleted',
+            'from_status'    => $transaction->status,
+            'to_status'      => 'deleted',
+            'performed_by'   => auth()->id(),
+            'notes'          => 'Transaction moved to trash by ' . auth()->user()->name,
+            'ip_address'     => request()->ip(),
+        ]);
+
+        $txId = $transaction->transaction_id;
+        $transaction->delete(); // soft delete — record preserved in DB
+
+        return redirect()->route('admin.transactions.index')
+            ->with('success', "Transaction {$txId} moved to trash. Wallet and ledger have been reversed.");
+    }
+
+    // ── Trash Management ─────────────────────────────────────────────────
+
+    public function trash()
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403, 'Only super admins can view deleted transactions.');
+        }
+        $transactions = Transaction::onlyTrashed()
+            ->with('user')
+            ->latest('deleted_at')
+            ->paginate(20);
+        return view('admin.transactions.trash', compact('transactions'));
+    }
+
+    public function restore(int $id)
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403);
+        }
+        $transaction = Transaction::onlyTrashed()->findOrFail($id);
+
+        // Re-apply wallet effect
+        if ($transaction->status === 'success') {
+            $wallet = Wallet::company();
+            if ($wallet->status === 'active') {
+                $desc = 'Restored transaction: ' . $transaction->transaction_id;
+                if ($transaction->type === 'credit') {
+                    $wallet->credit((float) $transaction->net_amount, $desc, auth()->id(), null);
+                } else {
+                    $wallet->debit((float) $transaction->net_amount, $desc, auth()->id(), null, true);
+                }
+            }
+
+            // Reverse the reversal journal entry (cancel the delete effect)
+            if ($transaction->journal_entry_id) {
+                $reversal = \App\Models\JournalEntry::where('reversal_of', $transaction->journal_entry_id)
+                    ->where('status', 'posted')
+                    ->latest()
+                    ->first();
+                if ($reversal) {
+                    $this->reverseJournalEntry($reversal->id, 'Restored transaction: ' . $transaction->transaction_id);
                 }
             }
         }
 
-        $txId = $transaction->transaction_id;
-        $transaction->delete();
+        $transaction->restore();
 
-        return redirect()->route('admin.transactions.index')
-            ->with('success', "Transaction {$txId} has been permanently deleted.");
+        TransactionLog::create([
+            'transaction_id' => $transaction->id,
+            'action'         => 'restored',
+            'from_status'    => 'deleted',
+            'to_status'      => $transaction->status,
+            'performed_by'   => auth()->id(),
+            'notes'          => 'Transaction restored from trash by ' . auth()->user()->name,
+            'ip_address'     => request()->ip(),
+        ]);
+
+        return redirect()->route('admin.transactions.trash')
+            ->with('success', "Transaction {$transaction->transaction_id} restored successfully.");
+    }
+
+    public function forceDelete(int $id)
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403);
+        }
+        $transaction = Transaction::onlyTrashed()->findOrFail($id);
+        $txId = $transaction->transaction_id;
+        $transaction->forceDelete(); // permanent — wallet/ledger already reversed on soft-delete
+        return redirect()->route('admin.transactions.trash')
+            ->with('success', "Transaction {$txId} permanently deleted.");
     }
 
     // ── Voucher PDFs ─────────────────────────────────────────────────────
