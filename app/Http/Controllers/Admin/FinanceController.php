@@ -418,24 +418,29 @@ class FinanceController extends Controller
 
         // ── AR Drill-down: customer-wise outstanding receivables ──────────────
         // Covers Pending, Partial, and Unbilled invoices — all create DR AR entries
+        // Pending/Unbilled: full total_amount is outstanding regardless of amount_paid
+        // Partial: only the remaining gap (GREATEST guards against negative)
+        $arOutstandingExpr = 'SUM(CASE
+            WHEN payment_status IN ("Pending","Unbilled") THEN total_amount
+            WHEN payment_status = "Partial" THEN GREATEST(0, total_amount - amount_paid)
+            ELSE 0
+        END)';
+
         $arDrilldown = SalesOrder::with('customer')
             ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
             ->whereNotNull('crm_customer_id')
-            ->selectRaw('crm_customer_id,
-                SUM(CASE WHEN payment_status = "Unbilled" THEN total_amount
-                         ELSE total_amount - amount_paid END) as outstanding,
-                SUM(total_amount) as invoice_total,
-                COUNT(*) as invoice_count')
+            ->selectRaw("crm_customer_id,
+                {$arOutstandingExpr} as outstanding,
+                COUNT(*) as invoice_count")
             ->groupBy('crm_customer_id')
-            ->havingRaw('outstanding > 0')
+            ->havingRaw("{$arOutstandingExpr} > 0")
             ->get();
 
         // Walk-in (no CRM customer) outstanding
         $walkInAR = SalesOrder::whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
             ->whereNull('crm_customer_id')
-            ->selectRaw('SUM(CASE WHEN payment_status = "Unbilled" THEN total_amount
-                                  ELSE total_amount - amount_paid END) as outstanding,
-                COUNT(*) as invoice_count')
+            ->selectRaw("{$arOutstandingExpr} as outstanding,
+                COUNT(*) as invoice_count")
             ->first();
         // ─────────────────────────────────────────────────────────────────────
 

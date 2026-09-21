@@ -156,7 +156,7 @@
                     </select>
                     @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3" id="paymentModeRow">
+                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Paid', 'Partial']) ? '' : 'd-none' }}" id="paymentModeRow">
                     <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
                     <select name="payment_mode" id="paymentMode" class="form-select @error('payment_mode') is-invalid @enderror">
                         <option value="Bank" @selected(old('payment_mode','Bank')==='Bank')>Bank Transfer / UPI</option>

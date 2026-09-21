@@ -380,9 +380,9 @@
                     <span>
                         <i class="bi bi-person-fill me-1" style="color:#0284c7;font-size:.7rem;"></i>
                         {{ $ar->customer?->name ?? 'Unknown' }}
-                        <a href="{{ route('admin.sales.index', ['search' => $ar->customer?->name]) }}"
+                        <a href="{{ route('admin.crm.show', $ar->crm_customer_id) }}"
                            style="font-size:.68rem;color:#0284c7;text-decoration:none;margin-left:6px;"
-                           title="View invoices">
+                           title="Open customer ledger">
                             <i class="bi bi-box-arrow-up-right"></i>
                         </a>
                         <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
@@ -554,8 +554,9 @@
                 <span>
                     <i class="bi bi-person-fill me-1" style="color:#0284c7;font-size:.7rem;"></i>
                     {{ $ar->customer?->name ?? 'Unknown' }}
-                    <a href="{{ route('admin.sales.index', ['search' => $ar->customer?->name]) }}"
-                       style="font-size:.68rem;color:#0284c7;text-decoration:none;margin-left:6px;">
+                    <a href="{{ route('admin.crm.show', $ar->crm_customer_id) }}"
+                       style="font-size:.68rem;color:#0284c7;text-decoration:none;margin-left:6px;"
+                       title="Open customer ledger">
                         <i class="bi bi-box-arrow-up-right"></i>
                     </a>
                     <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
