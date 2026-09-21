@@ -30,6 +30,9 @@ class SalesModuleController extends Controller
         if ($request->search) {
             $query->where('invoice_number', 'like', '%' . $request->search . '%');
         }
+        if ($request->customer_id) {
+            $query->where('crm_customer_id', $request->customer_id);
+        }
         if ($request->item_type) {
             $query->where('item_type', $request->item_type);
         }

@@ -87,12 +87,21 @@
 <form method="GET" action="{{ route('admin.sales.index') }}">
 <div class="card-glass mb-3 px-4 py-3">
     <div class="row g-2 align-items-end">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Search Invoice</label>
             <div class="input-group">
                 <span class="input-group-text" style="background:#f5f7fa;border-right:0;border-color:#e5e7eb;"><i class="bi bi-search" style="color:#9ca3af;font-size:.8rem;"></i></span>
                 <input type="text" name="search" class="form-control" placeholder="Invoice number&#8230;" value="{{ request('search') }}" style="border-left:0!important;border-color:#e5e7eb!important;padding-left:0!important;">
             </div>
+        </div>
+        <div class="col-12 col-md-3">
+            <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Customer</label>
+            <select name="customer_id" class="form-select" onchange="this.form.submit()" style="border-color:#e5e7eb;">
+                <option value="">— All Customers —</option>
+                @foreach($customers as $c)
+                    <option value="{{ $c->id }}" @selected(request('customer_id') == $c->id)>{{ $c->name }}</option>
+                @endforeach
+            </select>
         </div>
         <div class="col-6 col-md-2">
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Item Type</label>
@@ -116,7 +125,7 @@
             <button type="submit" class="btn btn-primary-grad flex-fill" style="height:42px;border-radius:9px;font-size:.85rem;">
                 <i class="bi bi-funnel me-1"></i>Filter
             </button>
-            @if(request()->hasAny(['search','item_type','payment_status']))
+            @if(request()->hasAny(['search','customer_id','item_type','payment_status']))
                 <a href="{{ route('admin.sales.index') }}" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" style="height:42px;width:42px;border-radius:9px;flex-shrink:0;" title="Clear">
                     <i class="bi bi-x-lg"></i>
                 </a>

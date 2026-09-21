@@ -420,11 +420,12 @@ class FinanceController extends Controller
         // Covers Pending, Partial, and Unbilled invoices — all create DR AR entries
         // Pending/Unbilled: full total_amount is outstanding regardless of amount_paid
         // Partial: only the remaining gap (GREATEST guards against negative)
-        $arOutstandingExpr = 'SUM(CASE
-            WHEN payment_status IN ("Pending","Unbilled") THEN total_amount
-            WHEN payment_status = "Partial" THEN GREATEST(0, total_amount - amount_paid)
+        // Use single-quoted string literals — double quotes break under MySQL ANSI_QUOTES mode
+        $arOutstandingExpr = "SUM(CASE
+            WHEN payment_status IN ('Pending','Unbilled') THEN total_amount
+            WHEN payment_status = 'Partial' THEN GREATEST(0, total_amount - amount_paid)
             ELSE 0
-        END)';
+        END)";
 
         $arDrilldown = SalesOrder::with('customer')
             ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
