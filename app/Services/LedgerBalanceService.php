@@ -216,17 +216,25 @@ class LedgerBalanceService
 
     /**
      * Profit & Loss: Revenue - Expenses for posted entries in period (or all time).
+     *
+     * Revenue is split into:
+     *   $billedRevenue   — accounts with sub_type IN ('sales', 'other_income')
+     *   $unbilledRevenue — accounts with sub_type = 'unbilled_sales' (account 4050)
      */
     public function profitAndLoss(?int $periodId = null, ?string $dateFrom = null, ?string $dateTo = null): array
     {
         $revenue  = $this->sumByType('revenue',  $periodId, $dateFrom, $dateTo);
         $expenses = $this->sumByType('expense',  $periodId, $dateFrom, $dateTo);
 
-        $netRevenue   = $revenue->sum('net');
-        $netExpenses  = $expenses->sum('net');
-        $netIncome    = $netRevenue - $netExpenses;
+        // Split revenue: billed = normal sales/income; unbilled = accrued not yet invoiced
+        $billedRevenue   = $revenue->filter(fn($r) => ($r->account->sub_type ?? '') !== 'unbilled_sales');
+        $unbilledRevenue = $revenue->filter(fn($r) => ($r->account->sub_type ?? '') === 'unbilled_sales');
 
-        return compact('revenue', 'expenses', 'netRevenue', 'netExpenses', 'netIncome');
+        $netRevenue      = $revenue->sum('net');
+        $netExpenses     = $expenses->sum('net');
+        $netIncome       = $netRevenue - $netExpenses;
+
+        return compact('revenue', 'billedRevenue', 'unbilledRevenue', 'expenses', 'netRevenue', 'netExpenses', 'netIncome');
     }
 
     /**

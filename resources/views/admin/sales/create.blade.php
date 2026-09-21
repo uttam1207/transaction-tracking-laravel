@@ -147,7 +147,7 @@
             {{-- ── C — Payment ─────────────────────────────────────────────── --}}
             <h6 class="form-section-label mb-3">C — Payment</h6>
             <div class="row g-3">
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
                     <select name="payment_status" id="paymentStatus" class="form-select @error('payment_status') is-invalid @enderror" onchange="toggleAmountPaid()">
                         @foreach(['Paid' => 'Paid (Invoice issued &amp; received)', 'Pending' => 'Pending (Invoice issued, not paid)', 'Partial' => 'Partial (Invoice issued, partly paid)', 'Unbilled' => 'Unbilled (Goods delivered, no invoice yet)'] as $val => $label)
@@ -156,8 +156,17 @@
                     </select>
                     @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-4 d-none" id="amountPaidRow">
-                    <label class="form-label fw-semibold">Amount Already Received (₹) <span class="text-danger">*</span></label>
+                <div class="col-md-3" id="paymentModeRow">
+                    <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
+                    <select name="payment_mode" id="paymentMode" class="form-select @error('payment_mode') is-invalid @enderror">
+                        <option value="Bank" @selected(old('payment_mode','Bank')==='Bank')>Bank Transfer / UPI</option>
+                        <option value="Cash" @selected(old('payment_mode')==='Cash')>Cash</option>
+                    </select>
+                    <div style="font-size:.68rem;color:#9ca3af;margin-top:3px;">How was payment received?</div>
+                    @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3 d-none" id="amountPaidRow">
+                    <label class="form-label fw-semibold">Amount Received (₹) <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaid"
                         class="form-control @error('amount_paid') is-invalid @enderror"
                         placeholder="0.00" value="{{ old('amount_paid', 0) }}">
@@ -338,7 +347,9 @@
 
     /* ── Payment status toggle ───────────────────────────────────── */
     function toggleAmountPaid() {
-        const status = document.getElementById('paymentStatus').value;
+        const status      = document.getElementById('paymentStatus').value;
+        const hasMoney    = status === 'Paid' || status === 'Partial';
+        document.getElementById('paymentModeRow').classList.toggle('d-none', !hasMoney);
         document.getElementById('amountPaidRow').classList.toggle('d-none', status !== 'Partial');
     }
     window.toggleAmountPaid = toggleAmountPaid;

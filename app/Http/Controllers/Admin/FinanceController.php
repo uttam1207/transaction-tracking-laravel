@@ -416,8 +416,31 @@ class FinanceController extends Controller
 
         $data = $this->ledger->balanceSheet($periodId ?: null);
 
+        // ── AR Drill-down: customer-wise outstanding receivables ──────────────
+        // Covers Pending, Partial, and Unbilled invoices — all create DR AR entries
+        $arDrilldown = SalesOrder::with('customer')
+            ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
+            ->whereNotNull('crm_customer_id')
+            ->selectRaw('crm_customer_id,
+                SUM(CASE WHEN payment_status = "Unbilled" THEN total_amount
+                         ELSE total_amount - amount_paid END) as outstanding,
+                SUM(total_amount) as invoice_total,
+                COUNT(*) as invoice_count')
+            ->groupBy('crm_customer_id')
+            ->havingRaw('outstanding > 0')
+            ->get();
+
+        // Walk-in (no CRM customer) outstanding
+        $walkInAR = SalesOrder::whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
+            ->whereNull('crm_customer_id')
+            ->selectRaw('SUM(CASE WHEN payment_status = "Unbilled" THEN total_amount
+                                  ELSE total_amount - amount_paid END) as outstanding,
+                COUNT(*) as invoice_count')
+            ->first();
+        // ─────────────────────────────────────────────────────────────────────
+
         return view('admin.finance.reports.balance-sheet', compact(
-            'periods', 'selectedPeriod', 'periodId', 'data'
+            'periods', 'selectedPeriod', 'periodId', 'data', 'arDrilldown', 'walkInAR'
         ));
     }
 

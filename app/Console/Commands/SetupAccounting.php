@@ -62,6 +62,7 @@ class SetupAccounting extends Command
                 ['code' => '4000', 'name' => 'Milk Sales Revenue',       'type' => 'revenue',   'sub_type' => 'sales'],
                 ['code' => '4010', 'name' => 'Dairy Products Sales',     'type' => 'revenue',   'sub_type' => 'sales'],
                 ['code' => '4020', 'name' => 'Feed Sales Revenue',       'type' => 'revenue',   'sub_type' => 'sales'],
+                ['code' => '4050', 'name' => 'Unbilled Revenue',         'type' => 'revenue',   'sub_type' => 'unbilled_sales'],
                 ['code' => '4100', 'name' => 'Service Income',           'type' => 'revenue',   'sub_type' => 'other_income'],
                 ['code' => '4900', 'name' => 'Other Income',             'type' => 'revenue',   'sub_type' => 'other_income'],
                 // Expenses
@@ -286,7 +287,7 @@ class SetupAccounting extends Command
         $this->info('');
         $this->info('=== Backfilling Sales Orders → Ledger ===');
 
-        $accts = ChartOfAccount::whereIn('code', ['1010','1100','2000','4000','4010','4020','4100','4900','5000'])
+        $accts = ChartOfAccount::whereIn('code', ['1000','1010','1100','2000','4000','4010','4020','4050','4100','4900','5000'])
             ->pluck('id', 'code');
 
         $pendingSales = SalesOrder::whereNull('journal_entry_id')->get();
@@ -299,17 +300,29 @@ class SetupAccounting extends Command
                 $amount = (float) $sale->total_amount;
                 if ($amount <= 0) { $salesFailed++; continue; }
 
-                $revenueCode = match (true) {
-                    stripos($sale->item_type, 'milk')      !== false => '4000',
-                    stripos($sale->item_type, 'animal')    !== false => '4010',
-                    stripos($sale->item_type, 'feed')      !== false => '4020',
-                    stripos($sale->item_type, 'franchise') !== false => '4100',
-                    default                                          => '4900',
+                $status     = $sale->payment_status;
+                $amountPaid = (float) $sale->amount_paid;
+                $remaining  = max(0.0, round($amount - $amountPaid, 2));
+                $isUnbilled = $status === 'Unbilled';
+
+                // Revenue account
+                $revCode = match (true) {
+                    $isUnbilled                                             => '4050',
+                    stripos($sale->item_type, 'milk')      !== false        => '4000',
+                    stripos($sale->item_type, 'dairy')     !== false        => '4010',
+                    stripos($sale->item_type, 'animal')    !== false        => '4010',
+                    stripos($sale->item_type, 'feed')      !== false        => '4020',
+                    stripos($sale->item_type, 'franchise') !== false        => '4100',
+                    default                                                 => '4900',
                 };
-                $debitCode   = $sale->payment_status === 'Paid' ? '1010' : '1100';
-                $debitId     = $accts[$debitCode] ?? null;
-                $creditId    = $accts[$revenueCode] ?? null;
-                if (! $debitId || ! $creditId) { $salesFailed++; continue; }
+
+                // Debit account: Cash/Bank for paid portion, AR for receivable
+                $mode       = $sale->payment_mode ?? 'Bank';
+                $bankCode   = ($mode === 'Cash') ? '1000' : '1010';
+                $arCode     = '1100';
+
+                $creditId = $accts[$revCode] ?? null;
+                if (! $creditId) { $salesFailed++; continue; }
 
                 $entryDate = $sale->sale_date->toDateString();
                 $periodId  = FinancialPeriod::where('start_date', '<=', $entryDate)
@@ -320,13 +333,18 @@ class SetupAccounting extends Command
 
                 if (! $periodId) { $salesFailed++; continue; }
 
-                DB::transaction(function () use ($sale, $entryDate, $periodId, $amount, $debitId, $creditId, $adminId, $ledger) {
+                $jeType = ($status === 'Paid') ? 'receipt' : 'sales';
+
+                DB::transaction(function () use (
+                    $sale, $entryDate, $periodId, $amount, $amountPaid, $remaining,
+                    $status, $bankCode, $arCode, $revCode, $creditId, $accts, $adminId, $ledger, $jeType
+                ) {
                     $entry = JournalEntry::create([
                         'entry_number' => JournalEntry::generateNumber(),
                         'period_id'    => $periodId,
                         'entry_date'   => $entryDate,
                         'reference'    => $sale->invoice_number,
-                        'type'         => $sale->payment_status === 'Paid' ? 'receipt' : 'general',
+                        'type'         => $jeType,
                         'description'  => 'Sale Invoice: ' . $sale->invoice_number . ' — ' . $sale->item_type,
                         'total_debit'  => $amount,
                         'total_credit' => $amount,
@@ -335,13 +353,30 @@ class SetupAccounting extends Command
                         'posted_by'    => $adminId,
                         'posted_at'    => now(),
                     ]);
-                    JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $debitId,  'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
+
+                    // CR Revenue always
                     JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $creditId, 'debit' => 0, 'credit' => $amount, 'description' => $sale->invoice_number]);
+
+                    if ($status === 'Paid') {
+                        $bankId = $accts[$bankCode] ?? null;
+                        if ($bankId) {
+                            JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $bankId, 'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
+                        }
+                    } elseif ($status === 'Partial' && $amountPaid > 0 && $remaining > 0) {
+                        $bankId = $accts[$bankCode] ?? null;
+                        $arId   = $accts[$arCode]   ?? null;
+                        if ($bankId) JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $bankId, 'debit' => $amountPaid, 'credit' => 0, 'description' => $sale->invoice_number . ' (partial)']);
+                        if ($arId)   JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $arId,   'debit' => $remaining,  'credit' => 0, 'description' => $sale->invoice_number . ' (outstanding)']);
+                    } else {
+                        $arId = $accts[$arCode] ?? null;
+                        if ($arId) JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $arId, 'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
+                    }
+
                     SalesOrder::withoutEvents(fn() => $sale->update(['journal_entry_id' => $entry->id]));
                     $ledger->updateAfterPost($entry->load('lines'));
                 });
 
-                $this->line("  <info>✓</info> {$sale->invoice_number}  →  JE posted  [{$entryDate}]");
+                $this->line("  <info>✓</info> {$sale->invoice_number} ({$status})  →  JE posted  [{$entryDate}]");
                 $salesPosted++;
             } catch (\Throwable $e) {
                 $this->error("  ✗ {$sale->invoice_number}: " . $e->getMessage());

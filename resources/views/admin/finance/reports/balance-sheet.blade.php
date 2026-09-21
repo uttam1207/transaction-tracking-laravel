@@ -358,9 +358,55 @@
 
             @foreach($rows as $row)
             <div class="bs-row">
-                <span>{{ $row->account->name }}</span>
+                @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->outstanding ?? 0) > 0))
+                    {{-- AR row with expandable customer drill-down --}}
+                    <span>
+                        <button type="button" onclick="toggleARDrilldown()"
+                            style="background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">
+                            <i class="bi bi-chevron-right" id="arChevron" style="font-size:.7rem;transition:transform .2s;"></i>
+                            {{ $row->account->name }}
+                        </button>
+                    </span>
+                @else
+                    <span>{{ $row->account->name }}</span>
+                @endif
                 <span class="amt">{{ number_format($row->net, 2) }}</span>
             </div>
+            @if(($row->account->code ?? '') === '1100')
+            {{-- AR Drill-down panel --}}
+            <div id="arDrilldownPanel" style="display:none;background:#f0f9ff;border-left:3px solid #0ea5e9;">
+                @forelse($arDrilldown as $ar)
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 18px 4px 44px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
+                    <span>
+                        <i class="bi bi-person-fill me-1" style="color:#0284c7;font-size:.7rem;"></i>
+                        {{ $ar->customer?->name ?? 'Unknown' }}
+                        <a href="{{ route('admin.sales.index', ['search' => $ar->customer?->name]) }}"
+                           style="font-size:.68rem;color:#0284c7;text-decoration:none;margin-left:6px;"
+                           title="View invoices">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                        </a>
+                        <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
+                    </span>
+                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($ar->outstanding, 2) }}</span>
+                </div>
+                @empty
+                @endforelse
+                @if(($walkInAR->outstanding ?? 0) > 0)
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 18px 4px 44px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
+                    <span>
+                        <i class="bi bi-person-dash-fill me-1" style="color:#64748b;font-size:.7rem;"></i>
+                        Walk-in / Retail
+                        <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $walkInAR->invoice_count }} inv.</span>
+                    </span>
+                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($walkInAR->outstanding, 2) }}</span>
+                </div>
+                @endif
+                <div style="display:flex;justify-content:space-between;padding:4px 18px 4px 44px;font-size:.74rem;font-weight:700;color:#0369a1;background:#e0f2fe;">
+                    <span>Total Receivable</span>
+                    <span>{{ number_format($arDrilldown->sum('outstanding') + ($walkInAR->outstanding ?? 0), 2) }}</span>
+                </div>
+            </div>
+            @endif
             @endforeach
 
             <div class="bs-subtotal">
@@ -488,9 +534,52 @@
         <div class="bs-v-sec-head">{{ strtoupper($groupName) }}</div>
         @foreach($rows as $row)
         <div class="bs-v-row">
-            <span>{{ $row->account->name }}</span>
+            @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->outstanding ?? 0) > 0))
+                <span>
+                    <button type="button" onclick="toggleARDrilldown()"
+                        style="background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-chevron-right" id="arChevronV" style="font-size:.7rem;transition:transform .2s;"></i>
+                        {{ $row->account->name }}
+                    </button>
+                </span>
+            @else
+                <span>{{ $row->account->name }}</span>
+            @endif
             <span class="amt">{{ number_format($row->net, 2) }}</span>
         </div>
+        @if(($row->account->code ?? '') === '1100')
+        <div id="arDrilldownPanelV" style="display:none;background:#f0f9ff;border-left:3px solid #0ea5e9;">
+            @forelse($arDrilldown as $ar)
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 24px 4px 52px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
+                <span>
+                    <i class="bi bi-person-fill me-1" style="color:#0284c7;font-size:.7rem;"></i>
+                    {{ $ar->customer?->name ?? 'Unknown' }}
+                    <a href="{{ route('admin.sales.index', ['search' => $ar->customer?->name]) }}"
+                       style="font-size:.68rem;color:#0284c7;text-decoration:none;margin-left:6px;">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                    <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
+                </span>
+                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($ar->outstanding, 2) }}</span>
+            </div>
+            @empty
+            @endforelse
+            @if(($walkInAR->outstanding ?? 0) > 0)
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 24px 4px 52px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
+                <span>
+                    <i class="bi bi-person-dash-fill me-1" style="color:#64748b;font-size:.7rem;"></i>
+                    Walk-in / Retail
+                    <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $walkInAR->invoice_count }} inv.</span>
+                </span>
+                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($walkInAR->outstanding, 2) }}</span>
+            </div>
+            @endif
+            <div style="display:flex;justify-content:space-between;padding:4px 24px 4px 52px;font-size:.74rem;font-weight:700;color:#0369a1;background:#e0f2fe;">
+                <span>Total Receivable</span>
+                <span>{{ number_format($arDrilldown->sum('outstanding') + ($walkInAR->outstanding ?? 0), 2) }}</span>
+            </div>
+        </div>
+        @endif
         @endforeach
         <div class="bs-v-subtotal">
             <span>TOTAL {{ strtoupper($groupName) }}</span>
@@ -521,3 +610,22 @@
 @endif
 
 @endsection
+
+@push('scripts')
+<script>
+function toggleARDrilldown() {
+    ['arDrilldownPanel','arDrilldownPanelV'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var open = el.style.display !== 'none';
+        el.style.display = open ? 'none' : 'block';
+    });
+    ['arChevron','arChevronV'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var open = el.style.transform === 'rotate(90deg)';
+        el.style.transform = open ? '' : 'rotate(90deg)';
+    });
+}
+</script>
+@endpush

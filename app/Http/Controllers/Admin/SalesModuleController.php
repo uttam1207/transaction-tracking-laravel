@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
+use App\Models\ChartOfAccount;
 use App\Models\CrmCustomer;
+use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
 use App\Models\SaleItemType;
@@ -86,6 +88,7 @@ class SalesModuleController extends Controller
             'due_date'        => 'nullable|date',
             'payment_terms'   => 'nullable|string|max:50',
             'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'payment_mode'    => 'nullable|in:Cash,Bank',
             'amount_paid'     => 'nullable|numeric|min:0',
             'items'           => 'required|array|min:1',
             'items.*.sale_item_type_id' => 'required|exists:sale_item_types,id',
@@ -104,7 +107,12 @@ class SalesModuleController extends Controller
             default   => 0.0,
         };
 
-        $sale = DB::transaction(function () use ($request, $first, $totalAmount, $amountPaid, $processedItems) {
+        // payment_mode only applies when money is actually received
+        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial'])
+            ? ($request->payment_mode ?: 'Bank')
+            : null;
+
+        $sale = DB::transaction(function () use ($request, $first, $totalAmount, $amountPaid, $processedItems, $paymentMode) {
             $so = SalesOrder::create([
                 'invoice_number'    => $request->invoice_number,
                 'crm_customer_id'   => $request->crm_customer_id ?: null,
@@ -120,6 +128,7 @@ class SalesModuleController extends Controller
                 'total_amount'      => $totalAmount,
                 'amount_paid'       => $amountPaid,
                 'payment_status'    => $request->payment_status,
+                'payment_mode'      => $paymentMode,
             ]);
 
             foreach ($processedItems as $item) {
@@ -128,6 +137,9 @@ class SalesModuleController extends Controller
 
             return $so;
         });
+
+        // Post journal entry based on payment_status + payment_mode
+        $this->postSaleJournalEntry($sale->fresh());
 
         $redirect = redirect()->route('admin.sales.index')
             ->with('success', 'Sales invoice ' . $sale->invoice_number . ' created.');
@@ -190,6 +202,7 @@ class SalesModuleController extends Controller
             'due_date'        => 'nullable|date',
             'payment_terms'   => 'nullable|string|max:50',
             'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'payment_mode'    => 'nullable|in:Cash,Bank',
             'amount_paid'     => 'nullable|numeric|min:0',
             'items'           => 'required|array|min:1',
             'items.*.sale_item_type_id' => 'required|exists:sale_item_types,id',
@@ -208,7 +221,20 @@ class SalesModuleController extends Controller
             default   => 0.0,
         };
 
-        DB::transaction(function () use ($request, $salesOrder, $first, $totalAmount, $amountPaid, $processedItems) {
+        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial'])
+            ? ($request->payment_mode ?: 'Bank')
+            : null;
+
+        // Reverse old JE before updating (only for manually-created invoices)
+        if ($salesOrder->journal_entry_id && ! $salesOrder->transaction_id) {
+            $this->ledger->reverseEntry(
+                $salesOrder->journal_entry_id,
+                'Updated Sale: ' . $salesOrder->invoice_number
+            );
+            SalesOrder::withoutEvents(fn() => $salesOrder->update(['journal_entry_id' => null]));
+        }
+
+        DB::transaction(function () use ($request, $salesOrder, $first, $totalAmount, $amountPaid, $processedItems, $paymentMode) {
             $salesOrder->update([
                 'invoice_number'    => $request->invoice_number,
                 'crm_customer_id'   => $request->crm_customer_id ?: null,
@@ -224,6 +250,7 @@ class SalesModuleController extends Controller
                 'total_amount'      => $totalAmount,
                 'amount_paid'       => $amountPaid,
                 'payment_status'    => $request->payment_status,
+                'payment_mode'      => $paymentMode,
             ]);
 
             $salesOrder->items()->delete();
@@ -231,6 +258,9 @@ class SalesModuleController extends Controller
                 $salesOrder->items()->create($item);
             }
         });
+
+        // Post a fresh journal entry for the updated sale
+        $this->postSaleJournalEntry($salesOrder->fresh());
 
         return redirect()->route('admin.sales.show', $salesOrder)->with('success', 'Sales invoice updated.');
     }
@@ -337,6 +367,149 @@ class SalesModuleController extends Controller
 
         return redirect()->route('admin.sales.trash')
             ->with('success', "Sales invoice {$inv} permanently deleted. Balance sheet updated.");
+    }
+
+    // ── Accounting helpers ─────────────────────────────────────────────────────
+
+    /**
+     * Revenue account code based on item type.
+     * Unbilled invoices always use 4050 (Unbilled Revenue) regardless of item.
+     */
+    private function revenueAccountCode(string $itemType, bool $unbilled = false): string
+    {
+        if ($unbilled) return '4050';
+
+        return match (true) {
+            stripos($itemType, 'milk')      !== false => '4000',
+            stripos($itemType, 'dairy')     !== false => '4010',
+            stripos($itemType, 'animal')    !== false => '4010',
+            stripos($itemType, 'feed')      !== false => '4020',
+            stripos($itemType, 'franchise') !== false => '4100',
+            default                                   => '4900',
+        };
+    }
+
+    /**
+     * Post the correct double-entry journal for a sales invoice based on
+     * payment_status and payment_mode.
+     *
+     *  Paid (Bank)  → DR 1010 Bank,     CR Revenue (full)
+     *  Paid (Cash)  → DR 1000 Cash,     CR Revenue (full)
+     *  Pending      → DR 1100 AR,        CR Revenue (full)
+     *  Partial      → DR 1010/1000 (paid) + DR 1100 AR (remaining), CR Revenue (full)
+     *  Unbilled     → DR 1100 AR,        CR 4050 Unbilled Revenue (full)
+     *
+     * Skips silently if no financial period covers the sale date, or if the
+     * invoice is linked to a Transaction (the Transaction already owns the JE).
+     */
+    public function postSaleJournalEntry(SalesOrder $sale): void
+    {
+        // Transaction-linked invoices share the Transaction's JE — do not create a second one
+        if ($sale->transaction_id) return;
+        // Already has a JE (e.g. called twice by mistake)
+        if ($sale->journal_entry_id) return;
+
+        $amount     = (float) $sale->total_amount;
+        if ($amount <= 0) return;
+
+        $amountPaid = (float) $sale->amount_paid;
+        $remaining  = max(0.0, round($amount - $amountPaid, 2));
+        $status     = $sale->payment_status;
+        $mode       = $sale->payment_mode ?? 'Bank';
+        $isUnbilled = $status === 'Unbilled';
+        $bankCode   = ($mode === 'Cash') ? '1000' : '1010';
+        $arCode     = '1100';
+        $revCode    = $this->revenueAccountCode($sale->item_type, $isUnbilled);
+
+        // Resolve financial period
+        $entryDate = $sale->sale_date->toDateString();
+        $period    = FinancialPeriod::where('start_date', '<=', $entryDate)
+            ->where('end_date', '>=', $entryDate)
+            ->whereIn('status', ['open', 'closed'])
+            ->orderBy('start_date', 'desc')
+            ->first();
+
+        if (! $period) return; // No period — no JE
+
+        // Resolve account IDs
+        $needed = array_unique([$bankCode, $arCode, $revCode]);
+        $accts  = ChartOfAccount::whereIn('code', $needed)->pluck('id', 'code');
+
+        if (! isset($accts[$revCode])) return; // Revenue account missing
+
+        $adminId = Auth::id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1;
+        $jeType  = ($status === 'Paid') ? 'receipt' : 'sales';
+
+        DB::transaction(function () use (
+            $sale, $entryDate, $period, $amount, $amountPaid, $remaining,
+            $status, $bankCode, $arCode, $revCode, $accts, $adminId, $jeType
+        ) {
+            $entry = JournalEntry::create([
+                'entry_number' => JournalEntry::generateNumber(),
+                'period_id'    => $period->id,
+                'entry_date'   => $entryDate,
+                'reference'    => $sale->invoice_number,
+                'type'         => $jeType,
+                'description'  => 'Sale Invoice: ' . $sale->invoice_number . ' — ' . $sale->item_type,
+                'total_debit'  => $amount,
+                'total_credit' => $amount,
+                'status'       => 'posted',
+                'created_by'   => $adminId,
+                'posted_by'    => $adminId,
+                'posted_at'    => now(),
+            ]);
+
+            // CR Revenue (always full amount)
+            JournalEntryLine::create([
+                'journal_entry_id' => $entry->id,
+                'account_id'       => $accts[$revCode],
+                'debit'            => 0,
+                'credit'           => $amount,
+                'description'      => $sale->invoice_number,
+            ]);
+
+            if ($status === 'Paid') {
+                // DR Bank or Cash for full amount
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $accts[$bankCode],
+                    'debit'            => $amount,
+                    'credit'           => 0,
+                    'description'      => $sale->invoice_number,
+                ]);
+            } elseif ($status === 'Partial' && $amountPaid > 0 && $remaining > 0 && isset($accts[$bankCode])) {
+                // DR Bank/Cash (paid portion) + DR AR (remaining)
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $accts[$bankCode],
+                    'debit'            => $amountPaid,
+                    'credit'           => 0,
+                    'description'      => $sale->invoice_number . ' (partial payment)',
+                ]);
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $accts[$arCode],
+                    'debit'            => $remaining,
+                    'credit'           => 0,
+                    'description'      => $sale->invoice_number . ' (outstanding)',
+                ]);
+            } else {
+                // Pending / Unbilled / Partial with no paid amount → DR AR full
+                JournalEntryLine::create([
+                    'journal_entry_id' => $entry->id,
+                    'account_id'       => $accts[$arCode],
+                    'debit'            => $amount,
+                    'credit'           => 0,
+                    'description'      => $sale->invoice_number,
+                ]);
+            }
+
+            // Link JE to sale (bypass observer to prevent loops)
+            SalesOrder::withoutEvents(fn() => $sale->update(['journal_entry_id' => $entry->id]));
+
+            // Update ledger balance cache
+            $this->ledger->updateAfterPost($entry->load('lines'));
+        });
     }
 
     // ── Shared helper ─────────────────────────────────────────────────────────

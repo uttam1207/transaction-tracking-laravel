@@ -118,6 +118,13 @@
     $opex         = $data['expenses']->filter(fn($r) => ($r->account->sub_type ?? '') !== 'cost_of_sales');
     $netCogs      = $cogs->sum('net');
     $netOpex      = $opex->sum('net');
+
+    // Split revenue: billed (sales / other_income) vs unbilled (unbilled_sales = account 4050)
+    $billedRevData   = $data['billedRevenue']   ?? $data['revenue']->filter(fn($r) => ($r->account->sub_type ?? '') !== 'unbilled_sales');
+    $unbilledRevData = $data['unbilledRevenue'] ?? $data['revenue']->filter(fn($r) => ($r->account->sub_type ?? '') === 'unbilled_sales');
+    $netBilledRev    = $billedRevData->sum('net');
+    $netUnbilledRev  = $unbilledRevData->sum('net');
+
     $grossProfit  = $data['netRevenue'] - $netCogs;
     $isGrossProfit= $grossProfit >= 0;
     $netIncome    = $data['netIncome'];
@@ -256,8 +263,14 @@
         <span><i class="bi bi-arrow-up-circle me-1"></i> REVENUE (INCOME)</span>
         <span>Amount (&#8377;)</span>
     </div>
-    @forelse($data['revenue'] as $row)
-    <div class="v-row">
+
+    {{-- A1: Billed Revenue --}}
+    <div style="padding:6px 24px 3px 28px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#059669;background:#f0fdf4;display:flex;justify-content:space-between;">
+        <span><span style="display:inline-block;background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:4px;font-size:.68rem;font-weight:700;margin-right:6px;">BILLED</span>Invoiced Sales (Paid / Pending / Partial)</span>
+        <span>{{ number_format($netBilledRev, 2) }}</span>
+    </div>
+    @forelse($billedRevData as $row)
+    <div class="v-row" style="padding-left:44px;">
         <span>
             <span class="acc-code">{{ $row->account->code }}</span>
             {{ $row->account->name }}
@@ -265,8 +278,26 @@
         <span style="color:#059669;font-weight:600;">{{ number_format($row->net, 2) }}</span>
     </div>
     @empty
-    <div class="v-row"><span style="color:#9ca3af;">No revenue entries found.</span><span>0.00</span></div>
+    <div class="v-row" style="padding-left:44px;"><span style="color:#9ca3af;">No billed revenue entries.</span><span>0.00</span></div>
     @endforelse
+
+    @if($netUnbilledRev > 0)
+    {{-- A2: Unbilled Revenue --}}
+    <div style="padding:6px 24px 3px 28px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d97706;background:#fffbeb;display:flex;justify-content:space-between;">
+        <span><span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:4px;font-size:.68rem;font-weight:700;margin-right:6px;">UNBILLED</span>Accrued / Not Yet Invoiced</span>
+        <span>{{ number_format($netUnbilledRev, 2) }}</span>
+    </div>
+    @foreach($unbilledRevData as $row)
+    <div class="v-row" style="padding-left:44px;">
+        <span>
+            <span class="acc-code">{{ $row->account->code }}</span>
+            {{ $row->account->name }}
+        </span>
+        <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
+    </div>
+    @endforeach
+    @endif
+
     <div class="v-subtotal">
         <span>Total Revenue (A)</span>
         <span style="color:#059669;">{{ number_format($data['netRevenue'], 2) }}</span>
@@ -424,18 +455,24 @@
                 <span>Amount (&#8377;)</span>
             </div>
 
-            <div class="h-cat-head"><i class="bi bi-arrow-up-circle me-1"></i>Revenue</div>
-            @forelse($data['revenue'] as $row)
+            <div class="h-cat-head"><i class="bi bi-arrow-up-circle me-1"></i>Revenue — Billed</div>
+            @forelse($billedRevData as $row)
             <div class="h-row">
-                <span>
-                    <span class="acc-code">{{ $row->account->code }}</span>
-                    {{ $row->account->name }}
-                </span>
+                <span><span class="acc-code">{{ $row->account->code }}</span>{{ $row->account->name }}</span>
                 <span style="color:#059669;font-weight:600;">{{ number_format($row->net, 2) }}</span>
             </div>
             @empty
-            <div class="h-row"><span style="color:#9ca3af;">No revenue entries.</span><span>0.00</span></div>
+            <div class="h-row"><span style="color:#9ca3af;">No billed revenue entries.</span><span>0.00</span></div>
             @endforelse
+            @if($netUnbilledRev > 0)
+            <div class="h-cat-head" style="background:#fffbeb;color:#92400e;"><i class="bi bi-hourglass-split me-1"></i>Revenue — Unbilled</div>
+            @foreach($unbilledRevData as $row)
+            <div class="h-row" style="background:#fffde7;">
+                <span><span class="acc-code">{{ $row->account->code }}</span>{{ $row->account->name }}</span>
+                <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
+            </div>
+            @endforeach
+            @endif
 
             @if(!$isProfit)
             <div class="h-net-row" style="background:linear-gradient(135deg,#fff1f2,#fee2e2);">

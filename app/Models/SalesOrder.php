@@ -30,6 +30,7 @@ class SalesOrder extends Model
         'total_amount',
         'amount_paid',
         'payment_status',
+        'payment_mode',
         'journal_entry_id',
         'transaction_id',
     ];
