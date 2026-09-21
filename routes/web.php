@@ -624,14 +624,14 @@ Route::prefix('admin')
     Route::post('/sales/{id}/restore',           [SalesModuleController::class, 'restore'])->name('sales.restore');
     Route::delete('/sales/{id}/force',           [SalesModuleController::class, 'forceDelete'])->name('sales.force-delete');
     Route::get('/sales/{salesOrder}/print',      [SalesModuleController::class, 'printInvoice'])->name('sales.print');
-    Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
-    // Sale Item Types management (AJAX CRUD)
+    // Sale Item Types management — must be before resource('sales') so it isn't caught by {salesOrder}
     Route::prefix('sales/item-types')->name('sales.item-types.')->group(function () {
         Route::get('/',           [SalesModuleController::class, 'itemTypesIndex'])->name('index');
         Route::post('/',          [SalesModuleController::class, 'itemTypesStore'])->name('store');
         Route::patch('/{type}',   [SalesModuleController::class, 'itemTypesUpdate'])->name('update');
         Route::delete('/{type}',  [SalesModuleController::class, 'itemTypesDestroy'])->name('destroy');
     });
+    Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
 
     // Module 15 — Maintenance
     Route::resource('maintenance', MaintenanceController::class)->parameters(['maintenance' => 'machineMaintenance']);

@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CrmCustomer;
+use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
 use App\Models\SaleItemType;
-use App\Models\SaleOrderItem;
 use App\Models\SalesOrder;
 use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SalesModuleController extends Controller
@@ -235,8 +237,9 @@ class SalesModuleController extends Controller
 
     public function destroy(SalesOrder $salesOrder)
     {
-        // Reverse any posted journal entry so the ledger stays balanced
-        if ($salesOrder->journal_entry_id) {
+        // Only reverse the JE for manually-created invoices.
+        // Transaction-linked invoices share the Transaction's JE — do not touch it.
+        if ($salesOrder->journal_entry_id && ! $salesOrder->transaction_id) {
             $this->ledger->reverseEntry(
                 $salesOrder->journal_entry_id,
                 'Deleted Sale: ' . $salesOrder->invoice_number
@@ -244,7 +247,7 @@ class SalesModuleController extends Controller
         }
 
         AuditLog::create([
-            'user_id'        => auth()->id(),
+            'user_id'        => Auth::id(),
             'event'          => 'deleted',
             'auditable_type' => SalesOrder::class,
             'auditable_id'   => $salesOrder->id,
@@ -252,7 +255,7 @@ class SalesModuleController extends Controller
             'new_values'     => null,
             'ip_address'     => request()->ip(),
             'module'         => 'sales',
-            'description'    => 'Sales invoice ' . $salesOrder->invoice_number . ' permanently deleted.',
+            'description'    => 'Sales invoice ' . $salesOrder->invoice_number . ' moved to trash.',
         ]);
 
         $salesOrder->delete(); // soft delete
@@ -282,7 +285,7 @@ class SalesModuleController extends Controller
         $salesOrder->restore();
 
         AuditLog::create([
-            'user_id'        => auth()->id(),
+            'user_id'        => Auth::id(),
             'event'          => 'restored',
             'auditable_type' => SalesOrder::class,
             'auditable_id'   => $salesOrder->id,
@@ -300,19 +303,40 @@ class SalesModuleController extends Controller
     public function forceDelete(int $id)
     {
         $salesOrder = SalesOrder::onlyTrashed()->findOrFail($id);
-        $inv = $salesOrder->invoice_number;
+        $inv        = $salesOrder->invoice_number;
 
-        // Reverse any posted journal entry so the ledger stays balanced on permanent delete
-        if ($salesOrder->journal_entry_id) {
-            $this->ledger->reverseEntry(
-                $salesOrder->journal_entry_id,
-                'Force Delete Sale: ' . $inv
-            );
-        }
+        DB::transaction(function () use ($salesOrder) {
+            // For manually-created invoices: permanently wipe the original JE and
+            // any reversal JE that was created when the invoice was soft-deleted.
+            // This ensures the balance sheet returns to its pre-invoice state.
+            //
+            // Transaction-linked invoices share the Transaction's JE — never touch it.
+            if ($salesOrder->journal_entry_id && ! $salesOrder->transaction_id) {
+                $jeIds = JournalEntry::where('id', $salesOrder->journal_entry_id)
+                    ->orWhere('reversal_of', $salesOrder->journal_entry_id)
+                    ->pluck('id');
 
-        $salesOrder->forceDelete();
+                JournalEntryLine::whereIn('journal_entry_id', $jeIds)->delete();
+                JournalEntry::whereIn('id', $jeIds)->delete();
+            }
+
+            $salesOrder->forceDelete();
+        });
+
+        AuditLog::create([
+            'user_id'        => Auth::id(),
+            'event'          => 'force_deleted',
+            'auditable_type' => SalesOrder::class,
+            'auditable_id'   => $id,
+            'old_values'     => null,
+            'new_values'     => null,
+            'ip_address'     => request()->ip(),
+            'module'         => 'sales',
+            'description'    => "Sales invoice {$inv} permanently deleted with all ledger entries.",
+        ]);
+
         return redirect()->route('admin.sales.trash')
-            ->with('success', "Sales invoice {$inv} permanently deleted. Ledger reversed.");
+            ->with('success', "Sales invoice {$inv} permanently deleted. Balance sheet updated.");
     }
 
     // ── Shared helper ─────────────────────────────────────────────────────────
@@ -337,16 +361,17 @@ class SalesModuleController extends Controller
 
             $isMilk  = (bool) ($isMilkMap[$typeId] ?? false);
 
+            // Amount is always Quantity × Rate for all item types.
+            // For milk types, fat_percentage and fat_rate are saved for reference only.
+            $rate   = (float) ($item['rate'] ?? 0);
+            $amount = $qty * $rate;
+
             if ($isMilk) {
-                $fat     = (float) ($item['fat_percentage'] ?? 0);
-                $fatRate = (float) ($item['fat_rate'] ?? 0);
-                $rate    = $fat * $fatRate;         // effective rate per litre
-                $amount  = $qty * $fat * $fatRate;
-                $fatPct  = $fat;
+                $fatVal  = ($item['fat_percentage'] ?? '') !== '' ? (float) $item['fat_percentage'] : null;
+                $fatRate = ($item['fat_rate']        ?? '') !== '' ? (float) $item['fat_rate']        : null;
+                $fatPct  = $fatVal;
             } else {
-                $rate    = (float) ($item['rate'] ?? 0);
-                $amount  = $qty * $rate;
-                $fat     = null;
+                $fatVal  = null;
                 $fatRate = null;
                 $fatPct  = null;
             }

@@ -126,7 +126,7 @@
                             <th style="min-width:180px;padding:10px 8px;">Item Type</th>
                             <th style="min-width:160px;padding:10px 8px;">Description</th>
                             <th style="min-width:90px;padding:10px 8px;">Quantity</th>
-                            <th style="min-width:230px;padding:10px 8px;">Rate / [Fat% × Fat Rate]</th>
+                            <th style="min-width:230px;padding:10px 8px;">Rate &amp; Fat Info</th>
                             <th style="min-width:110px;padding:10px 8px;text-align:right;">Amount</th>
                             <th style="width:40px;padding:10px 8px;"></th>
                         </tr>
@@ -204,10 +204,10 @@
         ).join('');
 
         const isMilk  = isMilkType(data.sale_item_type_id);
-        const qty     = data.quantity   || '';
-        const rate    = (data.rate && !isMilk) ? data.rate : '';
-        const fatPct  = data.fat_percentage || '';
-        const fatRate = data.fat_rate || '';
+        const qty     = data.quantity        || '';
+        const rate    = data.rate            || '';
+        const fatPct  = data.fat_percentage  || '';
+        const fatRate = data.fat_rate        || '';
         const desc    = (data.description || '').replace(/"/g, '&quot;');
         const amount  = parseFloat(data.amount) || 0;
 
@@ -228,22 +228,19 @@
                        step="0.01" min="0.01" placeholder="0" value="${qty}" required>
             </td>
             <td style="padding:6px 8px;vertical-align:top;">
-                <div class="rate-group${isMilk ? ' d-none' : ''}">
+                <div class="rate-group">
                     <input type="number" name="items[${idx}][rate]" class="form-control form-control-sm item-rate"
-                           step="0.01" min="0" placeholder="₹ per unit" value="${rate}"
-                           ${isMilk ? '' : 'required'}>
+                           step="0.01" min="0" placeholder="₹ per unit" value="${rate}" required>
                 </div>
-                <div class="fat-group${isMilk ? '' : ' d-none'}">
+                <div class="fat-group${isMilk ? '' : ' d-none'}" style="margin-top:4px;">
                     <div class="d-flex align-items-center gap-1">
                         <input type="number" name="items[${idx}][fat_percentage]" class="form-control form-control-sm item-fat"
-                               step="0.01" min="0.01" max="100" placeholder="Fat %" value="${fatPct}"
-                               ${isMilk ? 'required' : ''}>
+                               step="0.01" min="0" max="100" placeholder="Fat %" value="${fatPct}">
                         <span class="text-muted px-1" style="font-size:.85rem;">×</span>
                         <input type="number" name="items[${idx}][fat_rate]" class="form-control form-control-sm item-fat-rate"
-                               step="0.01" min="0.01" placeholder="Fat Rate" value="${fatRate}"
-                               ${isMilk ? 'required' : ''}>
+                               step="0.01" min="0" placeholder="Fat Rate" value="${fatRate}">
                     </div>
-                    <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Qty × Fat% × Fat Rate</div>
+                    <div style="font-size:.65rem;color:#9ca3af;margin-top:2px;">Fat info (reference only — not used in calculation)</div>
                 </div>
             </td>
             <td style="padding:6px 8px;text-align:right;vertical-align:middle;">
@@ -274,36 +271,19 @@
     function updateRowType(tr) {
         const sel  = tr.querySelector('.item-type-select');
         const milk = isMilkType(sel.value);
-        const rg   = tr.querySelector('.rate-group');
         const fg   = tr.querySelector('.fat-group');
-        const ri   = tr.querySelector('.item-rate');
-        const fi   = tr.querySelector('.item-fat');
-        const fri  = tr.querySelector('.item-fat-rate');
 
-        rg.classList.toggle('d-none', milk);
+        // Rate group is always visible; fat group only for milk types
         fg.classList.toggle('d-none', !milk);
-
-        if (ri)  { ri.required  = !milk; if (milk)  ri.value  = ''; }
-        if (fi)  { fi.required  =  milk; if (!milk) fi.value  = ''; }
-        if (fri) { fri.required =  milk; if (!milk) fri.value = ''; }
 
         recalcRow(tr);
     }
 
     function recalcRow(tr) {
-        const sel  = tr.querySelector('.item-type-select');
-        const qty  = parseFloat(tr.querySelector('.item-qty')?.value) || 0;
-        const milk = isMilkType(sel?.value);
-        let amount = 0;
-
-        if (milk) {
-            const fat = parseFloat(tr.querySelector('.item-fat')?.value)      || 0;
-            const fr  = parseFloat(tr.querySelector('.item-fat-rate')?.value) || 0;
-            amount = qty * fat * fr;
-        } else {
-            const rate = parseFloat(tr.querySelector('.item-rate')?.value) || 0;
-            amount = qty * rate;
-        }
+        const qty  = parseFloat(tr.querySelector('.item-qty')?.value)  || 0;
+        const rate = parseFloat(tr.querySelector('.item-rate')?.value) || 0;
+        // Always: Amount = Quantity × Rate (fat info is reference only)
+        let amount = qty * rate;
 
         const display = tr.querySelector('.item-amount-display');
         const hidden  = tr.querySelector('.item-amount-input');

@@ -149,7 +149,7 @@ class LedgerBalanceService
     {
         $query = JournalEntryLine::with('account')
             ->whereHas('journalEntry', function ($q) use ($periodId) {
-                $q->where('status', 'posted');
+                $q->whereIn('status', ['posted', 'reversed']);
                 if ($periodId) {
                     $q->where('period_id', $periodId);
                 }
@@ -177,7 +177,7 @@ class LedgerBalanceService
         $query = JournalEntryLine::with('journalEntry.period', 'journalEntry.createdBy')
             ->where('account_id', $accountId)
             ->whereHas('journalEntry', function ($q) use ($dateFrom, $dateTo) {
-                $q->where('status', 'posted');
+                $q->whereIn('status', ['posted', 'reversed']);
                 if ($dateFrom) $q->whereDate('entry_date', '>=', $dateFrom);
                 if ($dateTo)   $q->whereDate('entry_date', '<=', $dateTo);
             })
@@ -257,7 +257,11 @@ class LedgerBalanceService
         $rows = JournalEntryLine::with('account')
             ->whereHas('account', fn($q) => $q->where('type', $type))
             ->whereHas('journalEntry', function ($q) use ($periodId, $dateFrom, $dateTo) {
-                $q->where('status', 'posted');
+                // Include both 'posted' and 'reversed' so that a reversed entry and its
+                // reversal counterpart cancel each other out (net = 0) on reports.
+                // Deleted-invoice JEs are 'reversed'; their reversal JEs are 'posted'.
+                // Together they net to zero, giving accurate balance sheet / P&L figures.
+                $q->whereIn('status', ['posted', 'reversed']);
                 if ($periodId) $q->where('period_id', $periodId);
                 if ($dateFrom) $q->whereDate('entry_date', '>=', $dateFrom);
                 if ($dateTo)   $q->whereDate('entry_date', '<=', $dateTo);
