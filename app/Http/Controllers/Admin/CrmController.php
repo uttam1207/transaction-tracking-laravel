@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\CrmCategory;
 use App\Models\CrmCustomer;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CrmController extends Controller
 {
@@ -37,17 +39,20 @@ class CrmController extends Controller
 
     public function create()
     {
-        return view('admin.crm.create');
+        $categories = CrmCategory::where('is_active', true)->orderBy('name')->get();
+        return view('admin.crm.create', compact('categories'));
     }
     public function store(Request $request)
     {
+        $validCategories = CrmCategory::where('is_active', true)->pluck('name')->toArray();
+
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'category' => 'required|in:Milk Buyer,Animal Buyer,Franchise Lead,Investor,Government Official,Veterinary Doctor',
-            'phone' => 'required|regex:/^[6-9][0-9]{9}$/',
-            'email' => 'required|email|max:100',
-            'address' => 'nullable|string|max:255',
-            'status' => 'required|in:Lead,Contacted,Active Customer,Partner,Inactive',
+            'name'     => 'required|string|max:100',
+            'category' => ['required', Rule::in($validCategories)],
+            'phone'    => 'required|regex:/^[6-9][0-9]{9}$/',
+            'email'    => 'required|email|max:100',
+            'address'  => 'nullable|string|max:255',
+            'status'   => 'required|in:Lead,Contacted,Active Customer,Partner,Inactive',
         ]);
 
         CrmCustomer::create($validated);
@@ -89,14 +94,17 @@ class CrmController extends Controller
 
     public function edit(CrmCustomer $crmCustomer)
     {
-        return view('admin.crm.edit', compact('crmCustomer'));
+        $categories = CrmCategory::where('is_active', true)->orderBy('name')->get();
+        return view('admin.crm.edit', compact('crmCustomer', 'categories'));
     }
 
     public function update(Request $request, CrmCustomer $crmCustomer)
     {
+        $validCategories = CrmCategory::where('is_active', true)->pluck('name')->toArray();
+
         $validated = $request->validate([
             'name'                 => 'required|string|max:100',
-            'category'             => 'required|in:Milk Buyer,Animal Buyer,Franchise Lead,Investor,Government Official,Veterinary Doctor',
+            'category'             => ['required', Rule::in($validCategories)],
             'phone'                => 'required|regex:/^[6-9][0-9]{9}$/',
             'email'                => 'required|email|max:100',
             'address'              => 'nullable|string|max:255',

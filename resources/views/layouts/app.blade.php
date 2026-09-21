@@ -914,7 +914,7 @@
                 @php
                     $isErpActive = request()->routeIs('admin.dashboard') || request()->routeIs('documents.*') || request()->routeIs('questions.*') || request()->routeIs('admin.transactions.*') || request()->routeIs('admin.animals.*') || request()->routeIs('admin.milk.*') || request()->routeIs('admin.breeding.*') || request()->routeIs('admin.health.*') || request()->routeIs('admin.feed.*') || request()->routeIs('admin.farm.*') || request()->routeIs('admin.expenses.*') || request()->routeIs('admin.stock.*') || request()->routeIs('admin.maintenance.*') || request()->routeIs('admin.compliance.*') || request()->routeIs('admin.reports.center');
                     $isHrActive  = request()->routeIs('admin.users.*') || request()->routeIs('admin.employees.*') || request()->routeIs('admin.salaries.*') || request()->routeIs('admin.attendance.*') || request()->routeIs('admin.tasks.*') || request()->routeIs('admin.work-reports.*') || request()->routeIs('admin.timesheets.*') || request()->routeIs('admin.teams.*') || request()->routeIs('admin.shifts.*') || request()->routeIs('admin.departments.*') || request()->routeIs('admin.holidays.*') || request()->routeIs('admin.projects.*') || request()->routeIs('admin.queue.*') || request()->routeIs('admin.settings.*') || request()->routeIs('admin.wallets.*') || request()->routeIs('admin.roles.*') || request()->routeIs('admin.permissions.*') || request()->routeIs('admin.company.*') || request()->routeIs('admin.branches.*') || request()->routeIs('admin.designations.*') || request()->routeIs('admin.cost-centers.*') || request()->routeIs('admin.leave-types.*') || request()->routeIs('admin.leave-balances.*') || request()->routeIs('admin.salary-components.*') || request()->routeIs('admin.salary-structures.*') || request()->routeIs('admin.performance-reviews.*') || request()->routeIs('admin.approvals.*') || request()->routeIs('admin.recruitment.*') || request()->routeIs('admin.training.*') || request()->routeIs('admin.employee-assets.*') || request()->routeIs('admin.employee-lifecycle.*') || request()->routeIs('admin.transfers.*') || request()->routeIs('admin.leave-requests.*');
-                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.crm-leads.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.purchase-requests.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*') || request()->routeIs('admin.reports.vendor-ap-ar');
+                    $isCrmActive = request()->routeIs('admin.crm.*') || request()->routeIs('admin.crm-leads.*') || request()->routeIs('admin.crm-categories.*') || request()->routeIs('admin.franchise.*') || request()->routeIs('admin.procurement.*') || request()->routeIs('admin.purchase-requests.*') || request()->routeIs('admin.vendors.*') || request()->routeIs('admin.sales.*') || request()->routeIs('admin.contacts.*') || request()->routeIs('admin.contact-categories.*') || request()->routeIs('admin.reports.vendor-ap-ar');
                     if (!$isErpActive && !$isHrActive && !$isCrmActive) $isErpActive = true;
 
                     // Permission flags — used to hide entire groups/sub-titles when no access
@@ -1349,9 +1349,13 @@
                     </a>
                     @endif
                     @if(\App\Models\ServicePermission::canAccess('crm', $svcUser))
-                    <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.crm.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm.index') || request()->routeIs('admin.crm.show') || request()->routeIs('admin.crm.create') || request()->routeIs('admin.crm.edit') ? 'active' : '' }}">
                         <span class="nav-icon"><i class="bi bi-people-fill"></i></span>
                         <span class="nav-label">Customers</span>
+                    </a>
+                    <a href="{{ route('admin.crm-categories.index') }}" class="sidebar-link {{ request()->routeIs('admin.crm-categories.*') ? 'active' : '' }}">
+                        <span class="nav-icon"><i class="bi bi-tags-fill"></i></span>
+                        <span class="nav-label">Customer Categories</span>
                     </a>
                     @endif
                     @if(\App\Models\ServicePermission::canAccess('franchise', $svcUser))

@@ -81,6 +81,7 @@ use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\PurchaseRequestController;
 use App\Http\Controllers\Admin\WarehouseController;
 use App\Http\Controllers\Admin\CrmLeadController;
+use App\Http\Controllers\Admin\CrmCategoryController;
 
 // Auth Routes (Guest only)
 Route::middleware('guest')->group(function () {
@@ -494,6 +495,9 @@ Route::prefix('admin')
 
     // Module 11 — CRM
     Route::resource('crm', CrmController::class)->parameters(['crm' => 'crmCustomer']);
+    Route::resource('crm-categories', CrmCategoryController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['crm-categories' => 'crmCategory']);
 
     // Module 12 — Franchise Management
     Route::resource('franchise', FranchiseController::class)->parameters(['franchise' => 'franchise']);

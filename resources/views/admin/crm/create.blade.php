@@ -62,8 +62,8 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
                                 <select name="category" class="form-select @error('category') is-invalid @enderror">
-                                    @foreach(['Milk Buyer','Animal Buyer','Franchise Lead','Investor','Government Official','Veterinary Doctor'] as $cat)
-                                        <option value="{{ $cat }}" @selected(old('category')===$cat)>{{ $cat }}</option>
+                                    @foreach($categories as $cat)
+                                        <option value="{{ $cat->name }}" @selected(old('category')===$cat->name)>{{ $cat->name }}</option>
                                     @endforeach
                                 </select>
                                 @error('category')<div class="invalid-feedback">{{ $message }}</div>@enderror
