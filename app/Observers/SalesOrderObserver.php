@@ -15,8 +15,10 @@ use Illuminate\Support\Facades\Log;
  * created manually in the Finance → Journal Entries module.
  *
  * This observer handles only the wallet-balance side-effect:
- *   – Manual cash sale (Paid, no linked Transaction): credit company wallet.
- *   – Manual Pending/Partial → Paid conversion: credit company wallet.
+ *   – Paid / UnbilledPaid (full amount received): credit company wallet.
+ *   – Partial / UnbilledPartial (partial received): credit wallet for amount_paid only.
+ *   – Pending / Unbilled (nothing received yet): no wallet credit.
+ *   – When status later changes to Paid: credit wallet for full amount.
  *   – Wallet credits from Transaction-linked sales are already handled by
  *     TransactionController (no double credit needed here).
  */
@@ -24,26 +26,39 @@ class SalesOrderObserver
 {
     public function created(SalesOrder $salesOrder): void
     {
-        // Only sync wallet for fully-paid manual cash sales (no Transaction link)
-        if (
-            $salesOrder->payment_status === 'Paid'
-            && ! $salesOrder->transaction_id
-            && (float) $salesOrder->total_amount > 0
-        ) {
-            $this->creditWallet($salesOrder, (float) $salesOrder->total_amount, 'Sale: ');
+        if ($salesOrder->transaction_id) return; // Transaction-linked — wallet handled by TransactionController
+
+        $amount = match ($salesOrder->payment_status) {
+            'Paid', 'UnbilledPaid'         => (float) $salesOrder->total_amount,
+            'Partial', 'UnbilledPartial'   => (float) $salesOrder->amount_paid,
+            default                        => 0.0,
+        };
+
+        if ($amount > 0) {
+            $this->creditWallet($salesOrder, $amount, 'Sale: ');
         }
     }
 
     public function updated(SalesOrder $salesOrder): void
     {
-        // Status just turned Paid (was Pending/Partial/Unbilled), no linked transaction
-        $becamePaid = $salesOrder->wasChanged('payment_status')
-            && $salesOrder->payment_status === 'Paid'
-            && in_array($salesOrder->getOriginal('payment_status'), ['Pending', 'Partial', 'Unbilled'])
-            && ! $salesOrder->transaction_id;
+        if ($salesOrder->transaction_id) return; // Transaction-linked — handled elsewhere
 
-        if ($becamePaid && (float) $salesOrder->total_amount > 0) {
-            $this->creditWallet($salesOrder, (float) $salesOrder->total_amount, 'Payment received: ');
+        $statusChanged = $salesOrder->wasChanged('payment_status');
+        $oldStatus     = $salesOrder->getOriginal('payment_status');
+        $newStatus     = $salesOrder->payment_status;
+
+        // Status just turned fully Paid from any unpaid/partial state
+        if ($statusChanged && $newStatus === 'Paid'
+            && in_array($oldStatus, ['Pending', 'Partial', 'Unbilled', 'UnbilledPaid', 'UnbilledPartial'])
+        ) {
+            // Credit the remaining gap (full amount minus what was already credited on create)
+            $alreadyCredited = in_array($oldStatus, ['Partial', 'UnbilledPaid', 'UnbilledPartial'])
+                ? (float) $salesOrder->getOriginal('amount_paid')
+                : 0.0;
+            $gap = (float) $salesOrder->total_amount - $alreadyCredited;
+            if ($gap > 0) {
+                $this->creditWallet($salesOrder, $gap, 'Payment received: ');
+            }
         }
     }
 

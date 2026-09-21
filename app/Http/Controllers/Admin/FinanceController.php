@@ -425,8 +425,8 @@ class FinanceController extends Controller
         // getOutstandingAttribute() accessor that would override any 'outstanding' alias.
         // Use single-quoted SQL literals — double quotes break under MySQL ANSI_QUOTES mode.
         $arOutstandingExpr = "SUM(CASE
-            WHEN payment_status IN ('Pending','Unbilled','UnbilledPartial') THEN total_amount
-            WHEN payment_status = 'Partial' THEN GREATEST(0, total_amount - amount_paid)
+            WHEN payment_status IN ('Pending','Unbilled') THEN total_amount
+            WHEN payment_status IN ('Partial','UnbilledPartial') THEN GREATEST(0, total_amount - amount_paid)
             ELSE 0
         END)";
 
