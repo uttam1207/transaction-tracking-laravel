@@ -536,6 +536,8 @@ Route::prefix('admin')
 
         // Sync successful transactions to journal entries
         Route::post('/sync-transactions', [FinanceController::class, 'syncTransactions'])->name('sync-transactions');
+        // Sync missing journal entries for sales invoices (fix for UnbilledPaid/UnbilledPartial after migration)
+        Route::post('/sync-sales-jes', [FinanceController::class, 'syncSalesJEs'])->name('sync-sales-jes');
 
         // Business Ledgers — Bank Book, Sales/AR, Purchase/AP
         Route::get('/ledgers', [FinanceController::class, 'ledgers'])->name('ledgers.index');

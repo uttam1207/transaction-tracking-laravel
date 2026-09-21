@@ -12,6 +12,7 @@ use App\Models\PurchaseOrder;
 use App\Models\SalesOrder;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
+use App\Http\Controllers\Admin\SalesModuleController;
 use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -496,6 +497,54 @@ class FinanceController extends Controller
             'success' => true,
             'message' => "Synced {$synced} transaction(s) to journal entries."
                 . ($errors ? ' ' . count($errors) . ' failed.' : ''),
+            'count'   => $synced,
+            'errors'  => $errors,
+        ]);
+    }
+
+    /**
+     * Bulk-post journal entries for all sales orders that are missing one.
+     * Useful after deploying new payment-status variants (UnbilledPaid / UnbilledPartial)
+     * or after running migrations on production.
+     */
+    public function syncSalesJEs()
+    {
+        $salesController = app(SalesModuleController::class);
+
+        $pending = SalesOrder::whereNull('journal_entry_id')
+            ->whereNull('transaction_id')   // transaction-linked invoices share the Transaction JE
+            ->where('total_amount', '>', 0)
+            ->get();
+
+        if ($pending->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Nothing to sync — all sales invoices already have journal entries.',
+                'count'   => 0,
+            ]);
+        }
+
+        $synced = 0;
+        $errors = [];
+
+        foreach ($pending as $sale) {
+            try {
+                $salesController->postSaleJournalEntry($sale->fresh());
+                $sale->refresh();
+                if ($sale->journal_entry_id) {
+                    $synced++;
+                } else {
+                    $errors[] = $sale->invoice_number . ': no open period covers ' . $sale->sale_date->toDateString();
+                }
+            } catch (\Throwable $e) {
+                $errors[] = $sale->invoice_number . ': ' . $e->getMessage();
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Synced {$synced} sales invoice(s) to journal entries."
+                . ($errors ? ' ' . count($errors) . ' could not be posted.' : ''),
             'count'   => $synced,
             'errors'  => $errors,
         ]);

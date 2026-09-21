@@ -303,7 +303,7 @@ class SetupAccounting extends Command
                 $status     = $sale->payment_status;
                 $amountPaid = (float) $sale->amount_paid;
                 $remaining  = max(0.0, round($amount - $amountPaid, 2));
-                $isUnbilled = $status === 'Unbilled';
+                $isUnbilled = in_array($status, ['Unbilled', 'UnbilledPaid', 'UnbilledPartial']);
 
                 // Revenue account
                 $revCode = match (true) {
@@ -333,7 +333,7 @@ class SetupAccounting extends Command
 
                 if (! $periodId) { $salesFailed++; continue; }
 
-                $jeType = ($status === 'Paid') ? 'receipt' : 'sales';
+                $jeType = in_array($status, ['Paid', 'UnbilledPaid']) ? 'receipt' : 'sales';
 
                 DB::transaction(function () use (
                     $sale, $entryDate, $periodId, $amount, $amountPaid, $remaining,
@@ -357,17 +357,20 @@ class SetupAccounting extends Command
                     // CR Revenue always
                     JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $creditId, 'debit' => 0, 'credit' => $amount, 'description' => $sale->invoice_number]);
 
-                    if ($status === 'Paid') {
+                    if (in_array($status, ['Paid', 'UnbilledPaid'])) {
+                        // DR Bank/Cash — fully received (billed or unbilled)
                         $bankId = $accts[$bankCode] ?? null;
                         if ($bankId) {
                             JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $bankId, 'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
                         }
-                    } elseif ($status === 'Partial' && $amountPaid > 0 && $remaining > 0) {
+                    } elseif (in_array($status, ['Partial', 'UnbilledPartial']) && $amountPaid > 0 && $remaining > 0) {
+                        // DR Bank (paid portion) + DR AR (outstanding)
                         $bankId = $accts[$bankCode] ?? null;
                         $arId   = $accts[$arCode]   ?? null;
                         if ($bankId) JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $bankId, 'debit' => $amountPaid, 'credit' => 0, 'description' => $sale->invoice_number . ' (partial)']);
                         if ($arId)   JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $arId,   'debit' => $remaining,  'credit' => 0, 'description' => $sale->invoice_number . ' (outstanding)']);
                     } else {
+                        // Pending / Unbilled (not received) → DR AR full amount
                         $arId = $accts[$arCode] ?? null;
                         if ($arId) JournalEntryLine::create(['journal_entry_id' => $entry->id, 'account_id' => $arId, 'debit' => $amount, 'credit' => 0, 'description' => $sale->invoice_number]);
                     }

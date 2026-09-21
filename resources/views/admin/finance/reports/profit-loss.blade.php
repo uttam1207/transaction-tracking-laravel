@@ -281,13 +281,12 @@
     <div class="v-row" style="padding-left:44px;"><span style="color:#9ca3af;">No billed revenue entries.</span><span>0.00</span></div>
     @endforelse
 
-    @if($netUnbilledRev > 0)
-    {{-- A2: Unbilled Revenue --}}
+    {{-- A2: Unbilled Revenue (always shown so operators can see 0 if JEs are missing) --}}
     <div style="padding:6px 24px 3px 28px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#d97706;background:#fffbeb;display:flex;justify-content:space-between;">
         <span><span style="display:inline-block;background:#fef3c7;color:#92400e;padding:1px 8px;border-radius:4px;font-size:.68rem;font-weight:700;margin-right:6px;">UNBILLED</span>Accrued / Not Yet Invoiced</span>
         <span>{{ number_format($netUnbilledRev, 2) }}</span>
     </div>
-    @foreach($unbilledRevData as $row)
+    @forelse($unbilledRevData as $row)
     <div class="v-row" style="padding-left:44px;">
         <span>
             <span class="acc-code">{{ $row->account->code }}</span>
@@ -295,8 +294,9 @@
         </span>
         <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
     </div>
-    @endforeach
-    @endif
+    @empty
+    <div class="v-row" style="padding-left:44px;"><span style="color:#9ca3af;">No unbilled revenue entries — run <strong>Sync Sales JEs</strong> if invoices exist.</span><span>0.00</span></div>
+    @endforelse
 
     <div class="v-subtotal">
         <span>Total Revenue (A)</span>
@@ -464,15 +464,15 @@
             @empty
             <div class="h-row"><span style="color:#9ca3af;">No billed revenue entries.</span><span>0.00</span></div>
             @endforelse
-            @if($netUnbilledRev > 0)
             <div class="h-cat-head" style="background:#fffbeb;color:#92400e;"><i class="bi bi-hourglass-split me-1"></i>Revenue — Unbilled</div>
-            @foreach($unbilledRevData as $row)
+            @forelse($unbilledRevData as $row)
             <div class="h-row" style="background:#fffde7;">
                 <span><span class="acc-code">{{ $row->account->code }}</span>{{ $row->account->name }}</span>
                 <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
             </div>
-            @endforeach
-            @endif
+            @empty
+            <div class="h-row" style="background:#fffde7;"><span style="color:#9ca3af;">No unbilled entries.</span><span>0.00</span></div>
+            @endforelse
 
             @if(!$isProfit)
             <div class="h-net-row" style="background:linear-gradient(135deg,#fff1f2,#fee2e2);">

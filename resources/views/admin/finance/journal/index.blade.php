@@ -23,6 +23,12 @@
                class="btn btn-sm btn-outline-light px-3">
                 <i class="bi bi-file-earmark-pdf me-1"></i>PDF
             </a>
+            <button type="button" onclick="syncSalesJEs(this)"
+                    class="btn btn-sm px-3"
+                    style="background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;"
+                    title="Post missing journal entries for Unbilled / UnbilledPaid / UnbilledPartial invoices">
+                <i class="bi bi-receipt me-1"></i>Sync Sales JEs
+            </button>
             <a href="{{ route('admin.finance.journal.create') }}" class="btn btn-primary-grad btn-sm px-4">
                 <i class="bi bi-plus-lg me-1"></i> New Entry
             </a>
@@ -158,6 +164,28 @@ function reverseEntry(id) {
     }).then(r => r.json()).then(d => {
         if (d.success) location.reload();
         else APP.toast(d.message, 'error');
+    });
+}
+
+function syncSalesJEs(btn) {
+    if (!confirm('Post missing journal entries for all sales invoices (Unbilled / UnbilledPaid / UnbilledPartial)?\n\nThis is safe to run multiple times — invoices that already have a JE are skipped.')) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Syncing…';
+    fetch('{{ route("admin.finance.sync-sales-jes") }}', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+    }).then(r => r.json()).then(d => {
+        APP.toast(d.message, d.count > 0 ? 'success' : 'info');
+        if (d.errors && d.errors.length) {
+            console.warn('Sync Sales JEs — skipped:', d.errors);
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-receipt me-1"></i>Sync Sales JEs';
+        if (d.count > 0) setTimeout(() => location.reload(), 1500);
+    }).catch(() => {
+        APP.toast('Sync failed — check console.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-receipt me-1"></i>Sync Sales JEs';
     });
 }
 </script>
