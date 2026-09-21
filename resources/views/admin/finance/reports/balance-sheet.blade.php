@@ -358,7 +358,7 @@
 
             @foreach($rows as $row)
             <div class="bs-row">
-                @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->outstanding ?? 0) > 0))
+                @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->ar_outstanding ?? 0) > 0))
                     {{-- AR row with expandable customer drill-down --}}
                     <span>
                         <button type="button" onclick="toggleARDrilldown()"
@@ -387,23 +387,23 @@
                         </a>
                         <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
                     </span>
-                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($ar->outstanding, 2) }}</span>
+                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($ar->ar_outstanding, 2) }}</span>
                 </div>
                 @empty
                 @endforelse
-                @if(($walkInAR->outstanding ?? 0) > 0)
+                @if(($walkInAR->ar_outstanding ?? 0) > 0)
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 18px 4px 44px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
                     <span>
                         <i class="bi bi-person-dash-fill me-1" style="color:#64748b;font-size:.7rem;"></i>
                         Walk-in / Retail
                         <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $walkInAR->invoice_count }} inv.</span>
                     </span>
-                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($walkInAR->outstanding, 2) }}</span>
+                    <span style="color:#0c4a6e;font-weight:600;min-width:80px;text-align:right;">{{ number_format($walkInAR->ar_outstanding, 2) }}</span>
                 </div>
                 @endif
                 <div style="display:flex;justify-content:space-between;padding:4px 18px 4px 44px;font-size:.74rem;font-weight:700;color:#0369a1;background:#e0f2fe;">
                     <span>Total Receivable</span>
-                    <span>{{ number_format($arDrilldown->sum('outstanding') + ($walkInAR->outstanding ?? 0), 2) }}</span>
+                    <span>{{ number_format($arDrilldown->sum('ar_outstanding') + ($walkInAR->ar_outstanding ?? 0), 2) }}</span>
                 </div>
             </div>
             @endif
@@ -534,7 +534,7 @@
         <div class="bs-v-sec-head">{{ strtoupper($groupName) }}</div>
         @foreach($rows as $row)
         <div class="bs-v-row">
-            @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->outstanding ?? 0) > 0))
+            @if(($row->account->code ?? '') === '1100' && ($arDrilldown->count() > 0 || ($walkInAR->ar_outstanding ?? 0) > 0))
                 <span>
                     <button type="button" onclick="toggleARDrilldown()"
                         style="background:none;border:none;padding:0;color:inherit;font:inherit;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">
@@ -561,23 +561,23 @@
                     </a>
                     <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $ar->invoice_count }} inv.</span>
                 </span>
-                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($ar->outstanding, 2) }}</span>
+                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($ar->ar_outstanding, 2) }}</span>
             </div>
             @empty
             @endforelse
-            @if(($walkInAR->outstanding ?? 0) > 0)
+            @if(($walkInAR->ar_outstanding ?? 0) > 0)
             <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 24px 4px 52px;font-size:.78rem;border-bottom:1px solid #e0f2fe;">
                 <span>
                     <i class="bi bi-person-dash-fill me-1" style="color:#64748b;font-size:.7rem;"></i>
                     Walk-in / Retail
                     <span style="font-size:.68rem;color:#9ca3af;margin-left:4px;">{{ $walkInAR->invoice_count }} inv.</span>
                 </span>
-                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($walkInAR->outstanding, 2) }}</span>
+                <span style="color:#0c4a6e;font-weight:600;min-width:90px;text-align:right;">{{ number_format($walkInAR->ar_outstanding, 2) }}</span>
             </div>
             @endif
             <div style="display:flex;justify-content:space-between;padding:4px 24px 4px 52px;font-size:.74rem;font-weight:700;color:#0369a1;background:#e0f2fe;">
                 <span>Total Receivable</span>
-                <span>{{ number_format($arDrilldown->sum('outstanding') + ($walkInAR->outstanding ?? 0), 2) }}</span>
+                <span>{{ number_format($arDrilldown->sum('ar_outstanding') + ($walkInAR->ar_outstanding ?? 0), 2) }}</span>
             </div>
         </div>
         @endif

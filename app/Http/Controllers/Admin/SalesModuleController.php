@@ -90,7 +90,7 @@ class SalesModuleController extends Controller
             'sale_date'       => 'required|date',
             'due_date'        => 'nullable|date',
             'payment_terms'   => 'nullable|string|max:50',
-            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled,UnbilledPaid,UnbilledPartial',
             'payment_mode'    => 'nullable|in:Cash,Bank',
             'amount_paid'     => 'nullable|numeric|min:0',
             'items'           => 'required|array|min:1',
@@ -105,13 +105,13 @@ class SalesModuleController extends Controller
         }
 
         $amountPaid = match ($request->payment_status) {
-            'Paid'    => $totalAmount,
-            'Partial' => min((float) ($request->amount_paid ?? 0), $totalAmount),
-            default   => 0.0,
+            'Paid', 'UnbilledPaid'         => $totalAmount,
+            'Partial', 'UnbilledPartial'   => min((float) ($request->amount_paid ?? 0), $totalAmount),
+            default                        => 0.0,
         };
 
         // payment_mode only applies when money is actually received
-        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial'])
+        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial', 'UnbilledPaid', 'UnbilledPartial'])
             ? ($request->payment_mode ?: 'Bank')
             : null;
 
@@ -204,7 +204,7 @@ class SalesModuleController extends Controller
             'sale_date'       => 'required|date',
             'due_date'        => 'nullable|date',
             'payment_terms'   => 'nullable|string|max:50',
-            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled,UnbilledPaid,UnbilledPartial',
             'payment_mode'    => 'nullable|in:Cash,Bank',
             'amount_paid'     => 'nullable|numeric|min:0',
             'items'           => 'required|array|min:1',
@@ -219,12 +219,12 @@ class SalesModuleController extends Controller
         }
 
         $amountPaid = match ($request->payment_status) {
-            'Paid'    => $totalAmount,
-            'Partial' => min((float) ($request->amount_paid ?? $salesOrder->amount_paid), $totalAmount),
-            default   => 0.0,
+            'Paid', 'UnbilledPaid'         => $totalAmount,
+            'Partial', 'UnbilledPartial'   => min((float) ($request->amount_paid ?? $salesOrder->amount_paid), $totalAmount),
+            default                        => 0.0,
         };
 
-        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial'])
+        $paymentMode = in_array($request->payment_status, ['Paid', 'Partial', 'UnbilledPaid', 'UnbilledPartial'])
             ? ($request->payment_mode ?: 'Bank')
             : null;
 
@@ -396,11 +396,13 @@ class SalesModuleController extends Controller
      * Post the correct double-entry journal for a sales invoice based on
      * payment_status and payment_mode.
      *
-     *  Paid (Bank)  → DR 1010 Bank,     CR Revenue (full)
-     *  Paid (Cash)  → DR 1000 Cash,     CR Revenue (full)
-     *  Pending      → DR 1100 AR,        CR Revenue (full)
-     *  Partial      → DR 1010/1000 (paid) + DR 1100 AR (remaining), CR Revenue (full)
-     *  Unbilled     → DR 1100 AR,        CR 4050 Unbilled Revenue (full)
+     *  Paid (Bank)      → DR 1010 Bank,                      CR Revenue (full)
+     *  Paid (Cash)      → DR 1000 Cash,                      CR Revenue (full)
+     *  Pending          → DR 1100 AR,                         CR Revenue (full)
+     *  Partial          → DR 1010/1000 (paid) + DR 1100 AR (remaining), CR Revenue (full)
+     *  UnbilledPaid     → DR 1010/1000 Bank/Cash (full),     CR 4050 Unbilled Revenue
+     *  Unbilled         → DR 1100 AR (full),                  CR 4050 Unbilled Revenue
+     *  UnbilledPartial  → DR 1010/1000 (paid) + DR 1100 AR (remaining), CR 4050 Unbilled Revenue
      *
      * Skips silently if no financial period covers the sale date, or if the
      * invoice is linked to a Transaction (the Transaction already owns the JE).
@@ -419,7 +421,7 @@ class SalesModuleController extends Controller
         $remaining  = max(0.0, round($amount - $amountPaid, 2));
         $status     = $sale->payment_status;
         $mode       = $sale->payment_mode ?? 'Bank';
-        $isUnbilled = $status === 'Unbilled';
+        $isUnbilled = in_array($status, ['Unbilled', 'UnbilledPaid', 'UnbilledPartial']);
         $bankCode   = ($mode === 'Cash') ? '1000' : '1010';
         $arCode     = '1100';
         $revCode    = $this->revenueAccountCode($sale->item_type, $isUnbilled);
@@ -441,7 +443,7 @@ class SalesModuleController extends Controller
         if (! isset($accts[$revCode])) return; // Revenue account missing
 
         $adminId = Auth::id() ?? \App\Models\User::where('role', 'super_admin')->value('id') ?? 1;
-        $jeType  = ($status === 'Paid') ? 'receipt' : 'sales';
+        $jeType  = in_array($status, ['Paid', 'UnbilledPaid']) ? 'receipt' : 'sales';
 
         DB::transaction(function () use (
             $sale, $entryDate, $period, $amount, $amountPaid, $remaining,
@@ -471,8 +473,8 @@ class SalesModuleController extends Controller
                 'description'      => $sale->invoice_number,
             ]);
 
-            if ($status === 'Paid') {
-                // DR Bank or Cash for full amount
+            if (in_array($status, ['Paid', 'UnbilledPaid'])) {
+                // DR Bank or Cash for full amount (fully received, whether billed or unbilled)
                 JournalEntryLine::create([
                     'journal_entry_id' => $entry->id,
                     'account_id'       => $accts[$bankCode],
@@ -480,7 +482,7 @@ class SalesModuleController extends Controller
                     'credit'           => 0,
                     'description'      => $sale->invoice_number,
                 ]);
-            } elseif ($status === 'Partial' && $amountPaid > 0 && $remaining > 0 && isset($accts[$bankCode])) {
+            } elseif (in_array($status, ['Partial', 'UnbilledPartial']) && $amountPaid > 0 && $remaining > 0 && isset($accts[$bankCode])) {
                 // DR Bank/Cash (paid portion) + DR AR (remaining)
                 JournalEntryLine::create([
                     'journal_entry_id' => $entry->id,
@@ -497,7 +499,7 @@ class SalesModuleController extends Controller
                     'description'      => $sale->invoice_number . ' (outstanding)',
                 ]);
             } else {
-                // Pending / Unbilled / Partial with no paid amount → DR AR full
+                // Pending / Unbilled (not received) / edge case → DR AR full amount
                 JournalEntryLine::create([
                     'journal_entry_id' => $entry->id,
                     'account_id'       => $accts[$arCode],

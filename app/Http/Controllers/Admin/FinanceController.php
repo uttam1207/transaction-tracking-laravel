@@ -387,7 +387,7 @@ class FinanceController extends Controller
         }
 
         $billedSales   = (clone $salesQ)->whereIn('payment_status', ['Paid', 'Pending', 'Partial'])->sum('total_amount');
-        $unbilledSales = (clone $salesQ)->where('payment_status', 'Unbilled')->sum('total_amount');
+        $unbilledSales = (clone $salesQ)->whereIn('payment_status', ['Unbilled', 'UnbilledPaid', 'UnbilledPartial'])->sum('total_amount');
 
         $purchaseQ = PurchaseOrder::query();
         if ($selectedPeriod) {
@@ -417,30 +417,33 @@ class FinanceController extends Controller
         $data = $this->ledger->balanceSheet($periodId ?: null);
 
         // ── AR Drill-down: customer-wise outstanding receivables ──────────────
-        // Covers Pending, Partial, and Unbilled invoices — all create DR AR entries
-        // Pending/Unbilled: full total_amount is outstanding regardless of amount_paid
-        // Partial: only the remaining gap (GREATEST guards against negative)
-        // Use single-quoted string literals — double quotes break under MySQL ANSI_QUOTES mode
+        // Statuses that carry AR (money still owed):
+        //   Pending, Unbilled, UnbilledPartial → full total_amount outstanding
+        //   Partial                            → remaining gap (total - paid)
+        //   UnbilledPaid, Paid                 → no AR outstanding (fully received)
+        // Alias MUST be ar_outstanding (not outstanding) — the SalesOrder model has a
+        // getOutstandingAttribute() accessor that would override any 'outstanding' alias.
+        // Use single-quoted SQL literals — double quotes break under MySQL ANSI_QUOTES mode.
         $arOutstandingExpr = "SUM(CASE
-            WHEN payment_status IN ('Pending','Unbilled') THEN total_amount
+            WHEN payment_status IN ('Pending','Unbilled','UnbilledPartial') THEN total_amount
             WHEN payment_status = 'Partial' THEN GREATEST(0, total_amount - amount_paid)
             ELSE 0
         END)";
 
         $arDrilldown = SalesOrder::with('customer')
-            ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
+            ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled', 'UnbilledPartial'])
             ->whereNotNull('crm_customer_id')
             ->selectRaw("crm_customer_id,
-                {$arOutstandingExpr} as outstanding,
+                {$arOutstandingExpr} as ar_outstanding,
                 COUNT(*) as invoice_count")
             ->groupBy('crm_customer_id')
             ->havingRaw("{$arOutstandingExpr} > 0")
             ->get();
 
         // Walk-in (no CRM customer) outstanding
-        $walkInAR = SalesOrder::whereIn('payment_status', ['Pending', 'Partial', 'Unbilled'])
+        $walkInAR = SalesOrder::whereIn('payment_status', ['Pending', 'Partial', 'Unbilled', 'UnbilledPartial'])
             ->whereNull('crm_customer_id')
-            ->selectRaw("{$arOutstandingExpr} as outstanding,
+            ->selectRaw("{$arOutstandingExpr} as ar_outstanding,
                 COUNT(*) as invoice_count")
             ->first();
         // ─────────────────────────────────────────────────────────────────────
@@ -526,7 +529,7 @@ class FinanceController extends Controller
 
         // Customer-wise outstanding AR (unpaid/partial invoices)
         $customerAR = SalesOrder::with('customer')
-            ->whereIn('payment_status', ['Pending', 'Partial'])
+            ->whereIn('payment_status', ['Pending', 'Partial', 'Unbilled', 'UnbilledPartial'])
             ->selectRaw('crm_customer_id, SUM(total_amount) as outstanding, COUNT(*) as invoice_count')
             ->groupBy('crm_customer_id')
             ->get();

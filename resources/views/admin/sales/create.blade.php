@@ -150,13 +150,20 @@
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Payment Status <span class="text-danger">*</span></label>
                     <select name="payment_status" id="paymentStatus" class="form-select @error('payment_status') is-invalid @enderror" onchange="toggleAmountPaid()">
-                        @foreach(['Paid' => 'Paid (Invoice issued &amp; received)', 'Pending' => 'Pending (Invoice issued, not paid)', 'Partial' => 'Partial (Invoice issued, partly paid)', 'Unbilled' => 'Unbilled (Goods delivered, no invoice yet)'] as $val => $label)
+                        @foreach([
+                            'Paid'            => 'Paid (Invoice issued &amp; received)',
+                            'Pending'         => 'Pending (Invoice issued, not paid)',
+                            'Partial'         => 'Partial (Invoice issued, partly paid)',
+                            'UnbilledPaid'    => 'Unbilled — Goods delivered, Amount Received',
+                            'Unbilled'        => 'Unbilled — Goods delivered, Amount Not received',
+                            'UnbilledPartial' => 'Unbilled — Goods delivered, Amount partially Received',
+                        ] as $val => $label)
                             <option value="{{ $val }}" @selected(old('payment_status','Paid')===$val)>{!! $label !!}</option>
                         @endforeach
                     </select>
                     @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Paid', 'Partial', 'Unbilled']) ? '' : 'd-none' }}" id="paymentModeRow">
+                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Paid', 'Partial', 'UnbilledPaid', 'UnbilledPartial']) ? '' : 'd-none' }}" id="paymentModeRow">
                     <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
                     <select name="payment_mode" id="paymentMode" class="form-select @error('payment_mode') is-invalid @enderror">
                         <option value="Bank" @selected(old('payment_mode','Bank')==='Bank')>Bank Transfer / UPI</option>
@@ -165,7 +172,7 @@
                     <div style="font-size:.68rem;color:#9ca3af;margin-top:3px;">How was payment received?</div>
                     @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Partial', 'Unbilled']) ? '' : 'd-none' }}" id="amountPaidRow">
+                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Partial', 'UnbilledPartial']) ? '' : 'd-none' }}" id="amountPaidRow">
                     <label class="form-label fw-semibold">Amount Received (₹) <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaid"
                         class="form-control @error('amount_paid') is-invalid @enderror"
@@ -189,10 +196,11 @@
 <script>
 /* ── Global: must be available before the IIFE runs so onchange works ── */
 function toggleAmountPaid() {
-    var status   = document.getElementById('paymentStatus').value;
-    var hasMoney = status === 'Paid' || status === 'Partial' || status === 'Unbilled';
+    var status     = document.getElementById('paymentStatus').value;
+    var hasMoney   = ['Paid','Partial','UnbilledPaid','UnbilledPartial'].includes(status);
+    var hasPartial = status === 'Partial' || status === 'UnbilledPartial';
     document.getElementById('paymentModeRow').classList.toggle('d-none', !hasMoney);
-    document.getElementById('amountPaidRow').classList.toggle('d-none', status !== 'Partial' && status !== 'Unbilled');
+    document.getElementById('amountPaidRow').classList.toggle('d-none', !hasPartial);
 }
 </script>
 <script>

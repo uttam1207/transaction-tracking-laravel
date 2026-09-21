@@ -116,8 +116,16 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Payment</label>
             <select name="payment_status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                @foreach(['Paid','Pending','Partial','Unbilled','Overdue'] as $s)
-                    <option value="{{ $s }}" @selected(request('payment_status')===$s)>{{ $s }}</option>
+                @foreach([
+                    'Paid'            => 'Paid',
+                    'Pending'         => 'Pending',
+                    'Partial'         => 'Partial',
+                    'UnbilledPaid'    => 'Unbilled (Received)',
+                    'Unbilled'        => 'Unbilled (Not received)',
+                    'UnbilledPartial' => 'Unbilled (Partial)',
+                    'Overdue'         => 'Overdue',
+                ] as $val => $label)
+                    <option value="{{ $val }}" @selected(request('payment_status')===$val)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
