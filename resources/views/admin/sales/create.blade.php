@@ -156,7 +156,7 @@
                     </select>
                     @error('payment_status')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Paid', 'Partial']) ? '' : 'd-none' }}" id="paymentModeRow">
+                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Paid', 'Partial', 'Unbilled']) ? '' : 'd-none' }}" id="paymentModeRow">
                     <label class="form-label fw-semibold">Payment Mode <span class="text-danger">*</span></label>
                     <select name="payment_mode" id="paymentMode" class="form-select @error('payment_mode') is-invalid @enderror">
                         <option value="Bank" @selected(old('payment_mode','Bank')==='Bank')>Bank Transfer / UPI</option>
@@ -165,7 +165,7 @@
                     <div style="font-size:.68rem;color:#9ca3af;margin-top:3px;">How was payment received?</div>
                     @error('payment_mode')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3 d-none" id="amountPaidRow">
+                <div class="col-md-3 {{ in_array(old('payment_status', 'Paid'), ['Partial', 'Unbilled']) ? '' : 'd-none' }}" id="amountPaidRow">
                     <label class="form-label fw-semibold">Amount Received (₹) <span class="text-danger">*</span></label>
                     <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaid"
                         class="form-control @error('amount_paid') is-invalid @enderror"
@@ -186,6 +186,15 @@
 </div>
 
 @push('scripts')
+<script>
+/* ── Global: must be available before the IIFE runs so onchange works ── */
+function toggleAmountPaid() {
+    var status   = document.getElementById('paymentStatus').value;
+    var hasMoney = status === 'Paid' || status === 'Partial' || status === 'Unbilled';
+    document.getElementById('paymentModeRow').classList.toggle('d-none', !hasMoney);
+    document.getElementById('amountPaidRow').classList.toggle('d-none', status !== 'Partial' && status !== 'Unbilled');
+}
+</script>
 <script>
 (function () {
     /* ── Item types data from server ──────────────────────────────── */
@@ -345,14 +354,7 @@
         addRow();
     }
 
-    /* ── Payment status toggle ───────────────────────────────────── */
-    function toggleAmountPaid() {
-        const status      = document.getElementById('paymentStatus').value;
-        const hasMoney    = status === 'Paid' || status === 'Partial';
-        document.getElementById('paymentModeRow').classList.toggle('d-none', !hasMoney);
-        document.getElementById('amountPaidRow').classList.toggle('d-none', status !== 'Partial');
-    }
-    window.toggleAmountPaid = toggleAmountPaid;
+    /* ── Init payment toggle on load ────────────────────────────── */
     toggleAmountPaid();
 
     /* ── Payment terms → auto due date ──────────────────────────── */
