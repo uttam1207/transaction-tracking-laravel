@@ -11,7 +11,7 @@
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" style="position:relative;z-index:1;">
         <div>
             <h4>CRM & Lead Management</h4>
-            <p>Milk Buyers, Animal Buyers, Franchise Leads, Investors, Govt Officials & Vet Doctors</p>
+            <p>Manage customers, leads, and business contacts across all categories</p>
         </div>
         <a href="{{ route('admin.crm.create') }}" class="btn btn-primary-grad btn-sm px-4">
             <i class="bi bi-plus-lg me-1"></i>Add Contact
@@ -72,8 +72,8 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Category</label>
             <select name="category" class="form-select" onchange="this.form.submit()">
                 <option value="">All Categories</option>
-                @foreach(['Milk Buyer','Animal Buyer','Franchise Lead','Investor','Govt Official','Vet Doctor'] as $cat)
-                    <option value="{{ $cat }}" @selected(request('category')===$cat)>{{ $cat }}</option>
+                @foreach($allCategories as $cat)
+                    <option value="{{ $cat->name }}" @selected(request('category')===$cat->name)>{{ $cat->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -81,7 +81,7 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Status</label>
             <select name="status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                @foreach(['Active','Inactive','Lead','Prospect'] as $s)
+                @foreach(['Lead','Contacted','Active Customer','Partner','Inactive'] as $s)
                     <option value="{{ $s }}" @selected(request('status')===$s)>{{ $s }}</option>
                 @endforeach
             </select>
@@ -127,7 +127,12 @@
                             <div class="fw-bold" style="color:var(--primary);font-size:.87rem;">{{ $c->name }}</div>
                             <div style="font-size:.73rem;color:#9ca3af;">{{ $c->email ?? '' }}</div>
                         </td>
-                        <td><span class="spill spill-info">{{ $c->category }}</span></td>
+                        <td>
+                            @php $catClr = $categoryColors[$c->category] ?? '#6366f1'; @endphp
+                            <span style="display:inline-block;background:{{ $catClr }}18;color:{{ $catClr }};border:1px solid {{ $catClr }}40;border-radius:20px;padding:2px 10px;font-size:.74rem;font-weight:600;white-space:nowrap;">
+                                {{ $c->category }}
+                            </span>
+                        </td>
                         <td style="font-size:.82rem;">{{ $c->phone ?? '&#8212;' }}</td>
                         <td class="text-end fw-bold text-success">&#8377;{{ number_format($c->total_business_value,0) }}</td>
                         <td>

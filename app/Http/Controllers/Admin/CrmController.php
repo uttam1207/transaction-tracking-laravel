@@ -29,12 +29,17 @@ class CrmController extends Controller
 
         $customers = $query->latest()->paginate(15)->withQueryString();
         $summary = [
-            'total_buyers' => CrmCustomer::where('category', 'Milk Buyer')->count(),
+            'total_buyers'    => CrmCustomer::where('category', 'Milk Buyer')->count(),
             'franchise_leads' => CrmCustomer::where('category', 'Franchise Lead')->count(),
-            'investors' => CrmCustomer::where('category', 'Investor')->count(),
-            'total_business' => CrmCustomer::sum('total_business_value'),
+            'investors'       => CrmCustomer::where('category', 'Investor')->count(),
+            'total_business'  => CrmCustomer::sum('total_business_value'),
         ];
-        return view('admin.crm.index', compact('customers', 'summary'));
+
+        $allCategories = CrmCategory::orderBy('name')->get();
+        // Build name→color map for badge rendering in the view
+        $categoryColors = $allCategories->pluck('color', 'name')->toArray();
+
+        return view('admin.crm.index', compact('customers', 'summary', 'allCategories', 'categoryColors'));
     }
 
     public function create()
