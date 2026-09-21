@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class JournalEntry extends Model
 {
     protected $fillable = [
-        'entry_number', 'period_id', 'entry_date', 'reference', 'type',
-        'description', 'total_debit', 'total_credit', 'status',
+        'entry_number', 'period_id', 'contact_id', 'entry_date', 'reference', 'type',
+        'description', 'notes', 'total_debit', 'total_credit', 'status',
         'created_by', 'posted_by', 'posted_at', 'reversal_of',
     ];
 
@@ -22,6 +22,11 @@ class JournalEntry extends Model
     public function period()
     {
         return $this->belongsTo(FinancialPeriod::class, 'period_id');
+    }
+
+    public function contact()
+    {
+        return $this->belongsTo(CrmCustomer::class, 'contact_id');
     }
 
     public function createdBy()

@@ -44,11 +44,17 @@
                     <div class="col-sm-3"><div class="text-muted small">Date</div><div>{{ $entry->entry_date->format('d M Y') }}</div></div>
                     <div class="col-sm-3"><div class="text-muted small">Type</div><div><span class="badge bg-light text-dark border">{{ ucfirst($entry->type) }}</span></div></div>
                     <div class="col-sm-3"><div class="text-muted small">Period</div><div>{{ $entry->period?->name ?? '—' }}</div></div>
+                    @if ($entry->contact)
+                    <div class="col-sm-4"><div class="text-muted small">Customer / Contact</div><div class="fw-semibold">{{ $entry->contact->name }}</div></div>
+                    @endif
                     @if ($entry->reference)
                     <div class="col-sm-4"><div class="text-muted small">Reference</div><div>{{ $entry->reference }}</div></div>
                     @endif
                     @if ($entry->description)
                     <div class="col-12"><div class="text-muted small">Description</div><div>{{ $entry->description }}</div></div>
+                    @endif
+                    @if ($entry->notes)
+                    <div class="col-12"><div class="text-muted small">Notes <span style="font-size:.68rem;">(internal)</span></div><div style="font-size:.85rem;color:#6b7280;">{{ $entry->notes }}</div></div>
                     @endif
                 </div>
 

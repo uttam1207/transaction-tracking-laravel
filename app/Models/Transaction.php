@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\ChartOfAccount;
 use App\Models\JournalEntry;
+use App\Models\SalesOrder;
 use App\Models\User;
 use App\Models\TransactionLog;
 use App\Models\FraudAlert;
@@ -73,6 +74,11 @@ class Transaction extends Model
     public function journalEntry()
     {
         return $this->belongsTo(JournalEntry::class);
+    }
+
+    public function salesOrder()
+    {
+        return $this->hasOne(SalesOrder::class, 'transaction_id');
     }
 
     /** True if this transaction has been posted to the general ledger. */

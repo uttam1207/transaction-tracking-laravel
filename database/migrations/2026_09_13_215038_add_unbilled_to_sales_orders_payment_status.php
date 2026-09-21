@@ -7,13 +7,18 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE sales_orders MODIFY payment_status ENUM('Paid','Pending','Partial','Unbilled') NOT NULL DEFAULT 'Pending'");
+        // SQLite stores columns as TEXT; MODIFY COLUMN is MySQL-only syntax.
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE sales_orders MODIFY payment_status ENUM('Paid','Pending','Partial','Unbilled') NOT NULL DEFAULT 'Pending'");
+        }
     }
 
     public function down(): void
     {
-        // Remove Unbilled rows before reverting to old enum (to avoid truncation)
-        DB::statement("UPDATE sales_orders SET payment_status = 'Pending' WHERE payment_status = 'Unbilled'");
-        DB::statement("ALTER TABLE sales_orders MODIFY payment_status ENUM('Paid','Pending','Partial') NOT NULL DEFAULT 'Pending'");
+        if (DB::connection()->getDriverName() === 'mysql') {
+            // Remove Unbilled rows before reverting to old enum (to avoid truncation)
+            DB::statement("UPDATE sales_orders SET payment_status = 'Pending' WHERE payment_status = 'Unbilled'");
+            DB::statement("ALTER TABLE sales_orders MODIFY payment_status ENUM('Paid','Pending','Partial') NOT NULL DEFAULT 'Pending'");
+        }
     }
 };

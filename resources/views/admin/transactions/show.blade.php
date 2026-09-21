@@ -548,6 +548,45 @@
             </div>
         </div>
 
+        {{-- Auto-Generated Invoice --}}
+        @if($transaction->salesOrder)
+        @php $inv = $transaction->salesOrder; @endphp
+        <div class="info-card" style="border:2px solid #d1fae5;">
+            <div class="info-card-header" style="background:#f0fdf4;color:#065f46;">
+                <i class="bi bi-receipt-cutoff" style="color:#059669;"></i>
+                Auto-Generated Invoice
+            </div>
+            <div class="info-card-body">
+                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                    <div>
+                        <div style="font-weight:700;font-size:.9rem;color:#065f46;">{{ $inv->invoice_number }}</div>
+                        <div style="font-size:.75rem;color:#6b7280;margin-top:2px;">{{ $inv->sale_date?->format('d M Y') }}</div>
+                    </div>
+                    <a href="{{ route('admin.sales.show', $inv->id) }}"
+                       style="background:#059669;color:#fff;padding:5px 14px;border-radius:8px;font-size:.78rem;font-weight:600;text-decoration:none;">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>View Invoice
+                    </a>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:.78rem;color:#6b7280;">Status</span>
+                    @php
+                        $iBadge = match($inv->payment_status) {
+                            'Paid'    => 'spill-success',
+                            'Pending' => 'spill-warning',
+                            'Partial' => 'spill-info',
+                            default   => 'spill-secondary',
+                        };
+                    @endphp
+                    <span class="spill {{ $iBadge }}" style="font-size:.72rem;">{{ $inv->payment_status }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:.78rem;color:#6b7280;">Total</span>
+                    <span style="font-size:.88rem;font-weight:700;color:#059669;">₹{{ number_format($inv->total_amount, 2) }}</span>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Fraud Alerts --}}
         @if($transaction->fraudAlerts->count())
         <div class="info-card">

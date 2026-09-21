@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ChartOfAccount extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'code', 'name', 'type', 'sub_type', 'parent_id',
         'description', 'is_active', 'allow_direct_posting',

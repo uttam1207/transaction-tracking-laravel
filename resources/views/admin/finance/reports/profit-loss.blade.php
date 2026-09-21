@@ -113,14 +113,22 @@
 @section('content')
 
 @php
-    $netIncome = $data['netIncome'];
-    $isProfit  = $netIncome >= 0;
-    $margin    = $data['netRevenue'] > 0 ? round(($netIncome / $data['netRevenue']) * 100, 1) : 0;
-    $total     = $data['netRevenue'] + $data['netExpenses'];
-    $pct       = $total > 0 ? min(100, ($data['netRevenue'] / $total) * 100) : 0;
-    $fmt       = request('view', 'vertical');
-    $periodLabel = $selectedPeriod ? $selectedPeriod->name : 'All Periods';
-    $dateRange   = ($dateFrom && $dateTo) ? "$dateFrom — $dateTo" : ($selectedPeriod ? $selectedPeriod->start_date->format('d M Y') . ' — ' . $selectedPeriod->end_date->format('d M Y') : now()->format('d M Y'));
+    // Split expenses: sub_type 'cost_of_sales' = COGS, everything else = Operating Expenses
+    $cogs         = $data['expenses']->filter(fn($r) => ($r->account->sub_type ?? '') === 'cost_of_sales');
+    $opex         = $data['expenses']->filter(fn($r) => ($r->account->sub_type ?? '') !== 'cost_of_sales');
+    $netCogs      = $cogs->sum('net');
+    $netOpex      = $opex->sum('net');
+    $grossProfit  = $data['netRevenue'] - $netCogs;
+    $isGrossProfit= $grossProfit >= 0;
+    $netIncome    = $data['netIncome'];
+    $isProfit     = $netIncome >= 0;
+    $grossMargin  = $data['netRevenue'] > 0 ? round(($grossProfit / $data['netRevenue']) * 100, 1) : 0;
+    $margin       = $data['netRevenue'] > 0 ? round(($netIncome / $data['netRevenue']) * 100, 1) : 0;
+    $total        = $data['netRevenue'] + $data['netExpenses'];
+    $pct          = $total > 0 ? min(100, ($data['netRevenue'] / $total) * 100) : 0;
+    $fmt          = request('view', 'vertical');
+    $periodLabel  = $selectedPeriod ? $selectedPeriod->name : 'All Periods';
+    $dateRange    = ($dateFrom && $dateTo) ? "$dateFrom — $dateTo" : ($selectedPeriod ? $selectedPeriod->start_date->format('d M Y') . ' — ' . $selectedPeriod->end_date->format('d M Y') : now()->format('d M Y'));
 @endphp
 
 <div class="page-hero">
@@ -169,10 +177,12 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 8px rgba(0,0,0,.07);border-left:4px solid #ef4444;">
-            <div style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Total Expenses</div>
-            <div style="font-size:1.45rem;font-weight:800;color:#1e293b;margin-top:5px;line-height:1.2;">&#8377;{{ number_format($data['netExpenses'], 2) }}</div>
-            <div style="font-size:.72rem;color:#ef4444;margin-top:3px;font-weight:600;">{{ $data['expenses']->count() }} accounts</div>
+        <div style="background:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 1px 8px rgba(0,0,0,.07);border-left:4px solid {{ $isGrossProfit ? '#0891b2' : '#ef4444' }};">
+            <div style="font-size:.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px;">Gross Profit</div>
+            <div style="font-size:1.45rem;font-weight:800;color:{{ $isGrossProfit ? '#0e7490' : '#dc2626' }};margin-top:5px;line-height:1.2;">
+                &#8377;{{ number_format($grossProfit, 2) }}
+            </div>
+            <div style="font-size:.72rem;color:#6b7280;margin-top:3px;font-weight:600;">Gross Margin: {{ $grossMargin }}%</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
@@ -181,7 +191,7 @@
             <div style="font-size:1.45rem;font-weight:800;color:{{ $isProfit ? '#059669' : '#dc2626' }};margin-top:5px;line-height:1.2;">
                 {{ $isProfit ? '+' : '' }}&#8377;{{ number_format($netIncome, 2) }}
             </div>
-            <div style="font-size:.72rem;color:{{ $isProfit ? '#10b981' : '#ef4444' }};margin-top:3px;font-weight:600;">Revenue − Expenses</div>
+            <div style="font-size:.72rem;color:{{ $isProfit ? '#10b981' : '#ef4444' }};margin-top:3px;font-weight:600;">Revenue − All Expenses</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
@@ -241,9 +251,9 @@
         <div class="stmt-date">For the Period: {{ $dateRange }} &nbsp;|&nbsp; {{ $periodLabel }}</div>
     </div>
 
-    {{-- INCOME --}}
+    {{-- ── A) REVENUE ──────────────────────────────── --}}
     <div class="v-section-head" style="background:#ecfdf5;color:#065f46;">
-        <span><i class="bi bi-arrow-up-circle me-1"></i> INCOME</span>
+        <span><i class="bi bi-arrow-up-circle me-1"></i> REVENUE (INCOME)</span>
         <span>Amount (&#8377;)</span>
     </div>
     @forelse($data['revenue'] as $row)
@@ -258,18 +268,54 @@
     <div class="v-row"><span style="color:#9ca3af;">No revenue entries found.</span><span>0.00</span></div>
     @endforelse
     <div class="v-subtotal">
-        <span>Total Income (A)</span>
+        <span>Total Revenue (A)</span>
         <span style="color:#059669;">{{ number_format($data['netRevenue'], 2) }}</span>
     </div>
 
     <div class="v-spacer"></div>
 
-    {{-- EXPENDITURE --}}
-    <div class="v-section-head" style="background:#fff1f2;color:#991b1b;">
-        <span><i class="bi bi-arrow-down-circle me-1"></i> EXPENDITURE</span>
+    {{-- ── B) COST OF GOODS SOLD ───────────────────── --}}
+    <div class="v-section-head" style="background:#fff7ed;color:#92400e;">
+        <span><i class="bi bi-box-seam me-1"></i> COST OF GOODS SOLD (COGS)</span>
         <span>Amount (&#8377;)</span>
     </div>
-    @forelse($data['expenses'] as $row)
+    @forelse($cogs as $row)
+    <div class="v-row">
+        <span>
+            <span class="acc-code">{{ $row->account->code }}</span>
+            {{ $row->account->name }}
+        </span>
+        <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
+    </div>
+    @empty
+    <div class="v-row"><span style="color:#9ca3af;">No COGS entries (sub_type: cost_of_sales).</span><span>0.00</span></div>
+    @endforelse
+    <div class="v-subtotal">
+        <span>Total COGS (B)</span>
+        <span style="color:#d97706;">{{ number_format($netCogs, 2) }}</span>
+    </div>
+
+    <div class="v-spacer" style="height:0;"></div>
+
+    {{-- ── GROSS PROFIT ────────────────────────────── --}}
+    <div class="v-net-profit" style="background:{{ $isGrossProfit ? 'linear-gradient(135deg,#f0f9ff,#e0f2fe)' : 'linear-gradient(135deg,#fff1f2,#fee2e2)' }};border-top:2px solid {{ $isGrossProfit ? '#0891b2' : '#ef4444' }};">
+        <span style="color:{{ $isGrossProfit ? '#0c4a6e' : '#991b1b' }};font-size:.88rem;">
+            <i class="bi bi-calculator me-1"></i>GROSS PROFIT (A &minus; B)
+        </span>
+        <span style="font-size:1rem;color:{{ $isGrossProfit ? '#0891b2' : '#dc2626' }};">
+            &#8377;{{ number_format($grossProfit, 2) }}
+            <small style="font-size:.68rem;font-weight:600;opacity:.75;margin-left:6px;">{{ $grossMargin }}% margin</small>
+        </span>
+    </div>
+
+    <div class="v-spacer"></div>
+
+    {{-- ── C) OPERATING EXPENSES ───────────────────── --}}
+    <div class="v-section-head" style="background:#fff1f2;color:#991b1b;">
+        <span><i class="bi bi-arrow-down-circle me-1"></i> OPERATING EXPENSES</span>
+        <span>Amount (&#8377;)</span>
+    </div>
+    @forelse($opex as $row)
     <div class="v-row">
         <span>
             <span class="acc-code">{{ $row->account->code }}</span>
@@ -278,24 +324,25 @@
         <span style="color:#dc2626;font-weight:600;">{{ number_format($row->net, 2) }}</span>
     </div>
     @empty
-    <div class="v-row"><span style="color:#9ca3af;">No expense entries found.</span><span>0.00</span></div>
+    <div class="v-row"><span style="color:#9ca3af;">No operating expense entries.</span><span>0.00</span></div>
     @endforelse
     <div class="v-subtotal">
-        <span>Total Expenditure (B)</span>
-        <span style="color:#dc2626;">{{ number_format($data['netExpenses'], 2) }}</span>
+        <span>Total Operating Expenses (C)</span>
+        <span style="color:#dc2626;">{{ number_format($netOpex, 2) }}</span>
     </div>
 
     <div class="v-spacer"></div>
 
-    {{-- NET PROFIT / LOSS --}}
+    {{-- ── NET PROFIT / LOSS ───────────────────────── --}}
     <div class="v-net-profit"
          style="background:{{ $isProfit ? 'linear-gradient(135deg,#ecfdf5,#d1fae5)' : 'linear-gradient(135deg,#fff1f2,#fee2e2)' }};">
         <span style="color:{{ $isProfit ? '#065f46' : '#991b1b' }};">
             <i class="bi bi-{{ $isProfit ? 'graph-up-arrow' : 'graph-down-arrow' }} me-2"></i>
-            NET {{ $isProfit ? 'PROFIT' : 'LOSS' }} (A &minus; B)
+            NET {{ $isProfit ? 'PROFIT' : 'LOSS' }} (Gross Profit &minus; C)
         </span>
         <span style="font-size:1.15rem;color:{{ $isProfit ? '#059669' : '#dc2626' }};">
             {{ $isProfit ? '' : '(' }}&#8377;{{ number_format(abs($netIncome), 2) }}{{ $isProfit ? '' : ')' }}
+            <small style="font-size:.68rem;font-weight:600;opacity:.75;margin-left:6px;">{{ $margin }}% net margin</small>
         </span>
     </div>
 
@@ -306,9 +353,9 @@
             <div style="width:{{ 100 - $pct }}%;background:#ef4444;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:.75rem;font-weight:600;">
-            <span style="color:#059669;"><i class="bi bi-arrow-up-circle me-1"></i>Income: &#8377;{{ number_format($data['netRevenue'], 2) }}</span>
-            <span style="color:#6b7280;">Margin: {{ $margin }}%</span>
-            <span style="color:#dc2626;"><i class="bi bi-arrow-down-circle me-1"></i>Expenditure: &#8377;{{ number_format($data['netExpenses'], 2) }}</span>
+            <span style="color:#059669;"><i class="bi bi-arrow-up-circle me-1"></i>Revenue: &#8377;{{ number_format($data['netRevenue'], 2) }}</span>
+            <span style="color:#0891b2;">Gross Profit: &#8377;{{ number_format($grossProfit, 2) }}</span>
+            <span style="color:{{ $isProfit ? '#059669' : '#dc2626' }};">Net {{ $isProfit ? 'Profit' : 'Loss' }}: &#8377;{{ number_format(abs($netIncome), 2) }}</span>
         </div>
     </div>
 </div>
@@ -333,17 +380,28 @@
                 <span>Amount (&#8377;)</span>
             </div>
 
-            <div class="h-cat-head"><i class="bi bi-arrow-down-circle me-1"></i>Expenses</div>
-            @forelse($data['expenses'] as $row)
+            <div class="h-cat-head" style="background:#fff7ed;color:#92400e;"><i class="bi bi-box-seam me-1"></i>Cost of Goods Sold</div>
+            @forelse($cogs as $row)
             <div class="h-row">
-                <span>
-                    <span class="acc-code">{{ $row->account->code }}</span>
-                    {{ $row->account->name }}
-                </span>
+                <span><span class="acc-code">{{ $row->account->code }}</span>{{ $row->account->name }}</span>
+                <span style="color:#d97706;font-weight:600;">{{ number_format($row->net, 2) }}</span>
+            </div>
+            @empty
+            <div class="h-row"><span style="color:#9ca3af;">No COGS entries.</span><span>0.00</span></div>
+            @endforelse
+            <div class="h-subtotal" style="background:#fffbeb;">
+                <span style="color:#92400e;">Total COGS</span>
+                <span style="color:#d97706;">{{ number_format($netCogs, 2) }}</span>
+            </div>
+
+            <div class="h-cat-head"><i class="bi bi-arrow-down-circle me-1"></i>Operating Expenses</div>
+            @forelse($opex as $row)
+            <div class="h-row">
+                <span><span class="acc-code">{{ $row->account->code }}</span>{{ $row->account->name }}</span>
                 <span style="color:#dc2626;font-weight:600;">{{ number_format($row->net, 2) }}</span>
             </div>
             @empty
-            <div class="h-row"><span style="color:#9ca3af;">No expense entries.</span><span>0.00</span></div>
+            <div class="h-row"><span style="color:#9ca3af;">No operating expense entries.</span><span>0.00</span></div>
             @endforelse
 
             @if($isProfit)

@@ -52,17 +52,22 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="kpi-card" style="background:linear-gradient(135deg,#0d9488,#0891b2);">
-            <i class="bi bi-bag-check-fill kpi-icon"></i>
-            <div class="kpi-value" style="font-size:1.4rem;">&#8377;{{ number_format($summary['animal_sales'],0) }}</div>
-            <div class="kpi-label">Animal Sales</div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3">
         <div class="kpi-card" style="background:linear-gradient(135deg,#dc2626,#9f1239);">
             <i class="bi bi-clock-history kpi-icon"></i>
             <div class="kpi-value" style="font-size:1.4rem;">&#8377;{{ number_format($summary['pending_payment'],0) }}</div>
             <div class="kpi-label">Pending Outstanding</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card" style="background:linear-gradient(135deg,#b45309,#d97706);">
+            <i class="bi bi-exclamation-triangle-fill kpi-icon"></i>
+            <div class="kpi-value" style="font-size:1.4rem;">
+                {{ $summary['overdue_count'] }}
+                @if($summary['overdue_count'] > 0)
+                    <span style="font-size:.7rem;font-weight:600;opacity:.85;display:block;margin-top:2px;">&#8377;{{ number_format($summary['overdue_balance'],0) }}</span>
+                @endif
+            </div>
+            <div class="kpi-label">Overdue Invoices</div>
         </div>
     </div>
 </div>
@@ -70,6 +75,11 @@
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-3">
         {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+@if(session('warning'))
+    <div class="alert alert-warning alert-dismissible fade show mb-3">
+        {{ session('warning') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
 
@@ -97,7 +107,7 @@
             <label class="form-label fw-semibold" style="font-size:.75rem;color:#6b7280;margin-bottom:4px;">Payment</label>
             <select name="payment_status" class="form-select" onchange="this.form.submit()">
                 <option value="">All Status</option>
-                @foreach(['Paid','Pending','Partial','Unbilled'] as $s)
+                @foreach(['Paid','Pending','Partial','Unbilled','Overdue'] as $s)
                     <option value="{{ $s }}" @selected(request('payment_status')===$s)>{{ $s }}</option>
                 @endforeach
             </select>
@@ -131,31 +141,78 @@
         <table class="table modern-table mb-0">
             <thead>
                 <tr>
-                    <th>Invoice</th><th>Date</th><th>Customer</th><th>Item Type</th>
-                    <th class="text-end">Qty</th><th class="text-end">Total</th><th>Payment</th>
+                    <th>Invoice</th>
+                    <th>Date</th>
+                    <th>Due Date</th>
+                    <th>Customer</th>
+                    <th>Item Type</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Balance Due</th>
+                    <th>Status</th>
                     <th style="width:80px;text-align:center;">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($sales as $s)
-                    <tr>
+                    @php
+                        $today    = now()->startOfDay();
+                        $isOverdue = $s->due_date
+                            && !in_array($s->payment_status, ['Paid'])
+                            && $s->due_date->lt($today);
+                        $overdueDays = $isOverdue ? $today->diffInDays($s->due_date) : 0;
+                        $outstanding = max(0, (float)$s->total_amount - (float)$s->amount_paid);
+                    @endphp
+                    <tr class="{{ $isOverdue ? 'table-danger-soft' : '' }}">
                         <td>
                             <div class="fw-bold" style="color:var(--primary);font-size:.87rem;">{{ $s->invoice_number }}</div>
+                            @if($s->payment_terms)
+                                <div style="font-size:.68rem;color:#9ca3af;">{{ $s->payment_terms }}</div>
+                            @endif
                         </td>
                         <td style="font-size:.82rem;">{{ $s->sale_date?->format('d M Y') }}</td>
+                        <td style="font-size:.82rem;">
+                            @if($s->due_date)
+                                <div class="{{ $isOverdue ? 'text-danger fw-semibold' : 'text-body' }}">
+                                    {{ $s->due_date->format('d M Y') }}
+                                </div>
+                                @if($isOverdue)
+                                    <div style="font-size:.65rem;font-weight:700;color:#dc2626;letter-spacing:.02em;">
+                                        OVERDUE {{ $overdueDays }}d
+                                    </div>
+                                @endif
+                            @else
+                                <span style="color:#d1d5db;">—</span>
+                            @endif
+                        </td>
                         <td style="font-size:.83rem;">{{ $s->customer?->name ?? 'Retail Customer' }}</td>
                         <td><span class="spill spill-info">{{ $s->item_type }}</span></td>
-                        <td class="text-end" style="font-size:.83rem;">{{ number_format($s->quantity,1) }}</td>
                         <td class="text-end fw-bold text-success">&#8377;{{ number_format($s->total_amount,2) }}</td>
+                        <td class="text-end">
+                            @if($s->payment_status === 'Paid')
+                                <span style="font-size:.8rem;color:#16a34a;font-weight:600;">Settled</span>
+                            @else
+                                <span class="fw-bold {{ $isOverdue ? 'text-danger' : 'text-warning' }}" style="font-size:.9rem;">
+                                    &#8377;{{ number_format($outstanding,2) }}
+                                </span>
+                            @endif
+                        </td>
                         <td>
                             @php
-                                $pColor = match($s->payment_status) {
-                                    'Paid'    => 'spill-success',
-                                    'Pending' => 'spill-warning',
-                                    default   => 'spill-info',
+                                $pColor = match(true) {
+                                    $isOverdue                          => 'spill-danger',
+                                    $s->payment_status === 'Paid'       => 'spill-success',
+                                    $s->payment_status === 'Pending'    => 'spill-warning',
+                                    $s->payment_status === 'Partial'    => 'spill-info',
+                                    default                             => 'spill-secondary',
                                 };
+                                $label = $isOverdue ? 'Overdue' : $s->payment_status;
                             @endphp
-                            <span class="spill {{ $pColor }}">{{ $s->payment_status }}</span>
+                                <span class="spill {{ $pColor }}">{{ $label }}</span>
+                            @if($s->transaction_id)
+                                <div style="margin-top:3px;">
+                                    <span class="spill spill-info" style="font-size:.65rem;padding:1px 6px;opacity:.85;">Via TXN</span>
+                                </div>
+                            @endif
                         </td>
                         <td style="text-align:center;">
                             <a href="{{ route('admin.sales.show',$s) }}" class="act-btn act-view"><i class="bi bi-eye"></i></a>
@@ -163,7 +220,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8" class="empty-state"><i class="bi bi-cash-coin"></i><p>No sales invoices recorded</p></td></tr>
+                    <tr><td colspan="9" class="empty-state"><i class="bi bi-cash-coin"></i><p>No sales invoices recorded</p></td></tr>
                 @endforelse
             </tbody>
         </table>

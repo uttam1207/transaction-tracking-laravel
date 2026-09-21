@@ -14,6 +14,7 @@ use App\Models\Wallet;
 use App\Services\FraudDetectionService;
 use App\Services\LedgerBalanceService;
 use App\Services\NotificationService;
+use App\Services\TransactionInvoiceService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,8 @@ class TransactionController extends Controller
     public function __construct(
         private FraudDetectionService $fraudService,
         private NotificationService $notificationService,
-        private LedgerBalanceService $ledger
+        private LedgerBalanceService $ledger,
+        private TransactionInvoiceService $invoiceService,
     ) {
     }
 
@@ -225,6 +227,11 @@ class TransactionController extends Controller
             'ip_address' => $request->ip(),
         ]);
 
+        // Auto-generate Sales Invoice for successful sales-category credit transactions
+        if ($this->invoiceService->shouldCreateInvoice($transaction)) {
+            $this->invoiceService->createFromTransaction($transaction);
+        }
+
         return redirect()->route('admin.transactions.show', $transaction)
                          ->with('success', 'Transaction created. ID: ' . $transaction->transaction_id);
     }
@@ -284,6 +291,14 @@ class TransactionController extends Controller
                     $transaction->update(['status' => $oldStatus]);
                     return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
                 }
+            }
+        }
+
+        // Auto-generate Sales Invoice when a sales-category credit is marked success
+        if ($request->status === 'success' && $oldStatus !== 'success') {
+            $transaction->refresh(); // picks up journal_entry_id set by TransactionObserver
+            if ($this->invoiceService->shouldCreateInvoice($transaction)) {
+                $this->invoiceService->createFromTransaction($transaction);
             }
         }
 

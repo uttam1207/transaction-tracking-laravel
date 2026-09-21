@@ -615,10 +615,11 @@ Route::prefix('admin')
     Route::post('/salaries/{salary}/mark-paid', [SalaryController::class, 'markPaid'])->name('salaries.mark-paid');
 
     // Module 14 — Sales
-    Route::get('/sales/trash',            [SalesModuleController::class, 'trash'])->name('sales.trash');
-    Route::get('/sales/next-number',      [SalesModuleController::class, 'nextNumber'])->name('sales.next-number');
-    Route::post('/sales/{id}/restore',    [SalesModuleController::class, 'restore'])->name('sales.restore');
-    Route::delete('/sales/{id}/force',    [SalesModuleController::class, 'forceDelete'])->name('sales.force-delete');
+    Route::get('/sales/trash',                   [SalesModuleController::class, 'trash'])->name('sales.trash');
+    Route::get('/sales/next-number',             [SalesModuleController::class, 'nextNumber'])->name('sales.next-number');
+    Route::post('/sales/{id}/restore',           [SalesModuleController::class, 'restore'])->name('sales.restore');
+    Route::delete('/sales/{id}/force',           [SalesModuleController::class, 'forceDelete'])->name('sales.force-delete');
+    Route::get('/sales/{salesOrder}/print',      [SalesModuleController::class, 'printInvoice'])->name('sales.print');
     Route::resource('sales', SalesModuleController::class)->parameters(['sales' => 'salesOrder']);
     // Sale Item Types management (AJAX CRUD)
     Route::prefix('sales/item-types')->name('sales.item-types.')->group(function () {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\CrmCustomer;
 use App\Models\SaleItemType;
+use App\Models\SaleOrderItem;
 use App\Models\SalesOrder;
 use App\Services\LedgerBalanceService;
 use Illuminate\Http\Request;
@@ -28,7 +29,11 @@ class SalesModuleController extends Controller
         if ($request->item_type) {
             $query->where('item_type', $request->item_type);
         }
-        if ($request->payment_status) {
+        if ($request->payment_status === 'Overdue') {
+            $query->whereNotIn('payment_status', ['Paid'])
+                  ->whereNotNull('due_date')
+                  ->where('due_date', '<', now()->toDateString());
+        } elseif ($request->payment_status) {
             $query->where('payment_status', $request->payment_status);
         }
 
@@ -42,6 +47,15 @@ class SalesModuleController extends Controller
             'milk_sales'      => SalesOrder::whereIn('item_type', $milkTypeName)->sum('total_amount'),
             'animal_sales'    => SalesOrder::where('item_type', 'Animal Sales')->sum('total_amount'),
             'pending_payment' => SalesOrder::where('payment_status', 'Pending')->sum('total_amount'),
+            'overdue_count'   => SalesOrder::whereNotIn('payment_status', ['Paid'])
+                                    ->whereNotNull('due_date')
+                                    ->where('due_date', '<', now()->toDateString())
+                                    ->count(),
+            'overdue_balance' => SalesOrder::whereNotIn('payment_status', ['Paid'])
+                                    ->whereNotNull('due_date')
+                                    ->where('due_date', '<', now()->toDateString())
+                                    ->selectRaw('SUM(total_amount - amount_paid) as bal')
+                                    ->value('bal') ?? 0,
         ];
 
         return view('admin.sales.index', compact('sales', 'customers', 'summary', 'itemTypes'));
@@ -63,71 +77,61 @@ class SalesModuleController extends Controller
 
     public function store(Request $request)
     {
-        $itemType = SaleItemType::findOrFail($request->sale_item_type_id);
+        $request->validate([
+            'invoice_number'  => 'required|string|unique:sales_orders,invoice_number',
+            'crm_customer_id' => 'nullable|exists:crm_customers,id',
+            'sale_date'       => 'required|date',
+            'due_date'        => 'nullable|date',
+            'payment_terms'   => 'nullable|string|max:50',
+            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'amount_paid'     => 'nullable|numeric|min:0',
+            'items'           => 'required|array|min:1',
+            'items.*.sale_item_type_id' => 'required|exists:sale_item_types,id',
+            'items.*.quantity'          => 'required|numeric|min:0.01',
+        ]);
 
-        $rules = [
-            'invoice_number'    => 'required|string|unique:sales_orders,invoice_number',
-            'crm_customer_id'   => 'nullable|exists:crm_customers,id',
-            'sale_item_type_id' => 'required|exists:sale_item_types,id',
-            'sale_date'         => 'required|date',
-            'quantity'          => 'required|numeric|min:0.01',
-            'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
-            'amount_paid'       => 'nullable|numeric|min:0',
-        ];
+        [$processedItems, $totalAmount, $first] = $this->processItems($request->input('items', []));
 
-        if ($itemType->is_milk_type) {
-            $rules['fat_percentage'] = 'required|numeric|min:0.01|max:100';
-            $rules['fat_rate']       = 'required|numeric|min:0.01';
-            $rules['rate']           = 'nullable|numeric|min:0';
-        } else {
-            $rules['rate']           = 'required|numeric|min:0.01';
-            $rules['fat_percentage'] = 'nullable';
-            $rules['fat_rate']       = 'nullable';
+        if (empty($processedItems)) {
+            return back()->withInput()->withErrors(['items' => 'At least one valid item line is required.']);
         }
 
-        $validated = $request->validate($rules);
-
-        $quantity = (float) $validated['quantity'];
-
-        if ($itemType->is_milk_type) {
-            $fat        = (float) $validated['fat_percentage'];
-            $fatRate    = (float) $validated['fat_rate'];
-            $total      = $quantity * $fat * $fatRate;
-            $effectRate = $fat * $fatRate; // effective per-unit rate for display
-        } else {
-            $effectRate = (float) $validated['rate'];
-            $total      = $quantity * $effectRate;
-            $fat        = null;
-            $fatRate    = null;
-        }
-
-        // amount_paid: Paid = full amount, Partial = what was entered, otherwise 0
-        $amountPaid = match ($validated['payment_status']) {
-            'Paid'    => $total,
-            'Partial' => min((float) ($validated['amount_paid'] ?? 0), $total),
-            default   => 0,
+        $amountPaid = match ($request->payment_status) {
+            'Paid'    => $totalAmount,
+            'Partial' => min((float) ($request->amount_paid ?? 0), $totalAmount),
+            default   => 0.0,
         };
 
-        $sale = SalesOrder::create([
-            'invoice_number'    => $validated['invoice_number'],
-            'crm_customer_id'   => $validated['crm_customer_id'] ?? null,
-            'item_type'         => $itemType->name,
-            'sale_item_type_id' => $itemType->id,
-            'sale_date'         => $validated['sale_date'],
-            'quantity'          => $quantity,
-            'rate'              => $effectRate,
-            'fat_percentage'    => $fat,
-            'fat_rate'          => $fatRate,
-            'total_amount'      => $total,
-            'amount_paid'       => $amountPaid,
-            'payment_status'    => $validated['payment_status'],
-        ]);
+        $sale = DB::transaction(function () use ($request, $first, $totalAmount, $amountPaid, $processedItems) {
+            $so = SalesOrder::create([
+                'invoice_number'    => $request->invoice_number,
+                'crm_customer_id'   => $request->crm_customer_id ?: null,
+                'item_type'         => $first['item_type'],
+                'sale_item_type_id' => $first['sale_item_type_id'],
+                'sale_date'         => $request->sale_date,
+                'due_date'          => $request->due_date ?: null,
+                'payment_terms'     => $request->payment_terms ?: null,
+                'quantity'          => $first['quantity'],
+                'rate'              => $first['rate'],
+                'fat_percentage'    => $first['fat_percentage'],
+                'fat_rate'          => $first['fat_rate'],
+                'total_amount'      => $totalAmount,
+                'amount_paid'       => $amountPaid,
+                'payment_status'    => $request->payment_status,
+            ]);
+
+            foreach ($processedItems as $item) {
+                $so->items()->create($item);
+            }
+
+            return $so;
+        });
 
         $redirect = redirect()->route('admin.sales.index')
             ->with('success', 'Sales invoice ' . $sale->invoice_number . ' created.');
 
         if (! $sale->fresh()->journal_entry_id) {
-            $redirect = $redirect->with('warning', 'Accounting entry could not be posted — no open financial period covers ' . $validated['sale_date'] . '. Run: php artisan accounting:setup');
+            $redirect = $redirect->with('warning', 'Accounting entry could not be posted — no open financial period covers ' . $request->sale_date . '. Run: php artisan accounting:setup');
         }
 
         return $redirect;
@@ -135,79 +139,96 @@ class SalesModuleController extends Controller
 
     public function show(SalesOrder $salesOrder)
     {
-        $salesOrder->load('customer', 'saleItemType');
+        $salesOrder->load(['customer', 'saleItemType', 'items.itemType']);
         return view('admin.sales.show', compact('salesOrder'));
+    }
+
+    public function printInvoice(SalesOrder $salesOrder)
+    {
+        $salesOrder->load(['customer', 'items.itemType']);
+        return view('admin.sales.print', compact('salesOrder'));
     }
 
     public function edit(SalesOrder $salesOrder)
     {
-        $salesOrder->load('customer', 'saleItemType');
+        $salesOrder->load(['customer', 'saleItemType', 'items.itemType']);
         $customers = CrmCustomer::orderBy('name')->get();
         $itemTypes = SaleItemType::activeOrdered();
-        return view('admin.sales.edit', compact('salesOrder', 'customers', 'itemTypes'));
+
+        // Build existing items for JS — fall back to parent fields for legacy orders
+        $existingItems = $salesOrder->items->isNotEmpty()
+            ? $salesOrder->items->map(fn ($i) => [
+                'sale_item_type_id' => $i->sale_item_type_id,
+                'description'       => $i->description,
+                'quantity'          => $i->quantity,
+                'rate'              => $i->fat_percentage ? null : $i->rate,
+                'fat_percentage'    => $i->fat_percentage,
+                'fat_rate'          => $i->fat_rate,
+                'amount'            => $i->amount,
+              ])->values()->all()
+            : [[
+                'sale_item_type_id' => $salesOrder->sale_item_type_id,
+                'description'       => null,
+                'quantity'          => $salesOrder->quantity,
+                'rate'              => $salesOrder->fat_percentage ? null : $salesOrder->rate,
+                'fat_percentage'    => $salesOrder->fat_percentage,
+                'fat_rate'          => $salesOrder->fat_rate,
+                'amount'            => $salesOrder->total_amount,
+              ]];
+
+        return view('admin.sales.edit', compact('salesOrder', 'customers', 'itemTypes', 'existingItems'));
     }
 
     public function update(Request $request, SalesOrder $salesOrder)
     {
-        $itemType = SaleItemType::findOrFail($request->sale_item_type_id);
+        $request->validate([
+            'invoice_number'  => 'required|string|unique:sales_orders,invoice_number,' . $salesOrder->id,
+            'crm_customer_id' => 'nullable|exists:crm_customers,id',
+            'sale_date'       => 'required|date',
+            'due_date'        => 'nullable|date',
+            'payment_terms'   => 'nullable|string|max:50',
+            'payment_status'  => 'required|in:Paid,Pending,Partial,Unbilled',
+            'amount_paid'     => 'nullable|numeric|min:0',
+            'items'           => 'required|array|min:1',
+            'items.*.sale_item_type_id' => 'required|exists:sale_item_types,id',
+            'items.*.quantity'          => 'required|numeric|min:0.01',
+        ]);
 
-        $rules = [
-            'invoice_number'    => 'required|string|unique:sales_orders,invoice_number,' . $salesOrder->id,
-            'crm_customer_id'   => 'nullable|exists:crm_customers,id',
-            'sale_item_type_id' => 'required|exists:sale_item_types,id',
-            'sale_date'         => 'required|date',
-            'quantity'          => 'required|numeric|min:0.01',
-            'payment_status'    => 'required|in:Paid,Pending,Partial,Unbilled',
-            'amount_paid'       => 'nullable|numeric|min:0',
-        ];
+        [$processedItems, $totalAmount, $first] = $this->processItems($request->input('items', []));
 
-        if ($itemType->is_milk_type) {
-            $rules['fat_percentage'] = 'required|numeric|min:0.01|max:100';
-            $rules['fat_rate']       = 'required|numeric|min:0.01';
-            $rules['rate']           = 'nullable|numeric|min:0';
-        } else {
-            $rules['rate']           = 'required|numeric|min:0.01';
-            $rules['fat_percentage'] = 'nullable';
-            $rules['fat_rate']       = 'nullable';
+        if (empty($processedItems)) {
+            return back()->withInput()->withErrors(['items' => 'At least one valid item line is required.']);
         }
 
-        $validated = $request->validate($rules);
-
-        $quantity = (float) $validated['quantity'];
-
-        if ($itemType->is_milk_type) {
-            $fat        = (float) $validated['fat_percentage'];
-            $fatRate    = (float) $validated['fat_rate'];
-            $total      = $quantity * $fat * $fatRate;
-            $effectRate = $fat * $fatRate;
-        } else {
-            $effectRate = (float) $validated['rate'];
-            $total      = $quantity * $effectRate;
-            $fat        = null;
-            $fatRate    = null;
-        }
-
-        // amount_paid: Paid = full amount, Partial = keep user-entered value, otherwise 0
-        $amountPaid = match ($validated['payment_status']) {
-            'Paid'    => $total,
-            'Partial' => min((float) ($validated['amount_paid'] ?? $salesOrder->amount_paid), $total),
-            default   => 0,
+        $amountPaid = match ($request->payment_status) {
+            'Paid'    => $totalAmount,
+            'Partial' => min((float) ($request->amount_paid ?? $salesOrder->amount_paid), $totalAmount),
+            default   => 0.0,
         };
 
-        $salesOrder->update([
-            'invoice_number'    => $validated['invoice_number'],
-            'crm_customer_id'   => $validated['crm_customer_id'] ?? null,
-            'item_type'         => $itemType->name,
-            'sale_item_type_id' => $itemType->id,
-            'sale_date'         => $validated['sale_date'],
-            'quantity'          => $quantity,
-            'rate'              => $effectRate,
-            'fat_percentage'    => $fat,
-            'fat_rate'          => $fatRate,
-            'total_amount'      => $total,
-            'amount_paid'       => $amountPaid,
-            'payment_status'    => $validated['payment_status'],
-        ]);
+        DB::transaction(function () use ($request, $salesOrder, $first, $totalAmount, $amountPaid, $processedItems) {
+            $salesOrder->update([
+                'invoice_number'    => $request->invoice_number,
+                'crm_customer_id'   => $request->crm_customer_id ?: null,
+                'item_type'         => $first['item_type'],
+                'sale_item_type_id' => $first['sale_item_type_id'],
+                'sale_date'         => $request->sale_date,
+                'due_date'          => $request->due_date ?: null,
+                'payment_terms'     => $request->payment_terms ?: null,
+                'quantity'          => $first['quantity'],
+                'rate'              => $first['rate'],
+                'fat_percentage'    => $first['fat_percentage'],
+                'fat_rate'          => $first['fat_rate'],
+                'total_amount'      => $totalAmount,
+                'amount_paid'       => $amountPaid,
+                'payment_status'    => $request->payment_status,
+            ]);
+
+            $salesOrder->items()->delete();
+            foreach ($processedItems as $item) {
+                $salesOrder->items()->create($item);
+            }
+        });
 
         return redirect()->route('admin.sales.show', $salesOrder)->with('success', 'Sales invoice updated.');
     }
@@ -292,6 +313,65 @@ class SalesModuleController extends Controller
         $salesOrder->forceDelete();
         return redirect()->route('admin.sales.trash')
             ->with('success', "Sales invoice {$inv} permanently deleted. Ledger reversed.");
+    }
+
+    // ── Shared helper ─────────────────────────────────────────────────────────
+
+    /**
+     * Process the items[] array from the form, compute amounts, and return:
+     * [ processedItems[], totalAmount, firstItem ]
+     */
+    private function processItems(array $rawItems): array
+    {
+        $typeMap        = SaleItemType::pluck('name', 'id')->all(); // id => name
+        $isMilkMap      = SaleItemType::pluck('is_milk_type', 'id')->all(); // id => bool
+        $processed      = [];
+        $total          = 0.0;
+
+        foreach (array_values($rawItems) as $idx => $item) {
+            $typeId = (int) ($item['sale_item_type_id'] ?? 0);
+            if (! $typeId || ! isset($typeMap[$typeId])) continue;
+
+            $qty     = max(0.0, (float) ($item['quantity'] ?? 0));
+            if ($qty <= 0) continue;
+
+            $isMilk  = (bool) ($isMilkMap[$typeId] ?? false);
+
+            if ($isMilk) {
+                $fat     = (float) ($item['fat_percentage'] ?? 0);
+                $fatRate = (float) ($item['fat_rate'] ?? 0);
+                $rate    = $fat * $fatRate;         // effective rate per litre
+                $amount  = $qty * $fat * $fatRate;
+                $fatPct  = $fat;
+            } else {
+                $rate    = (float) ($item['rate'] ?? 0);
+                $amount  = $qty * $rate;
+                $fat     = null;
+                $fatRate = null;
+                $fatPct  = null;
+            }
+
+            $processed[] = [
+                'sale_item_type_id' => $typeId,
+                'item_type'         => $typeMap[$typeId],
+                'description'       => isset($item['description']) ? trim($item['description']) : null,
+                'quantity'          => $qty,
+                'rate'              => $rate,
+                'fat_percentage'    => $fatPct,
+                'fat_rate'          => $fatRate ?? null,
+                'amount'            => round($amount, 2),
+                'sort_order'        => $idx,
+            ];
+
+            $total += $amount;
+        }
+
+        $first = $processed[0] ?? [
+            'item_type' => 'Mixed', 'sale_item_type_id' => null,
+            'quantity' => 0, 'rate' => 0, 'fat_percentage' => null, 'fat_rate' => null,
+        ];
+
+        return [$processed, round($total, 2), $first];
     }
 
     // ── Sale Item Types CRUD (AJAX) ────────────────────────────────────────────

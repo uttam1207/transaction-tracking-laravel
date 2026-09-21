@@ -211,9 +211,16 @@ textarea.form-control { height: auto !important; }
                         <label class="form-label">Category <span class="req">*</span></label>
                         <select name="category" class="form-select" required>
                             <option value="">Select Category</option>
-                            @foreach(['transfer'=>'Bank Transfer','payment'=>'Payment','withdrawal'=>'Withdrawal','deposit'=>'Deposit','refund'=>'Refund','purchase'=>'Purchase','salary'=>'Salary','investment'=>'Investment','loan'=>'Loan','other'=>'Other'] as $val=>$label)
-                                <option value="{{ $val }}">{{ $label }}</option>
-                            @endforeach
+                            <optgroup label="Sales (Auto-Invoice)">
+                                @foreach(['Milk Sales','Dairy Products Sales','Animal Sales','Feed Sales','Dung Sales','Franchise Royalty'] as $cat)
+                                    <option value="{{ $cat }}" style="font-weight:600;">{{ $cat }}</option>
+                                @endforeach
+                            </optgroup>
+                            <optgroup label="General">
+                                @foreach(['transfer'=>'Bank Transfer','payment'=>'Payment','withdrawal'=>'Withdrawal','deposit'=>'Deposit','refund'=>'Refund','purchase'=>'Purchase','salary'=>'Salary','investment'=>'Investment','loan'=>'Loan','other'=>'Other'] as $val=>$label)
+                                    <option value="{{ $val }}">{{ $label }}</option>
+                                @endforeach
+                            </optgroup>
                         </select>
                     </div>
                     <div class="col-md-5">

@@ -7,6 +7,7 @@ use App\Models\ChartOfAccount;
 use App\Models\FinancialPeriod;
 use App\Models\JournalEntry;
 use App\Models\JournalEntryLine;
+use App\Models\CrmCustomer;
 use App\Models\PurchaseOrder;
 use App\Models\SalesOrder;
 use App\Models\Transaction;
@@ -192,10 +193,11 @@ class FinanceController extends Controller
 
     public function journalCreate()
     {
-        $accounts = ChartOfAccount::postable()->orderBy('code')->get();
-        $periods  = FinancialPeriod::open()->orderByDesc('start_date')->get();
-        $types    = ['general', 'sales', 'purchase', 'payment', 'receipt', 'payroll', 'depreciation', 'adjustment'];
-        return view('admin.finance.journal.create', compact('accounts', 'periods', 'types'));
+        $accounts  = ChartOfAccount::postable()->orderBy('code')->get();
+        $periods   = FinancialPeriod::open()->orderByDesc('start_date')->get();
+        $customers = CrmCustomer::orderBy('name')->get();
+        $types     = ['general', 'sales', 'purchase', 'payment', 'receipt', 'payroll', 'depreciation', 'adjustment'];
+        return view('admin.finance.journal.create', compact('accounts', 'periods', 'types', 'customers'));
     }
 
     public function journalStore(Request $request)
@@ -203,8 +205,10 @@ class FinanceController extends Controller
         $request->validate([
             'entry_date'           => 'required|date',
             'period_id'            => 'nullable|exists:financial_periods,id',
+            'contact_id'           => 'nullable|exists:crm_customers,id',
             'type'                 => 'required|in:general,sales,purchase,payment,receipt,payroll,depreciation,adjustment',
             'description'          => 'nullable|string',
+            'notes'                => 'nullable|string',
             'reference'            => 'nullable|string|max:100',
             'lines'                => 'required|array|min:2',
             'lines.*.account_id'   => 'required|exists:chart_of_accounts,id',
@@ -223,10 +227,12 @@ class FinanceController extends Controller
             $entry = JournalEntry::create([
                 'entry_number' => JournalEntry::generateNumber(),
                 'period_id'    => $request->period_id,
+                'contact_id'   => $request->contact_id ?: null,
                 'entry_date'   => $request->entry_date,
                 'reference'    => $request->reference,
                 'type'         => $request->type,
                 'description'  => $request->description,
+                'notes'        => $request->notes ?: null,
                 'total_debit'  => $totalDebit,
                 'total_credit' => $totalCredit,
                 'status'       => 'draft',
@@ -251,7 +257,7 @@ class FinanceController extends Controller
 
     public function journalShow(JournalEntry $entry)
     {
-        $entry->load('lines.account', 'period', 'createdBy', 'postedBy');
+        $entry->load('lines.account', 'period', 'contact', 'createdBy', 'postedBy');
         return view('admin.finance.journal.show', compact('entry'));
     }
 

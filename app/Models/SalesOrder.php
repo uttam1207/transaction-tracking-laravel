@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\CrmCustomer;
 use App\Models\JournalEntry;
 use App\Models\SaleItemType;
+use App\Models\SaleOrderItem;
+use App\Models\Transaction;
 
 class SalesOrder extends Model
 {
@@ -19,6 +21,8 @@ class SalesOrder extends Model
         'item_type',
         'sale_item_type_id',
         'sale_date',
+        'due_date',
+        'payment_terms',
         'quantity',
         'rate',
         'fat_percentage',
@@ -27,10 +31,12 @@ class SalesOrder extends Model
         'amount_paid',
         'payment_status',
         'journal_entry_id',
+        'transaction_id',
     ];
 
     protected $casts = [
         'sale_date'      => 'date',
+        'due_date'       => 'date',
         'quantity'       => 'decimal:2',
         'rate'           => 'decimal:2',
         'fat_percentage' => 'decimal:2',
@@ -93,5 +99,15 @@ class SalesOrder extends Model
     public function saleItemType()
     {
         return $this->belongsTo(SaleItemType::class, 'sale_item_type_id');
+    }
+
+    public function items()
+    {
+        return $this->hasMany(SaleOrderItem::class)->orderBy('sort_order');
+    }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class, 'transaction_id');
     }
 }
